@@ -1,0 +1,43 @@
+CREATE DATABASE IF NOT EXISTS tp;
+
+USE tp;
+
+CREATE TABLE IF NOT EXISTS cursos (
+    id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS alumnos (
+    id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    curso_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS clase_presencial (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    curso_id INT NOT NULL,
+    fecha DATE NOT NULL,
+    FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS asistencias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    alumno_id INT NOT NULL,
+    clase_presencial_id INT NOT NULL,
+    presente BOOLEAN DEFAULT 1,
+    FOREIGN KEY (alumno_id) REFERENCES alumnos(id) ON DELETE CASCADE
+    FOREIGN KEY (clase_presencial_id) REFERENCES clase_presencial(id) ON DELETE CASCADE
+
+);
+
+CREATE TABLE IF NOT EXISTS tokens_asistencia (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    alumno_id INT NOT NULL,
+    fecha_expiracion DATETIME NOT NULL,
+    utilizado BOOLEAN DEFAULT 0,
+    FOREIGN KEY (alumno_id) REFERENCES alumnos(id) ON DELETE CASCADE
+);

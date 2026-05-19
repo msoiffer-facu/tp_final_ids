@@ -1,6 +1,6 @@
 from flask import Flask
-from tp_final_ids.backend.routes.login import *
-from tp_final_ids.backend.routes.cursada import cursada_bp
+from routes.login import *
+from routes.asistencia import asistencia_bp
 
 app = Flask(__name__)
 
