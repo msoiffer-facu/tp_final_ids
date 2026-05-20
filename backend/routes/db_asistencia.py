@@ -44,9 +44,9 @@ def buscar_clase_p(id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM clase_presencial WHERE id = %s",(id,))
-    curso = cursor.fetchone()
+    clase = cursor.fetchone()
     cursor.close()
-    return curso
+    return clase
 
 def actualizar_clase_p(id, fecha, curso_id):
     db = get_db()
@@ -186,7 +186,12 @@ def obtener_cursos():
 def listar_alumnos_por_curso(curso_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM alumnos WHERE curso_id = %s", (curso_id,))
+    query = """
+        SELECT a.* FROM alumnos a
+        INNER JOIN alumnos_curso ac ON a.id = ac.alumnos_id
+        WHERE ac.curso_id = %s
+    """
+    cursor.execute(query, (curso_id,))
     curso = cursor.fetchall()
     cursor.close()
     return curso
