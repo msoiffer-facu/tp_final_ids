@@ -10,7 +10,6 @@ create table cursos (
     modificacion varchar(255)
 );
 
-create table clase_presencial
 (
     id       int auto_increment primary key,
     curso_id int not null,
