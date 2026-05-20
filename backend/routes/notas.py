@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify
-from backend.db import get_db_connection
+from flask import Blueprint, jsonify, request
+
+from backend.db import get_db
 
 notas_bp = Blueprint("notas", __name__)
 
@@ -12,15 +13,15 @@ def crear_nota():
     evaluacion_id = data.get("evaluacion_id")
     nota_alumno = data.get("nota_alumno")
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     if alumno_id is None or evaluacion_id is None:
        return jsonify({"error": "alumno_id y evaluacion_id son obligatorios"}), 400
-    
+
     try:
         cursor.execute("""
-            INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno) 
+            INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno)
             VALUES (%s, %s, %s)""", (alumno_id, evaluacion_id, nota_alumno))
 
         conn.commit()
@@ -29,7 +30,7 @@ def crear_nota():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
     finally:
         cursor.close()
         conn.close()
@@ -39,7 +40,7 @@ def crear_nota():
 
 @notas_bp.route("/notas", methods=["GET"])
 def obtener_notas():
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -50,7 +51,7 @@ def obtener_notas():
                 ON notas.evaluacion_id = evaluaciones.id
         JOIN tipos_evaluacion
             ON evaluaciones.tipo_id = tipos_evaluacion.id """)
-        
+
      notas = cursor.fetchall()
 
     except Exception as e:
@@ -65,7 +66,7 @@ def obtener_notas():
 
 @notas_bp.route("/notas/alumno/<int:alumno_id>", methods=["GET"])
 def alumno_notas(alumno_id):
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -76,7 +77,7 @@ def alumno_notas(alumno_id):
         ON notas.evaluacion_id = evaluaciones.id
      JOIN tipos_evaluacion
         ON evaluaciones.tipo_id = tipos_evaluacion.id
-                
+
      WHERE notas.alumno_id = %s""", (alumno_id,))
 
         notas_alumno = cursor.fetchall()
@@ -92,9 +93,9 @@ def alumno_notas(alumno_id):
 
 @notas_bp.route("/notas/equipo/<int:equipo_id>", methods=["GET"])
 def equipo_notas(equipo_id):
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    
+
     try:
 
      cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.padron, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre AS tipo_evaluacion, equipos.nombre FROM notas
@@ -112,10 +113,10 @@ def equipo_notas(equipo_id):
         WHERE equipos.id = %s""", (equipo_id,))
 
      notas_equipo = cursor.fetchall()
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
     finally:
      cursor.close()
      conn.close()
@@ -128,7 +129,7 @@ def modificar_nota(nota_id):
     data = request.get_json()
     nota_alumno = data.get("nota_alumno")
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     try:
@@ -149,7 +150,7 @@ def modificar_nota(nota_id):
 
 @notas_bp.route("/notas/<int:nota_id>", methods=["DELETE"])
 def eliminar_nota(nota_id):
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     try:
@@ -160,10 +161,10 @@ def eliminar_nota(nota_id):
          cursor.close()
          conn.close()
          return jsonify({"error": "Nota no encontrada"}), 404
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
     finally:
      cursor.close()
      conn.close()
