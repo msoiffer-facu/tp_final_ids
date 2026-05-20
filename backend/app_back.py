@@ -1,7 +1,8 @@
 from flask import Flask
-from tp_final_ids.backend.routes.login import *
+from routes.reportes import reportes_bp
 
 app = Flask(__name__)
+app.register_blueprint(reportes_bp)
 
 @app.route("/")
 def home():
