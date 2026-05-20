@@ -135,7 +135,7 @@ def eliminar_clase_presencial(id):
     try:
         clase_p = buscar_clase_p(id)
     except Exception:
-        return "Error interno al obtener el usuario",500
+        return "Error interno al obtener la clase",500
 
     if not clase_p:
         return "clase presencial no encontrada",404
@@ -143,7 +143,7 @@ def eliminar_clase_presencial(id):
     try:
         eliminar_clase_p(id)
     except Exception:
-        return "Error interno al eliminar el usuario",500
+        return "Error interno al eliminar la clase",500
     return "", 204
 
 @asistencia_bp.route("/pedir-asistencia", methods=['POST'])
@@ -151,23 +151,45 @@ def create_asistencia():
     data = request.get_json()
     id_clase = data.get("id_clase_p")
 
-    # TODO: crear funcion en db que me devuelva una fila de la tabla clase_presencial en base al id
-    clase = buscar_clase(id_clase)
+    try:
+        clase = buscar_clase_p(id_clase)
+    except Exception:
+        return "Error interno al buscar la clase",500
 
-    #TODO: crear funcion en db que me devuelva los alumnos de la tabla alumnos que tengan x curso
-    alumnos = listar_alumnos_por_curso(clase.curso)
+    if not clase:
+        return "No existe una clase con ese id", 404
 
-    #TODO: crear funcion en db que inserte una nueva fila (por cada alumno) en la tabla asistencias con el id del alumno y el id de la clase presencial (por defecto la columna presente=false)
-    crear_asistencia_alumnos(alumnos, id_clase)
+    try:
+        alumnos = listar_alumnos_por_curso(clase["curso_id"])
+    except Exception:
+        return "Error interno al listar a los alumnos del curso",500
 
-    #TODO: tengo que crear los tokens para cada alumno que se guardan en la tabla tokens_asistencia
-    #TODO: ver como limpiar la tabla tokens_asistencia cada x cantidad de tiempo
-    tokens = crear_token_alumno(alumnos)
+    if not alumnos:
+        return "No hay alumnos en esta clase",404
 
-    #TODO: aca tengo que crear un qr en base a cada token de cada alumno y enviarselos por su email
-    enviar_qr_alumnos(alumnos, token)
+    try:
+        crear_asistencia_alumnos(alumnos, id_clase)
+    except Exception:
+        return "Error interno al crear las asistencias",500
+
+    return jsonify(
+        {
+            "alumnos":alumnos
+        }
+    ),200
+
+    # #TODO: tengo que crear los tokens para cada alumno que se guardan en la tabla tokens_asistencia
+    # #TODO: ver como limpiar la tabla tokens_asistencia cada x cantidad de tiempo
+    # tokens = crear_token_alumno(alumnos)
+
+    # #TODO: aca tengo que crear un qr en base a cada token de cada alumno y enviarselos por su email
+    # enviar_qr_alumnos(alumnos, token)
     return 200
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
+    data = request.get_json()
+    token = data.get("token")
+
+    comprobar_token()
     return 200

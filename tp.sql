@@ -28,9 +28,8 @@ CREATE TABLE IF NOT EXISTS asistencias (
     alumno_id INT NOT NULL,
     clase_presencial_id INT NOT NULL,
     presente BOOLEAN DEFAULT 1,
-    FOREIGN KEY (alumno_id) REFERENCES alumnos(id) ON DELETE CASCADE
+    FOREIGN KEY (alumno_id) REFERENCES alumnos(id) ON DELETE CASCADE,
     FOREIGN KEY (clase_presencial_id) REFERENCES clase_presencial(id) ON DELETE CASCADE
-
 );
 
 CREATE TABLE IF NOT EXISTS tokens_asistencia (

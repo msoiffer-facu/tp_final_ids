@@ -52,6 +52,17 @@ def eliminar_clase_p(id):
     db.commit()
     cursor.close()
 
+def crear_asistencia_alumnos(alumnos, clase_id):
+    db = get_db()
+    cursor = db.cursor()
+
+    datos = [(alumno['id'], clase_id) for alumno in alumnos]
+
+    query = "INSERT INTO asistencias (alumno_id, clase_presencial_id) VALUES (%s, %s)"
+    cursor.executemany(query, datos)
+    db.commit()
+    cursor.close()
+
 #TODO: cambiar la siguiente funcion a un archivo de curso y no dejarlo en el repository de asistencia
 
 def buscar_curso(id):
@@ -66,6 +77,14 @@ def obtener_cursos():
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM cursos")
+    cursos = cursor.fetchall()
+    cursor.close()
+    return cursos
+
+def listar_alumnos_por_curso(curso_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM alumnos WHERE curso_id = %s", (curso_id,))
     curso = cursor.fetchall()
     cursor.close()
     return curso
