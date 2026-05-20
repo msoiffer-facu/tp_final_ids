@@ -1,18 +1,9 @@
 from flask import Blueprint, jsonify, request, url_for
 
 from routes.db_asistencia import *
+from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
-
-# @asistencia_bp.route("/cursos", methods=['GET'])
-# def get_cursos():
-#     try:
-#         #TODO: en db hacer la funcion obtener_clases_p()
-#         cursos = obtener_cursos()
-#     except Exception as e:
-#         return jsonify(e.__cause__),500
-
-#     return jsonify({"cursos" : cursos}),200
 
 @asistencia_bp.route("/", methods=['GET'])
 def get_clase_presencial():
@@ -172,24 +163,34 @@ def create_asistencia():
     except Exception:
         return "Error interno al crear las asistencias",500
 
-    return jsonify(
-        {
-            "alumnos":alumnos
-        }
-    ),200
+    #TODO: ver como limpiar la tabla tokens_asistencia cada x cantidad de tiempo
+    tokens = crear_token_alumno(alumnos)
 
-    # #TODO: tengo que crear los tokens para cada alumno que se guardan en la tabla tokens_asistencia
-    # #TODO: ver como limpiar la tabla tokens_asistencia cada x cantidad de tiempo
-    # tokens = crear_token_alumno(alumnos)
+    # with ThreadPoolExecutor(max_workers=1) as executor:
+    #     executor.map(crear_enviar_qr_alumnos, tokens)
+    try:
+        for token in tokens:
+            crear_enviar_qr_alumnos(token)
+    except Exception:
+        return "Error interno crear o enviar el qr",500
 
-    # #TODO: aca tengo que crear un qr en base a cada token de cada alumno y enviarselos por su email
-    # enviar_qr_alumnos(alumnos, token)
-    return 200
+
+    # return jsonify(
+    #     {
+    #         "tokens":tokens
+    #     }
+    # ),200
+
+    return "Se envio el qr a los alumnos",200
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
     data = request.get_json()
     token = data.get("token")
 
-    comprobar_token()
-    return 200
+    try:
+        respuesta = comprobar_token(token)
+    except Exception as e:
+        return f'Error al revisar el token. {e}',500
+
+    return respuesta, 200
