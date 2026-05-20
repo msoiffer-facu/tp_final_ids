@@ -1,7 +1,8 @@
 from flask import Flask
-from tp_final_ids.backend.routes.login import *
+from routes.profesores import profesores_bp
 
 app = Flask(__name__)
+app.register_blueprint(profesores_bp, url_prefix="/profesores")
 
 @app.route("/")
 def home():
