@@ -4,17 +4,15 @@ services:
     container_name: tp_final_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_pass
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-}
+      MYSQL_DATABASE: ${DB_NAME:-tp_final_ids}
+      MYSQL_USER: ${DB_USER:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-}
     ports:
       - "3306:3306"
     volumes:
-      - ./tp_final_ids/backend/db.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
+      - ./db.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
       - mysql_data:/var/lib/mysql
-    env_file:
-      - .env
 
 volumes:
   mysql_data:
