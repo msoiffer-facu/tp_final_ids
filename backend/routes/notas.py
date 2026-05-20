@@ -1,18 +1,5 @@
-'''
-create table notas (
-    id int  not null  auto_increment primary key,
-    alumno_id int not null ,
-    evaluacion_id int not null ,
-    nota_alumno decimal(10),
-
-    foreign key (alumno_id)
-        references alumnos(id),
-    foreign key (evaluacion_id)
-        references evaluaciones(id)
-);
-'''
 from flask import Blueprint, request, jsonify
-from database import get_connection
+from backend.db import get_db_connection
 
 notas_bp = Blueprint("notas", __name__)
 
@@ -25,7 +12,7 @@ def crear_nota():
     evaluacion_id = data.get("evaluacion_id")
     nota_alumno = data.get("nota_alumno")
 
-    conn = get_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     if alumno_id is None or evaluacion_id is None:
@@ -52,7 +39,7 @@ def crear_nota():
 
 @notas_bp.route("/notas", methods=["GET"])
 def obtener_notas():
-    conn = get_connection()
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -78,7 +65,7 @@ def obtener_notas():
 
 @notas_bp.route("/notas/alumno/<int:alumno_id>", methods=["GET"])
 def alumno_notas(alumno_id):
-    conn = get_connection()
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -105,7 +92,7 @@ def alumno_notas(alumno_id):
 
 @notas_bp.route("/notas/equipo/<int:equipo_id>", methods=["GET"])
 def equipo_notas(equipo_id):
-    conn = get_connection()
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
     try:
@@ -141,7 +128,7 @@ def modificar_nota(nota_id):
     data = request.get_json()
     nota_alumno = data.get("nota_alumno")
 
-    conn = get_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -162,7 +149,7 @@ def modificar_nota(nota_id):
 
 @notas_bp.route("/notas/<int:nota_id>", methods=["DELETE"])
 def eliminar_nota(nota_id):
-    conn = get_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
