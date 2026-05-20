@@ -1,3 +1,7 @@
+create database if not exists tp_final_ids;
+
+use tp_final_ids;
+
 create table cursos (
     id int not null auto_increment primary key,
     nombre varchar(100),

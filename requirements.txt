@@ -1,3 +1,2 @@
 Flask
-flask-sqlalchemy
-pymysql
+python-dotenv
