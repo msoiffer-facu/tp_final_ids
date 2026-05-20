@@ -59,7 +59,6 @@ def editar_equipo(id):
     cursor = conn.cursor()
     
     try:
-        # Verificar si existe el equipo primero
         cursor.execute("SELECT id FROM equipos WHERE id = %s", (id,))
         if not cursor.fetchone():
             return jsonify({"error": "Equipo no encontrado"}), 404
@@ -72,6 +71,97 @@ def editar_equipo(id):
         return jsonify({"message": "Equipo actualizado correctamente"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al editar equipo: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@equipos_bp.route("/<int:id>", methods=["DELETE"])
+def eliminar_equipo(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT id FROM equipos WHERE id = %s", (id,))
+        if not cursor.fetchone():
+            return jsonify({"error": "Equipo no encontrado"}), 404
+            
+        cursor.execute("DELETE FROM equipo_alumnos WHERE equipo_id = %s", (id,))
+        cursor.execute("DELETE FROM equipos WHERE id = %s", (id,))
+        conn.commit()
+        
+        return "", 204
+    except Exception as e:
+        return jsonify({"error": f"Error al eliminar equipo: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@equipos_bp.route("/<int:id>/alumnos", methods=["POST"])
+def asociar_alumnos(id):
+    data = request.get_json()
+    alumnos_ids = data.get("alumnos") 
+    
+    if not alumnos_ids or not isinstance(alumnos_ids, list):
+        return jsonify({"error": "Se requiere una lista de IDs bajo la clave 'alumnos'"}), 400
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        for alumno_id in alumnos_ids:            
+            cursor.execute(
+                "SELECT 1 FROM equipo_alumnos WHERE equipo_id = %s AND alumno_id = %s",
+                (id, alumno_id)
+            )
+            if not cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO equipo_alumnos (equipo_id, alumno_id) VALUES (%s, %s)",
+                    (id, alumno_id)
+                )
+        conn.commit()
+        return jsonify({"message": "Alumnos asociados al equipo correctamente"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Error al asociar alumnos: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@equipos_bp.route("/<int:id>/tps", methods=["POST"])
+def asociar_equipos_a_tp(id):
+    data = request.get_json()
+    evaluacion_id = data.get("evaluacion_id")  
+    
+    if not evaluacion_id:
+        return jsonify({"error": "El campo evaluacion_id es requerido"}), 400
+        
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT alumno_id FROM equipo_alumnos WHERE equipo_id = %s", (id,))
+        integrantes = cursor.fetchall()
+        
+        if not integrantes:
+            return jsonify({"error": "El equipo no tiene alumnos asociados todavía. Asocie alumnos primero."}), 400
+            
+        for integrante in integrantes:
+            alumno_id = integrante["alumno_id"]
+            
+            cursor.execute(
+                "SELECT id FROM notas WHERE alumno_id = %s AND evaluacion_id = %s", 
+                (alumno_id, evaluacion_id)
+            )
+            
+            if not cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno) VALUES (%s, %s, %s)",
+                    (alumno_id, evaluacion_id, 0)
+                )
+                
+        conn.commit()
+        return jsonify({"message": "Equipo asociado al Trabajo Práctico con éxito (Alumnos asignados en tabla notas)"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Error al asociar equipo al TP: {str(e)}"}), 500
     finally:
         cursor.close()
         conn.close()
