@@ -8,6 +8,7 @@ from backend.routes.evaluaciones import *
 
 app = Flask(__name__)
 
+app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
 app.register_blueprint(equipos_bp, url_prefix="/equipos")
 app.register_blueprint(login_bp, url_prefix="/login")
