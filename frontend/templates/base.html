@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema Académico{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <header>
+        {% set current = request.path %}
+        <nav>
+            <a href="/dashboard"     class="{% if current == '/dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="/alumnos"       class="{% if current.startswith('/alumnos') %}active{% endif %}">Alumnos</a>
+            <a href="/evaluaciones"  class="{% if current.startswith('/evaluaciones') %}active{% endif %}">Evaluaciones</a>
+            <a href="/equipos"       class="{% if current.startswith('/equipos') %}active{% endif %}">Equipos</a>
+            <a href="/asistencia"    class="{% if current.startswith('/asistencia') %}active{% endif %}">Asistencia</a>
+            <a href="/material"      class="{% if current.startswith('/material') %}active{% endif %}">Material</a>
+        </nav>
+        <div class="user-badge">
+            <div class="user-avatar">M</div>
+            <span>Matias</span>
+        </div>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
