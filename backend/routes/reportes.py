@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, make_response
-from db import get_connection
+from db import get_db
 from herramientas.generar_pdf import generar_pdf_reporte
 
 reportes_bp = Blueprint("reportes", __name__, url_prefix="/api/reportes")
@@ -91,7 +91,7 @@ def _build_equipos_filters(params, columns):
 
 
 def _fetch_alumnos(params):
-    conn = get_connection()
+    conn = get_db()
     try:
         cursor = conn.cursor()
         if not _table_exists(cursor, "alumnos"):
@@ -124,7 +124,7 @@ def _fetch_alumnos(params):
 
 
 def _fetch_equipos(params):
-    conn = get_connection()
+    conn = get_db()
     try:
         cursor = conn.cursor()
         if not _table_exists(cursor, "equipos"):
@@ -149,7 +149,7 @@ def _fetch_equipos(params):
 
 
 def _statistics_data():
-    conn = get_connection()
+    conn = get_db()
     try:
         cursor = conn.cursor()
         if not _table_exists(cursor, "alumnos"):

@@ -1,16 +1,15 @@
+
+import os
+
 import mysql.connector
-from mysql.connector import Error
+from dotenv import load_dotenv
 
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "root",
-    "database": "curso_db"
-}
+load_dotenv()
 
-def get_connection():
-    try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        return connection
-    except Error as e:
-        raise Exception(f"Error conectando a la base de datos: {e}")
+def get_db():
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
+    )
