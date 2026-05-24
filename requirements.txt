@@ -1,5 +1,7 @@
+
 flask
-rquests
+Flask-SQLAlchemy
+Pymysql
 mysql-connector-python
 qrcode
 pillow
