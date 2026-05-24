@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 
-from backend.db import get_db
+from db import get_db
 
 notas_bp = Blueprint("notas", __name__)
 

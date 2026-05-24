@@ -1,5 +1,4 @@
 flask
-rquests
 mysql-connector-python
 qrcode
 pillow
