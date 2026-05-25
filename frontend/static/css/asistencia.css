@@ -1,0 +1,260 @@
+/* ── Contenedor de Métricas Rápidas ── */
+.metrics-container {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    flex: 1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.25rem;
+}
+
+/* ── Mejoras en Filtros del Header ── */
+.table-filters {
+    display: flex;
+    gap: 12px;
+    flex-grow: 1;
+    margin: 0 2.5rem;
+    max-width: 500px;
+}
+
+.search-input, .filter-select {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    outline: none;
+    color: #374151;
+    background-color: #fff;
+    transition: border-color 0.2s;
+}
+
+.search-input { flex-grow: 2; }
+.filter-select { flex-grow: 1; cursor: pointer; }
+
+.search-input:focus, .filter-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* ── Badges/Etiquetas de Estado ── */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.badge-success {
+    background-color: #def7ec;
+    color: #03543f;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-info {
+    background-color: #e1effe;
+    color: #1e429f;
+}
+
+/* ── Ajustes de Alineación de Celdas y Botones ── */
+.text-right {
+    text-align: right !important;
+}
+
+.acciones-cell.text-right {
+    justify-content: flex-end;
+}
+
+.visual-data {
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.btn-asistencia {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+/* Pequeña corrección al margin-bottom del header heredado */
+.table-card-header {
+    margin-bottom: 0 !important;
+}
+
+/* ── Clases presenciales table ── */
+.table-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.table-card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.table-card-header h2 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+}
+
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.table-card thead {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-card th {
+    padding: 0.625rem 1.5rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.table-card tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.1s;
+}
+
+.table-card tbody tr:last-child { border-bottom: none; }
+.table-card tbody tr:hover { background: #f9fafb; }
+
+.table-card td {
+    padding: 0.625rem 1.5rem;
+    color: #374151;
+}
+
+.table-card td.usuario { font-weight: 500; color: #111827; }
+.table-card td.hora    { font-size: 0.75rem; color: #9ca3af; }
+
+/* Contenedor de las acciones en la celda */
+.acciones-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilo base para todos los botones de acción */
+.btn-accion {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+.btn-ver {
+    color: #2196F3;
+}
+.btn-ver:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.btn-editar {
+    color: #FFC107;
+}
+.btn-editar:hover {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.btn-borrar {
+    color: #F44336; /* Rojo */
+}
+.btn-borrar:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* ── Pagination ── */
+.pagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.625rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination button,
+.pagination span {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.pagination button:hover { color: #2563eb; }
+
+.pagination span.current {
+    color: #2563eb;
+    font-weight: 600;
+    border-bottom: 2px solid #2563eb;
+}
+
+.btn-agregar {
+    background-color: #4CAF50; /* Verde, o el color de tu ecosistema */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-agregar:hover {
+    background-color: #45a049;
+}

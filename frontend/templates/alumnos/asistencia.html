@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Asistencias - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/asistencia.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="metrics-container">
+    <div class="metric-card">
+        <div class="metric-label">Total Clases (Mes)</div>
+        <div class="metric-value">14</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Asistencia Promedio</div>
+        <div class="metric-value">88%</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Próxima Clase</div>
+        <div class="metric-value" style="font-size: 1.1rem; font-weight: 600; color: #374151; margin-top: 5px;">
+            Hoy 18:00 - Curso 3b
+        </div>
+    </div>
+</div>
+<!-- Clases presenciales -->
+<div class="table-card">
+    <div class="table-card-header">
+        <h2>Clases presenciales</h2>
+        
+        <div class="table-filters">
+            <input type="text" placeholder="Buscar curso..." class="search-input">
+            <select class="filter-select">
+                    <option value="">Todos los cursos</option>
+                    <option value="3b">Curso 3b</option>
+                    <option value="4a">Curso 4a</option>
+                    <option value="12c">Curso 12c</option>
+                </select>
+        </div>
+        <button class="btn-agregar" onclick="abrirModalAgregar()">+ Agregar Registro</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 80px;">id</th>
+                <th>curso</th>
+                <th>fecha</th>
+                <th class="text-center">alumnos</th>
+                <th class="text-center">estado</th>
+                <th class="text-center" style="width: 150px;">asistencia</th>
+                <th class="text-right" style="width: 130px;">acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in clases %}
+            <tr>
+                <td class="usuario">{{ registro.id }}</td>
+                <td><strong>{{ registro.curso.nombre }}</strong></td>
+                <td class="hora">{{ registro.hora }}</td>
+
+                <td class="text-center visual-data">
+                    {% if registro.estado == 'pendiente' %}
+                        0 / {{ registro.curso.total_alumnos | default('100') }}
+                    {% else %}
+                        {{ registro.curso.presentes | default('0') }} / {{ registro.curso.total_alumnos | default('100') }}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if registro.estado == 'completado' %}
+                        <span class="badge badge-success">Completado</span>
+                    {% elif registro.estado == 'en_proceso' %}
+                        <span class="badge badge-info">En Proceso</span>
+                    {% else %}
+                        <span class="badge badge-warning">Pendiente</span>
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    <button class="btn-agregar btn-asistencia" onclick="pedirAsistencia('{{registro}}')">
+                        + Pedir asistencia
+                    </button>
+                </td>
+
+                <td>
+                    <div class="acciones-cell text-right">
+                        <button class="btn-accion btn-ver" title="Ver detalle" onclick="verRegistro('{{ registro.id }}')">👁</button>
+                        <button class="btn-accion btn-editar" title="Editar" onclick="editarRegistro('{{ registro.id }}')">✏️</button>
+                        <button class="btn-accion btn-borrar" title="Eliminar" onclick="eliminarRegistro('{{ registro.id }}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="pagination">
+        <button>&lt;</button>
+        <span class="current">1</span>
+        <span>2</span>
+        <span>3</span>
+        <span>...</span>
+        <button>&gt;</button>
+    </div>
+</div>
+
+{% endblock %}
+
