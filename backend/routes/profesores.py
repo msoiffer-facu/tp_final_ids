@@ -22,7 +22,11 @@ def login():
     if not email or not password:
         return jsonify({"error": "email y password requeridos"}), 400
 
-    profesor = db_get_profesor_by_email(email)
+    try:
+        profesor = db_get_profesor_by_email(email)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     if not profesor or profesor["password"] != password:
         return jsonify({"error": "Credenciales inválidas"}), 401
 
