@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for
+from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from services.curso import obtener_cursos
 
 views_bp = Blueprint("views", __name__)
 
@@ -41,86 +43,8 @@ def dashboard():
 
 @views_bp.route("/asistencia")
 def asistencia():
-    cursos = [
-        {
-            "id":1,
-            "nombre":"curso 3b",
-        },
-        {
-            "id":2,
-            "nombre":"curso 4a",
-        },
-        {
-            "id":3,
-            "nombre":"curso 12c",
-        },
-        {
-            "id":4,
-            "nombre":"curso 14l",
-        },
-        {
-            "id":5,
-            "nombre":"curso 1g",
-        },
-    ]
-    clases = [
-        {
-            "id": "1",
-            "curso": {
-                "id":1,
-                "nombre":"curso 3b",
-                "total_alumnos":40,
-                "presentes":10,
-            },
-            "hora": "15/05/26 15:35",
-            "estado":"en_proceso",
-            "pedir_asistencia": True,
-        },
-        {
-            "id": "2",
-            "curso": {
-                "id":1,
-                "nombre":"curso 4a",
-                "total_alumnos":25,
-                "presentes":10,
-            },
-            "hora": "14/05/26 21:35",
-            "estado":"completado",
-            "pedir_asistencia": False,
-        },
-        {
-            "id": "3",
-            "curso": {
-                "id":1,
-                "nombre":"curso 12c",
-                "total_alumnos":30,
-            },
-            "hora": "14/05/26 13:02",
-            "estado":"pendiente",
-            "pedir_asistencia": True,
-        },
-        {
-            "id": "4",
-            "curso": {
-                "id":1,
-                "nombre":"curso 14l",
-                "total_alumnos":80,
-            },
-            "hora": "14/05/26 13:02",
-            "estado":"pendiente",
-            "pedir_asistencia": False,
-        },
-        {
-            "id": "5",
-            "curso": {
-                "id":1,
-                "nombre":"curso 1g",
-                "total_alumnos":25,
-            },
-            "hora": "14/05/26 13:02",
-            "estado":"pendiente",
-            "pedir_asistencia": True,
-        },
-    ]
-    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos)
+    cursos = obtener_cursos()
+    clases = obtener_clases_presenciales()
+    clasesMes = calcular_clases_mes(clases)
+    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
 

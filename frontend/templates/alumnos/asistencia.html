@@ -10,7 +10,7 @@
 <div class="metrics-container">
     <div class="metric-card">
         <div class="metric-label">Total Clases (Mes)</div>
-        <div class="metric-value">14</div>
+        <div class="metric-value">{{clasesMes}}</div>
     </div>
     <div class="metric-card">
         <div class="metric-label">Asistencia Promedio</div>
@@ -64,7 +64,7 @@
             <tr>
                 <td class="usuario">{{ registro.id }}</td>
                 <td><strong>{{ registro.curso.nombre }}</strong></td>
-                <td class="hora">{{ registro.hora }}</td>
+                <td class="hora">{{ registro.fecha }}</td>
 
                 <td class="text-center visual-data">
                     {% if registro.estado == 'pendiente' %}
@@ -97,8 +97,7 @@
 
                 <td>
                     <div class="acciones-cell text-right">
-                        <button class="btn-accion btn-ver" title="Ver detalle" onclick="verRegistro('{{ registro.id }}','{{registro.curso.nombre}}','{{ registro.hora }}')">👁</button>
-                        <!-- <button class="btn-accion btn-editar" title="Editar" onclick="editarRegistro('{{ registro.id }}')">✏️</button> -->
+                        <button class="btn-accion btn-ver" title="Ver detalle" onclick="verRegistro('{{ registro.id }}','{{registro.curso.nombre}}','{{ registro.fecha }}')">👁</button>
                         <button class="btn-accion btn-borrar" title="Eliminar" onclick="eliminarRegistro('{{ registro.id }}')">🗑️</button>
                     </div>
                 </td>

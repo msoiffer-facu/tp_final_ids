@@ -1,3 +1,7 @@
+
+
+//----------------Funciones relacionadas con las ventanas modal-----------------------------
+
 function abrirModal(id) {
     const modal = document.getElementById(id);
 

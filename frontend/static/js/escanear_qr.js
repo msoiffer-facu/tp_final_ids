@@ -15,7 +15,7 @@ function abrirEscannerQR() {
         if (devices && devices.length > 0) {
             camarasDisponibles = devices;
             const select = document.getElementById('camera-select');
-            select.innerHTML = ''; // Limpiar opciones anteriores
+            select.innerHTML = '';
 
             //Poner en el select las cámaras encontradas
             devices.forEach((device, index) => {
