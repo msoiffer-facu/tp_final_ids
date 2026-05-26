@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, abort
 
 views_bp = Blueprint("views", __name__)
 
@@ -38,3 +38,80 @@ def dashboard():
         },
     ]
     return render_template("dashboard.html", stats=stats, historial=historial)
+
+
+@views_bp.route("/equipos")
+def equipos():
+    equipos = [
+        {
+            "id": 1,
+            "nombre": "Equipo A",
+            "descripcion": "Avance en proyecto final.",
+            "estado": "Activo",
+            "miembros": 3,
+            "curso": "IDS 2026",
+        },
+        {
+            "id": 2,
+            "nombre": "Equipo B",
+            "descripcion": "En proceso de integración.",
+            "estado": "Desconectados",
+            "miembros": 2,
+            "curso": "IDS 2026",
+        },
+        {
+            "id": 3,
+            "nombre": "Equipo C",
+            "descripcion": "Necesita completar tareas.",
+            "estado": "Incompleto",
+            "miembros": 4,
+            "curso": "IDS 2026",
+        },
+    ]
+
+    return render_template("equipos/listado.html", equipos=equipos)
+
+
+@views_bp.route("/equipos/<int:equipo_id>")
+def equipo_detalle(equipo_id):
+    equipos = [
+        {
+            "id": 1,
+            "nombre": "Equipo A",
+            "descripcion": "Avance en proyecto final.",
+            "estado": "Activo",
+            "miembros": 3,
+            "curso": "IDS 2026",
+            "fecha_creacion": "10/05/2026",
+        },
+        {
+            "id": 2,
+            "nombre": "Equipo B",
+            "descripcion": "En proceso de integración.",
+            "estado": "Desconectados",
+            "miembros": 2,
+            "curso": "IDS 2026",
+            "fecha_creacion": "12/05/2026",
+        },
+        {
+            "id": 3,
+            "nombre": "Equipo C",
+            "descripcion": "Necesita completar tareas.",
+            "estado": "Incompleto",
+            "miembros": 4,
+            "curso": "IDS 2026",
+            "fecha_creacion": "16/05/2026",
+        },
+    ]
+
+    equipo = next((item for item in equipos if item["id"] == equipo_id), None)
+    if not equipo:
+        return abort(404)
+
+    miembros = [
+        {"padron": "12345", "nombre": "Luca", "apellido": "Perez"},
+        {"padron": "12346", "nombre": "Ana", "apellido": "Gomez"},
+        {"padron": "12347", "nombre": "Mica", "apellido": "Lopez"},
+    ]
+
+    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros)
