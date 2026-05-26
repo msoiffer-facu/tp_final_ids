@@ -17,9 +17,9 @@ equipos_bp = Blueprint("equipos", __name__)
 def listar_equipos():
     try:
         equipos = db_listar_equipos()
-        return jsonify(equipos), 200
     except Exception as e:
         return jsonify({"error": f"Error al listar equipos: {str(e)}"}), 500
+    return jsonify(equipos), 200
 
 
 @equipos_bp.route("/", methods=["POST"])
@@ -34,20 +34,20 @@ def crear_equipo():
 
     try:
         nuevo_id = db_crear_equipo(nombre, descripcion, curso_id)
-        return jsonify({"message": "Equipo creado con éxito", "id": nuevo_id}), 201
     except Exception as e:
         return jsonify({"error": f"Error al crear el equipo: {str(e)}"}), 500
+    return jsonify({"message": "Equipo creado con éxito", "id": nuevo_id}), 201
 
 
 @equipos_bp.route("/<int:id>", methods=["GET"])
 def obtener_equipo(id):
     try:
         equipo = db_buscar_equipo_por_id(id)
-        if not equipo:
-            return jsonify({"error": "Equipo no encontrado"}), 404
-        return jsonify(equipo), 200
     except Exception as e:
         return jsonify({"error": f"Error al obtener equipo: {str(e)}"}), 500
+    if not equipo:
+        return jsonify({"error": "Equipo no encontrado"}), 404
+    return jsonify(equipo), 200
 
 
 @equipos_bp.route("/<int:id>", methods=["PUT"])
@@ -64,9 +64,9 @@ def editar_equipo(id):
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
         db_editar_equipo(id, nombre, descripcion)
-        return jsonify({"message": "Equipo actualizado correctamente"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al editar equipo: {str(e)}"}), 500
+    return jsonify({"message": "Equipo actualizado correctamente"}), 200
 
 
 @equipos_bp.route("/<int:id>", methods=["DELETE"])
@@ -76,9 +76,9 @@ def eliminar_equipo(id):
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
         db_eliminar_equipo(id)
-        return "", 204
     except Exception as e:
         return jsonify({"error": f"Error al eliminar equipo: {str(e)}"}), 500
+    return "", 204
 
 
 @equipos_bp.route("/<int:id>/alumnos", methods=["POST"])
@@ -94,9 +94,9 @@ def asociar_alumnos(id):
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
         db_asociar_alumnos(id, alumnos_ids)
-        return jsonify({"message": "Alumnos asociados al equipo correctamente"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al asociar alumnos: {str(e)}"}), 500
+    return jsonify({"message": "Alumnos asociados al equipo correctamente"}), 200
 
 
 @equipos_bp.route("/<int:id>/tps", methods=["POST"])
@@ -112,6 +112,6 @@ def asociar_equipos_a_tp(id):
         if not integrantes:
             return jsonify({"error": "El equipo no tiene alumnos asociados todavía. Asocie alumnos primero."}), 400
         db_asociar_equipo_a_tp(id, evaluacion_id, integrantes)
-        return jsonify({"message": "Equipo asociado al Trabajo Práctico con éxito"}), 200
     except Exception as e:
         return jsonify({"error": f"Error al asociar equipo al TP: {str(e)}"}), 500
+    return jsonify({"message": "Equipo asociado al Trabajo Práctico con éxito"}), 200
