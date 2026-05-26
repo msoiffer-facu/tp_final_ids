@@ -1,3 +1,25 @@
+:root {
+    --color-primary:    #4f46e5;
+    --color-primary-dk: #4338ca;
+    --color-secondary:  #10b981;
+    --color-dark:       #1f2937;
+    --color-light:      #f3f4f6;
+    --color-white:      #ffffff;
+    --color-gray:       #6b7280;
+    --color-gray-lt:    #d1d5db;
+    --color-bg:         #f9fafb;
+    --color-success:    #10b981;
+    --color-success-bg: #ecfdf5;
+    --color-danger:     #ef4444;
+    --color-danger-bg:  #fef2f2;
+
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --radius:      12px;
+    --shadow:      0 4px 15px rgba(0, 0, 0, 0.06);
+    --shadow-lg:   0 10px 30px rgba(0, 0, 0, 0.10);
+    --transition:  0.25s ease;
+}
+
 /* ── Contenedor de Métricas Rápidas ── */
 .metrics-container {
     display: flex;
@@ -27,6 +49,44 @@
     font-weight: 700;
     color: #111827;
     margin-top: 0.25rem;
+}
+/* Tarjeta de métrica que actúa como botón/acción */
+.metric-card-action {
+    background-color: #f0f5ff; /* Un fondo azul muy sutil para destacar que es clickeable */
+    border: 1px solid #bfdbfe;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Efecto Hover para simular el botón */
+.metric-card-action:hover {
+    background-color: #e1effe; /* Azul un poco más oscuro al pasar el mouse */
+    border-color: #3b82f6;
+    transform: translateY(-2px); /* Pequeño efecto de elevación */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Distribución interna del icono y los textos */
+.metric-action-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    height: 100%;
+}
+
+.qr-icon {
+    font-size: 2rem; /* Tamaño del emoji/icono */
+    background: #fff;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.metric-action-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e429f; /* Texto azul haciendo juego con el fondo */
+    margin-top: 2px;
 }
 
 /* ── Mejoras en Filtros del Header ── */
@@ -244,7 +304,7 @@
 }
 
 .btn-agregar {
-    background-color: #4CAF50; /* Verde, o el color de tu ecosistema */
+    background-color: #4CAF50;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -257,4 +317,186 @@
 
 .btn-agregar:hover {
     background-color: #45a049;
+}
+
+.btn-agregar:disabled {
+    background-color: #9ca3af;
+    color: #f3f4f6;
+    opacity: 0.65;
+    box-shadow: none;
+}
+
+
+/* ---------------------------------------------------------------
+   Formulario
+   --------------------------------------------------------------- */
+.form__group {
+    margin-bottom: 1.2rem;
+}
+
+.form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.form__row .form__group {
+    margin-bottom: 0;
+}
+
+.form__label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin-bottom: 0.4rem;
+    color: var(--color-dark);
+}
+
+.form__input,
+.form__select,
+.form__textarea {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 2px solid var(--color-light);
+    border-radius: 8px;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    color: var(--color-dark);
+    background: var(--color-white);
+    transition: border-color var(--transition);
+}
+
+.form__input:focus,
+.form__select:focus,
+.form__textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.form__actions {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.form__actions--single {
+    justify-content: stretch;
+}
+
+.form__actions--single .form__btn {
+    flex: 1;
+}
+
+.form__btn {
+    padding: 0.8rem 1.8rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition);
+    text-align: center;
+    display: inline-block;
+    font-family: inherit;
+}
+
+.form__btn--submit, .form__btn--edit {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.form__btn--submit:hover, .form__btn--edit:hover {
+    background: var(--color-primary-dk);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+.form__btn--cancel {
+    background: transparent;
+    color: var(--color-gray);
+    border: 2px solid var(--color-gray-lt);
+}
+
+.form__btn--cancel:hover {
+    border-color: var(--color-gray);
+    color: var(--color-dark);
+}
+
+/* ---------------------------------------------------------------
+   Modales
+   --------------------------------------------------------------- */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 5vh 1rem 2rem;
+    overflow-y: auto;
+}
+
+.modal--open {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.modal__content {
+    position: relative;
+    background: var(--color-white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.25s ease;
+}
+
+.modal__content--wide {
+    max-width: 640px;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal__close {
+    position: absolute;
+    top: 0.8rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--color-gray);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    transition: color var(--transition);
+}
+
+.modal__close:hover {
+    color: var(--color-dark);
+}
+
+.modal__title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-dark);
+    margin-bottom: 0.3rem;
+}
+
+.modal__subtitle {
+    color: var(--color-gray);
+    margin-bottom: 1.5rem;
+    font-size: 0.92rem;
 }

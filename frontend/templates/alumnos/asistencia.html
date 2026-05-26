@@ -22,22 +22,30 @@
             Hoy 18:00 - Curso 3b
         </div>
     </div>
+    <div class="metric-card metric-card-action" onclick="abrirEscannerQR()">
+        <div class="metric-action-content">
+            <span class="qr-icon">📷</span> <div>
+                <div class="metric-label" style="color: #1e429f;">Control de Asistencia</div>
+                <div class="metric-action-title">Escanear código QR</div>
+            </div>
+        </div>
+    </div>
 </div>
 <!-- Clases presenciales -->
 <div class="table-card">
     <div class="table-card-header">
         <h2>Clases presenciales</h2>
-        
+
         <div class="table-filters">
             <input type="text" placeholder="Buscar curso..." class="search-input">
             <select class="filter-select">
                     <option value="">Todos los cursos</option>
-                    <option value="3b">Curso 3b</option>
-                    <option value="4a">Curso 4a</option>
-                    <option value="12c">Curso 12c</option>
+                    {%for curso in cursos%}
+                    <option value= "{{ curso.nombre }}">{{curso.nombre}}</option>
+                    {% endfor %}
                 </select>
         </div>
-        <button class="btn-agregar" onclick="abrirModalAgregar()">+ Agregar Registro</button>
+        <button class="btn-agregar" onclick="abrirModalCrear()">+ Agregar Registro</button>
     </div>
     <table>
         <thead>
@@ -76,15 +84,21 @@
                 </td>
 
                 <td class="text-center">
-                    <button class="btn-agregar btn-asistencia" onclick="pedirAsistencia('{{registro}}')">
-                        + Pedir asistencia
-                    </button>
+                    {% if registro.pedir_asistencia %}
+                        <button class="btn-agregar btn-asistencia" onclick="pedirAsistencia()">
+                            + Pedir asistencia
+                        </button>
+                    {%else%}
+                        <button class="btn-agregar btn-asistencia" disabled>
+                            + Pedir asistencia
+                        </button>
+                    {% endif %}
                 </td>
 
                 <td>
                     <div class="acciones-cell text-right">
-                        <button class="btn-accion btn-ver" title="Ver detalle" onclick="verRegistro('{{ registro.id }}')">👁</button>
-                        <button class="btn-accion btn-editar" title="Editar" onclick="editarRegistro('{{ registro.id }}')">✏️</button>
+                        <button class="btn-accion btn-ver" title="Ver detalle" onclick="verRegistro('{{ registro.id }}','{{registro.curso.nombre}}','{{ registro.hora }}')">👁</button>
+                        <!-- <button class="btn-accion btn-editar" title="Editar" onclick="editarRegistro('{{ registro.id }}')">✏️</button> -->
                         <button class="btn-accion btn-borrar" title="Eliminar" onclick="eliminarRegistro('{{ registro.id }}')">🗑️</button>
                     </div>
                 </td>
@@ -102,5 +116,62 @@
     </div>
 </div>
 
+<!-- Modal: Agregar/ver/modfiicar clase presencial -->
+<div id="modalClase" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal__content">
+        <button class="modal__close" onclick="cerrarModalClase()" aria-label="Cerrar">&times;</button>
+
+        <h2 class="modal__title" id="modalTitle">Clase Presencial</h2>
+        <p class="modal__subtitle" id="modalSubtitle">Gestiona la información de la clase</p>
+
+        <form method="POST" class="form" id="formClasePresencial">
+            <input type="hidden" id="claseId" name="clase_id" value="">
+
+            <div class="form__group">
+                <label for="curso" class="form__label">Curso</label>
+                <select id="curso" name="curso" class="form__input" required>
+                    <option value="" disabled selected>Selecciona un curso...</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.nombre }}">{{ curso.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form__group">
+                <label for="fecha" class="form__label">Fecha y Hora</label>
+                <input type="datetime-local" id="fecha" name="fecha" class="form__input" required>
+            </div>
+
+            <div class="form__actions">
+                <button type="button" id="btnCancelar" class="form__btn form__btn--cancel" onclick="cerrarModalClase()">Cancelar</button>
+                <button type="button" id="btnHabilitarEdicion" class="form__btn form__btn--edit" onclick="activarModoEdicion()">✏️ Editar</button>
+                <button type="submit" id="btnGuardarCambios" class="form__btn form__btn--submit">Guardar Cambios</button>
+                <button type="submit" id="btnCrearClase" class="form__btn form__btn--submit">Crear Clase</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:500px; text-align:center;">
+        <h3>Escanear Asistencia QR</h3>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="camera-select" style="font-size: 0.85rem; color: #4b5563; display: block; margin-bottom: 5px;">Seleccionar Cámara:</label>
+            <select id="camera-select" style="padding: 6px; width: 100%; border-radius: 4px; border: 1px solid #d1d5db;"></select>
+        </div>
+
+        <div id="reader" style="width:100%; background: #000; border-radius: 6px; overflow: hidden;"></div> 
+        
+        <button onclick="cerrarEscannerQR()" style="margin-top:15px; padding:8px 16px; background:#ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Cerrar</button>
+    </div>
+</div>
+
 {% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/asistencia.js') }}"></script>
+<script src="{{ url_for('static', filename='js/escanear_qr.js') }}"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+{% endblock %}
+
 

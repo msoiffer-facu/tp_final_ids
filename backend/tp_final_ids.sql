@@ -15,6 +15,7 @@ create table clase_presencial
     id       int auto_increment primary key,
     curso_id int not null,
     fecha    timestamp,
+    pedir_asistencia TINYINT(1) DEFAULT 0 NOT NULL;
     foreign key (curso_id) references cursos(id)
 );
 
