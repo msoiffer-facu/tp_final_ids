@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from db_evaluaciones import (
+from dbs.db_evaluaciones import (
     db_obtener_todas_las_evaluaciones,
     db_eliminar_evaluacion_bd,
     db_obtener_tipos_evaluacion,

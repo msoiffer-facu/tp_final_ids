@@ -7,6 +7,8 @@ from routes.profesores import profesores_bp
 from routes.evaluaciones import evaluaciones_bp
 from routes.notas import notas_bp
 from routes.reportes import reportes_bp
+from routes.cursos import cursos_bp
+from routes.equipos import equipos_bp
 import sys
 from routes.cursos import cursos_bp
 
@@ -24,6 +26,8 @@ app.register_blueprint(cursos_bp, url_prefix="/api")
 
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
+app.register_blueprint(cursos_bp, url_prefix="/cursos")
+app.register_blueprint(equipos_bp, url_prefix="/equipos")
 
 
 @app.route("/")

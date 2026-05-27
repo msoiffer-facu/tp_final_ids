@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 import requests
+from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from services.curso import obtener_cursos
 
 views_bp = Blueprint("views", __name__)
 
@@ -94,3 +96,10 @@ def curso_eliminar(id):
     global CURSOS
     CURSOS = [c for c in CURSOS if c["id"] != id]
     return redirect(url_for("views.cursos"))
+@views_bp.route("/asistencia")
+def asistencia():
+    cursos = obtener_cursos()
+    clases = obtener_clases_presenciales()
+    clasesMes = calcular_clases_mes(clases)
+    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
+
