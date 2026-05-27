@@ -16,6 +16,12 @@ ALUMNOS = [
     {"id": 2, "padron": 67890, "nombre": "Maria", "apellido": "Garcia", "email": "maria@mail.com", "abandono": False, "estado": True},
 ]
 
+PROFESORES = [
+    {"id": 1, "nombre": "Lucia", "apellido": "Martinez", "email": "lucia.martinez@mail.com", "telefono": "+54 11 4567-8901", "asignatura": "Programación", "estado": "Activo"},
+    {"id": 2, "nombre": "Carlos", "apellido": "Giordano", "email": "carlos.giordano@mail.com", "telefono": "+54 11 4123-4567", "asignatura": "Bases de Datos", "estado": "Activo"},
+    {"id": 3, "nombre": "Veronica", "apellido": "Rossi", "email": "veronica.rossi@mail.com", "telefono": "+54 11 4789-1234", "asignatura": "Arquitectura de Software", "estado": "Inactivo"},
+]
+
 EQUIPOS = [
     {"id": 1, "nombre": "Grupo 1", "descripcion": "TP Final", "fecha_creacion": "2025-03-01"},
 ]
@@ -96,6 +102,60 @@ def curso_eliminar(id):
     global CURSOS
     CURSOS = [c for c in CURSOS if c["id"] != id]
     return redirect(url_for("views.cursos"))
+
+@views_bp.route("/profesores")
+def profesores():
+    return render_template("profesores/profesores.html", profesores=PROFESORES)
+
+
+@views_bp.route("/profesores/nuevo", methods=["GET", "POST"])
+def profesor_nuevo():
+    if request.method == "POST":
+        nuevo = {
+            "id": len(PROFESORES) + 1,
+            "nombre": request.form.get("nombre"),
+            "apellido": request.form.get("apellido"),
+            "email": request.form.get("email"),
+            "telefono": request.form.get("telefono"),
+            "asignatura": request.form.get("asignatura"),
+            "estado": request.form.get("estado", "Inactivo"),
+        }
+        PROFESORES.append(nuevo)
+        return redirect(url_for("views.profesores"))
+    return render_template("profesores/profesor_form.html", profesor=None)
+
+
+@views_bp.route("/profesores/<int:id>")
+def profesor_detalle(id):
+    profesor = next((p for p in PROFESORES if p["id"] == id), None)
+    if not profesor:
+        return redirect(url_for("views.profesores"))
+    return render_template("profesores/profesor_detalle.html", profesor=profesor)
+
+
+@views_bp.route("/profesores/<int:id>/editar", methods=["GET", "POST"])
+def profesor_editar(id):
+    profesor = next((p for p in PROFESORES if p["id"] == id), None)
+    if not profesor:
+        return redirect(url_for("views.profesores"))
+    if request.method == "POST":
+        profesor["nombre"] = request.form.get("nombre")
+        profesor["apellido"] = request.form.get("apellido")
+        profesor["email"] = request.form.get("email")
+        profesor["telefono"] = request.form.get("telefono")
+        profesor["asignatura"] = request.form.get("asignatura")
+        profesor["estado"] = request.form.get("estado", "Inactivo")
+        return redirect(url_for("views.profesor_detalle", id=id))
+    return render_template("profesores/profesor_form.html", profesor=profesor)
+
+
+@views_bp.route("/profesores/<int:id>/eliminar", methods=["POST"])
+def profesor_eliminar(id):
+    global PROFESORES
+    PROFESORES = [p for p in PROFESORES if p["id"] != id]
+    return redirect(url_for("views.profesores"))
+
+
 @views_bp.route("/asistencia")
 def asistencia():
     cursos = obtener_cursos()
