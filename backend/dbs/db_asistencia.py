@@ -8,17 +8,13 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from db import get_db
 
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USER = "correoprobar6@gmail.com"
 SMTP_PASSWORD = "voph xnfy xtmy bovm"
-
-def get_db():
-    return mysql.connector.connect(
-        host="localhost", user="root", password="root", database="tp"
-    )
 
 
 def obtener_clases_p():

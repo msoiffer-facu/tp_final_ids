@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, url_for
 
-from routes.db_asistencia import *
+from dbs.db_asistencia import *
 from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
@@ -81,8 +81,8 @@ def create_clase_presencial():
 
     try:
         curso = buscar_curso(id_curso)
-    except Exception:
-        return"Error interno al buscar el curso",500
+    except Exception as e:
+        return f'Error interno al buscar el curso: {e}',500
 
     if not curso:
         return "El curso con el que quiere hacer la clase no existe", 404
