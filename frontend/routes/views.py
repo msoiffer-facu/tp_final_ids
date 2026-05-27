@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for, request
+from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
 from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
 from services.curso import obtener_cursos
+from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
 
 views_bp = Blueprint("views", __name__)
 
@@ -34,7 +35,9 @@ CLASES = [
 
 @views_bp.route("/")
 def index():
-    return redirect(url_for("views.dashboard"))
+    if usuario_logueado():
+        return redirect(url_for("views.dashboard"))
+    return redirect(url_for("views.login"))
 
 
 @views_bp.route("/dashboard")
@@ -163,3 +166,27 @@ def asistencia():
     clasesMes = calcular_clases_mes(clases)
     return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
 
+@views_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        if email == "a@test.com" and password == "1234":
+            session["user"] = {
+                "email": email,
+                "name": "Martin"
+            }
+            session["token"] = "prueba"
+
+            guardar_sesion(session["token"], session["user"])
+            flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
+            return redirect(url_for("views.dashboard"))
+
+    return render_template("login.html")
+
+@views_bp.route("/logout", methods=['POST'])
+def logout():
+    limpiar_sesion()
+    flash('Cerraste sesión.', 'success')
+    return redirect(url_for("views.login"))
