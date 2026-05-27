@@ -1,63 +1,102 @@
 import csv
-from backend.herramientas.validaciones import validar_alumno 
+import io
+from herramientas.validaciones_alumnos import validar_convertir_padron, validar_email, validar_convertir_booleano, validar_convertir_string
 
-def improtar_alumnos_csv(archivo):
-    alumnos=[]
+def importar_alumnos_csv(archivo):
+    alumnos = []
     errores = []
-    with open(archivo, mode='r', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile)
+    faltantes = []
+    try:
+        
+        contenido = archivo.read().decode("utf-8-sig")
 
+        reader = csv.DictReader(io.StringIO(contenido))
+
+        if reader.fieldnames is None:
+            return {
+                "error": "CSV vacio"
+            }
+        
+        
         columnas_obligatorias = [
             "nombre",
             "apellido",
             "email",
-            "padron"
+            "padron",
+            "abandono"
         ]
 
-    # validar columnas
-        for field in columnas_obligatorias:
-            if field not in reader.fieldnames:
-                return {
-                    "error": f"Falta la columna {field}"
-                }
-        for number, row in enumerate(reader, start=2):
+        headers = [
+            columna.strip().lower()
+            for columna in reader.fieldnames
+            ]
+
+        for columna in columnas_obligatorias:
+            if columna not in headers:
+                faltantes.append(columna)
+
+        if faltantes:
+            return {"error": f"Faltan columnas: {', '.join(faltantes)}"}
+
+        padrones = set()
+        emails = set()
+
+        for index, fila in enumerate(reader, start=2):
+
+            if not any(fila.values()):
+                continue
+
+            errores_fila = []
 
             try:
-            # validar vacíos
-                if not row["nombre"]:
-                    errores.append(
-                       f"Fila {number}: nombre vacío"
-                    )
-                    continue
-                if not row["email"]:
-                    errores.append(
-                        f"Fila {number}: email vacío"
-                    )
-                    continue
+                nombre = validar_convertir_string(fila["nombre"])
+                apellido = validar_convertir_string(fila["apellido"])
+                email = fila["email"]
+                padron = validar_convertir_padron(fila["padron"])
+                abandono = validar_convertir_booleano(fila["abandono"])
 
-            # validar padrón
-                try:
-                    padron = int(row["padron"])
-                except ValueError:
-                    errores.append(
-                        f"Fila {numero_fila}: padrón inválido"
-                    )
+                if nombre is None:
+                    errores_fila.append("nombre invalido")
+
+                if apellido is None:
+                    errores_fila.append("apellido invalido")
+
+                if not validar_email(email):
+                    errores_fila.append("email invalido")
+                elif email in emails:
+                    errores_fila.append("email duplicado")
+
+                if padron is None:
+                    errores_fila.append("padron invalido")
+                else:
+                    if padron in padrones:
+                        errores_fila.append("padron duplicado")
+
+                if abandono is None:
+                    errores_fila.append("abandono invalido")
+
+                if errores_fila:
+                    errores.append(f"Fila {index}: {', '.join(errores_fila)}")
                     continue
 
                 alumno = {
-                    "nombre": row["nombre"].strip(),
-                    "apellido": row["apellido"].strip(),
-                    "email": row["email"].strip(),
-                    "padron": padron
+                    "nombre": nombre,
+                    "apellido": apellido,
+                    "email": email,
+                    "padron": padron,
+                    "abandono": abandono,
+                    "estado": True
                 }
-
                 alumnos.append(alumno)
+                
+                padrones.add(padron)
+                emails.add(email)
 
-            except Exception as e:
+            except Exception as err:
+                errores.append(f"Fila {index}: {str(err)}")
 
-                errores.append(
-                    f"Fila {numero_fila}: {str(e)}"
-                )
+    except Exception as err:
+        return {"error": str(err)}
 
     return {
         "alumnos": alumnos,
