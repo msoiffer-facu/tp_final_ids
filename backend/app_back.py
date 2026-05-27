@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-from flask import Flask
-from backend.routes.alumnos import alumnos_bp
-
-app = Flask(__name__)
-app.register_blueprint(alumnos_bp, url_prefix="/alumnos")
-=======
 import os
 
 from flask import Flask
@@ -14,6 +7,7 @@ from routes.profesores import profesores_bp
 from routes.evaluaciones import evaluaciones_bp
 from routes.notas import notas_bp
 from routes.reportes import reportes_bp
+from backend.routes.alumnos import alumnos_bp
 import sys
 
 BASE_DIR = os.path.dirname(__file__)
@@ -29,8 +23,7 @@ app.register_blueprint(reportes_bp)
 
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
-
->>>>>>> origin/main
+app.register_blueprint(alumnos_bp, url_prefix="/alumnos")
 
 @app.route("/")
 def home():
