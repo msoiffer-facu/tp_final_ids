@@ -11,6 +11,7 @@ from backend.routes.alumnos import alumnos_bp
 from routes.cursos import cursos_bp
 from routes.equipos import equipos_bp
 import sys
+from routes.cursos import cursos_bp
 
 BASE_DIR = os.path.dirname(__file__)
 if BASE_DIR not in sys.path:
@@ -22,6 +23,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 app.register_blueprint(profesores_bp, url_prefix="/profesores")
 app.register_blueprint(evaluaciones_bp, url_prefix="/evaluaciones")
 app.register_blueprint(reportes_bp)
+app.register_blueprint(cursos_bp, url_prefix="/api")
 
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
