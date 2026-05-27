@@ -13,6 +13,7 @@
     <header>
         {% set current = request.path %}
         <nav>
+            <a href="/cursos" class="{% if current.startswith('/cursos') %}active{% endif %}">Cursos</a>
             <a href="/dashboard"     class="{% if current == '/dashboard' %}active{% endif %}">Dashboard</a>
             <a href="/alumnos"       class="{% if current.startswith('/alumnos') %}active{% endif %}">Alumnos</a>
             <a href="/evaluaciones"  class="{% if current.startswith('/evaluaciones') %}active{% endif %}">Evaluaciones</a>

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import mysql.connector
-from db_cursos import (
+from routes.db_cursos import (
     db_get_cursos, db_get_curso_by_id, db_create_curso, db_update_curso, db_delete_curso,
     db_get_alumnos_curso, db_inscribir_alumno, db_desinscribir_alumno,
     db_get_clases, db_create_clase, db_delete_clase,
