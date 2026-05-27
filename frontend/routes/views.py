@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, abort
+from flask import Blueprint, render_template, redirect, url_for, abort, request, flash
 
 views_bp = Blueprint("views", __name__)
 
@@ -72,7 +72,7 @@ def equipos():
     return render_template("equipos/listado.html", equipos=equipos)
 
 
-@views_bp.route("/equipos/<int:equipo_id>")
+@views_bp.route("/equipos/<int:equipo_id>", methods=["GET", "POST"])
 def equipo_detalle(equipo_id):
     equipos = [
         {
@@ -107,6 +107,14 @@ def equipo_detalle(equipo_id):
     equipo = next((item for item in equipos if item["id"] == equipo_id), None)
     if not equipo:
         return abort(404)
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "delete":
+            flash("Equipo eliminado correctamente.", "success")
+            return redirect(url_for("views.equipos"))
+        flash("Datos del equipo actualizados.", "success")
+        return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
 
     miembros = [
         {"padron": "12345", "nombre": "Luca", "apellido": "Perez"},

@@ -48,7 +48,7 @@
                     <td><span class="status {{ equipo.estado|lower }}">{{ equipo.estado }}</span></td>
                     <td class="actions-cell">
                         <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="btn small">Ver</a>
-                        <a href="#" class="btn small secondary">Eliminar</a>
+                        <button type="button" class="btn small danger">Eliminar</button>
                     </td>
                 </tr>
                 {% endfor %}
