@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{% if curso %}Editar curso{% else %}Nuevo curso{% endif %} - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="/cursos{% if curso %}/{{ curso.id }}{% endif %}" class="btn-volver">← Volver</a>
+        <h1 class="page-title">{% if curso %}Editar curso{% else %}Nuevo curso{% endif %}</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <form method="POST" action="{% if curso %}/cursos/{{ curso.id }}/editar{% else %}/cursos/nuevo{% endif %}">
+
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre"
+                   value="{{ curso.nombre if curso else '' }}"
+                   placeholder="Ej: Introducción al Desarrollo de Software" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="anio">Año</label>
+                <input type="number" id="anio" name="anio"
+                       value="{{ curso.anio if curso else '' }}"
+                       placeholder="Ej: 2025" required>
+            </div>
+
+            <div class="form-group">
+                <label for="cuatrimestre">Cuatrimestre</label>
+                <select id="cuatrimestre" name="cuatrimestre" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="1" {% if curso and curso.cuatrimestre == '1' %}selected{% endif %}>1°</option>
+                    <option value="2" {% if curso and curso.cuatrimestre == '2' %}selected{% endif %}>2°</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="modificacion">Modificación <span class="opcional">(opcional)</span></label>
+            <input type="text" id="modificacion" name="modificacion"
+                   value="{{ curso.modificacion if curso and curso.modificacion else '' }}"
+                   placeholder="Ej: ninguna">
+        </div>
+
+        <div class="form-actions">
+            <a href="/cursos{% if curso %}/{{ curso.id }}{% endif %}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-primary">
+                {% if curso %}Guardar cambios{% else %}Crear curso{% endif %}
+            </button>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{% if profesor %}Editar profesor{% else %}Nuevo profesor{% endif %} - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="/profesores" class="btn-volver">← Volver</a>
+        <h1 class="page-title">{% if profesor %}Editar profesor{% else %}Nuevo profesor{% endif %}</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <form method="POST" action="{% if profesor %}/profesores/{{ profesor.id }}/editar{% else %}/profesores/nuevo{% endif %}">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" name="nombre"
+                       value="{{ profesor.nombre if profesor else '' }}"
+                       placeholder="Ej: Lucia" required>
+            </div>
+            <div class="form-group">
+                <label for="apellido">Apellido</label>
+                <input type="text" id="apellido" name="apellido"
+                       value="{{ profesor.apellido if profesor else '' }}"
+                       placeholder="Ej: Martinez" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email"
+                       value="{{ profesor.email if profesor else '' }}"
+                       placeholder="Ej: lucia@mail.com" required>
+            </div>
+            <div class="form-group">
+                <label for="telefono">Teléfono <span class="opcional">(opcional)</span></label>
+                <input type="text" id="telefono" name="telefono"
+                       value="{{ profesor.telefono if profesor else '' }}"
+                       placeholder="Ej: +54 11 4567-8901">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="asignatura">Asignatura</label>
+                <input type="text" id="asignatura" name="asignatura"
+                       value="{{ profesor.asignatura if profesor else '' }}"
+                       placeholder="Ej: Programación" required>
+            </div>
+            <div class="form-group">
+                <label for="estado">Estado</label>
+                <select id="estado" name="estado" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="Activo" {% if profesor and profesor.estado == 'Activo' %}selected{% endif %}>Activo</option>
+                    <option value="Inactivo" {% if profesor and profesor.estado == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="/profesores{% if profesor %}/{{ profesor.id }}{% endif %}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-primary">
+                {% if profesor %}Guardar cambios{% else %}Crear profesor{% endif %}
+            </button>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}

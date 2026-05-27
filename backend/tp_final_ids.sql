@@ -15,6 +15,7 @@ create table clase_presencial
     id       int auto_increment primary key,
     curso_id int not null,
     fecha    timestamp,
+    pedir_asistencia TINYINT(1) DEFAULT 0 NOT NULL,
     foreign key (curso_id) references cursos(id)
 );
 
@@ -104,16 +105,15 @@ create table equipo_alumnos (
 
 create table asistencias (
     id int not null auto_increment primary key,
-    alumno_id int not null ,
-    curso_id int not null ,
-    fecha date,
+    alumno_id int not null,
+    clase_presencial_id int not null,
     presente boolean,
     codigo_qr varchar(100),
 
     foreign key (alumno_id)
         references alumnos(id),
-     foreign key (curso_id)
-        references cursos(id)
+    foreign key (clase_presencial_id)
+        references clase_presencial(id)
 );
 
 create table login (
@@ -123,4 +123,15 @@ create table login (
 
     foreign key (profesor_id)
         references profesores(id)
+);
+
+create table tokens_asistencia (
+    id int not null auto_increment primary key,
+    token varchar(255) not null unique,
+    alumno_id int not null,
+    fecha_expiracion timestamp,
+    utilizado boolean default false,
+
+    foreign key (alumno_id)
+        references alumnos(id)
 );
