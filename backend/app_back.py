@@ -7,6 +7,7 @@ from routes.profesores import profesores_bp
 from routes.evaluaciones import evaluaciones_bp
 from routes.notas import notas_bp
 from routes.reportes import reportes_bp
+from backend.routes.alumnos import alumnos_bp
 from routes.cursos import cursos_bp
 from routes.equipos import equipos_bp
 import sys
@@ -24,6 +25,7 @@ app.register_blueprint(reportes_bp)
 
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
+app.register_blueprint(alumnos_bp, url_prefix="/alumnos")
 app.register_blueprint(cursos_bp, url_prefix="/cursos")
 app.register_blueprint(equipos_bp, url_prefix="/equipos")
 
