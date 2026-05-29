@@ -1,9 +1,11 @@
 from flask import Flask
 from routes.views import views_bp
+from routes.authenticacion_views import auth_bp
 
 app = Flask(__name__)
 
 app.register_blueprint(views_bp)
+app.register_blueprint(auth_bp)
 app.config["SECRET_KEY"] = "clave-secreta"
 
 if __name__ == "__main__":
