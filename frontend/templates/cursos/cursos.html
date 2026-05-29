@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Cursos - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1 class="page-title">Cursos</h1>
+    <a href="/cursos/nuevo" class="btn-primary">+ Nuevo curso</a>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Año</th>
+                <th>Cuatrimestre</th>
+                <th>Alumnos</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for curso in cursos %}
+            <tr>
+                <td class="nombre">{{ curso.nombre }}</td>
+                <td>{{ curso.anio }}</td>
+                <td>{{ curso.cuatrimestre }}°</td>
+                <td>{{ curso.cantidad_alumnos }}</td>
+                <td class="acciones">
+                    <a href="/cursos/{{ curso.id }}" class="btn-accion ver">Ver</a>
+                    <a href="/cursos/{{ curso.id }}/editar" class="btn-accion editar">Editar</a>
+                    <button class="btn-accion eliminar"
+                            onclick="confirmarEliminar({{ curso.id }}, '{{ curso.nombre }}')">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="vacio">No hay cursos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal">
+        <p class="modal-titulo">¿Estás seguro?</p>
+        <p class="modal-texto">Estás por eliminar el curso <strong id="modal-nombre"></strong>. Esta acción no se puede deshacer.</p>
+        <div class="modal-btns">
+            <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+            <form id="form-eliminar" method="POST" style="display:inline;">
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit" class="btn-confirmar">Sí, eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function confirmarEliminar(id, nombre) {
+        document.getElementById('modal-nombre').textContent = nombre;
+        document.getElementById('form-eliminar').action = '/cursos/' + id + '/eliminar';
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+
+    // Cerrar modal si se hace click fuera
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal();
+    });
+</script>
+{% endblock %}
