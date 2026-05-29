@@ -1,12 +1,12 @@
->>>>>>> HEAD
+
 from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
-=======
+
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
 from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
 from services.curso import obtener_cursos
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
->>>>>>> 607199d9831cce30963958e1a1b637bb9f2e4be0
+
 
 views_bp = Blueprint("views", __name__)
 
@@ -137,7 +137,7 @@ def equipo_detalle(equipo_id):
     return render_template("equipos/abm.html", equipo=equipo, miembros=miembros)
 
 
->>>>>>> HEAD
+
 @views_bp.route("/equipos/<int:equipo_id>/delete", methods=["POST"])
 def equipo_delete(equipo_id):
     equipo = get_equipo(equipo_id)
@@ -237,4 +237,4 @@ def logout():
     limpiar_sesion()
     flash('Cerraste sesión.', 'success')
     return redirect(url_for("views.login"))
->>>>>>> 607199d9831cce30963958e1a1b637bb9f2e4be0
+
