@@ -1,11 +1,10 @@
 from flask import Blueprint, render_template, redirect, request, session, url_for, flash
-from frontend.services.asistencia import obtener_clases_presenciales , calcular_clases_mes
-from frontend.services.curso import obtener_cursos
+#from frontend.services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+#from frontend.services.curso import obtener_cursos
 from backend.herramientas.importar_csv import importar_alumnos_csv
-from frontend.services.login import guardar_sesion, limpiar_sesion, usuario_logueado
+#from frontend.services.login import guardar_sesion, limpiar_sesion, usuario_logueado
 
 views_bp = Blueprint("views", __name__)
-
 
 # Datos hardcodeados para probar
 CURSOS = [
@@ -245,3 +244,4 @@ def logout():
     limpiar_sesion()
     flash('Cerraste sesión.', 'success')
     return redirect(url_for("views.login"))
+    
