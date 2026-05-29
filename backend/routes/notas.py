@@ -1,98 +1,172 @@
-from flask import Blueprint, request, jsonify
-from backend.swagger.db_notas import crear_nota_db, obtener_notas_db, notas_alumno_db, notas_equipo_db, modificar_nota_db, eliminar_nota_db
+from flask import Blueprint, jsonify, request
 
+from db import get_db
 
 notas_bp = Blueprint("notas", __name__)
 
 @notas_bp.route("/notas", methods=["POST"])
 def crear_nota():
+
     data = request.get_json()
 
     alumno_id = data.get("alumno_id")
     evaluacion_id = data.get("evaluacion_id")
     nota_alumno = data.get("nota_alumno")
 
+    conn = get_db()
+    cursor = conn.cursor()
 
     if alumno_id is None or evaluacion_id is None:
        return jsonify({"error": "alumno_id y evaluacion_id son obligatorios"}), 400
-    
 
-    nueva_nota_id = crear_nota_db(alumno_id, evaluacion_id, nota_alumno)
+    try:
+        cursor.execute("""
+            INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno)
+            VALUES (%s, %s, %s)""", (alumno_id, evaluacion_id, nota_alumno))
 
+        conn.commit()
+
+        nueva_nota_id = cursor.lastrowid
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
 
     return jsonify({"mensaje": "Nota creada correctamente","id": nueva_nota_id}), 201
 
 
 @notas_bp.route("/notas", methods=["GET"])
 def obtener_notas():
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
     try:
-        notas = obtener_notas_db()
-        return jsonify(notas), 200
+     cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre FROM notas
+            JOIN alumnos
+                ON notas.alumno_id = alumnos.id
+            JOIN evaluaciones
+                ON notas.evaluacion_id = evaluaciones.id
+        JOIN tipos_evaluacion
+            ON evaluaciones.tipo_id = tipos_evaluacion.id """)
+
+     notas = cursor.fetchall()
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify(notas), 200
 
 
 @notas_bp.route("/notas/alumno/<int:alumno_id>", methods=["GET"])
 def alumno_notas(alumno_id):
-   try:
-       notas_alumno = notas_alumno_db(alumno_id)
-       return jsonify(notas_alumno), 200
-   
-   except Exception as e:
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre FROM notas
+     JOIN alumnos
+        ON notas.alumno_id = alumnos.id
+     JOIN evaluaciones
+        ON notas.evaluacion_id = evaluaciones.id
+     JOIN tipos_evaluacion
+        ON evaluaciones.tipo_id = tipos_evaluacion.id
+
+     WHERE notas.alumno_id = %s""", (alumno_id,))
+
+        notas_alumno = cursor.fetchall()
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify(notas_alumno), 200
 
 @notas_bp.route("/notas/equipo/<int:equipo_id>", methods=["GET"])
 def equipo_notas(equipo_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
     try:
-       notas_equipo = notas_equipo_db(equipo_id)
-       return jsonify(notas_equipo), 200
-    
+
+     cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.padron, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre AS tipo_evaluacion, equipos.nombre FROM notas
+        JOIN alumnos
+            ON notas.alumno_id = alumnos.id
+        JOIN equipo_alumnos
+            ON alumnos.id = equipo_alumnos.alumno_id
+        JOIN equipos
+            ON equipo_alumnos.equipo_id = equipos.id
+        JOIN evaluaciones
+            ON notas.evaluacion_id = evaluaciones.id
+        JOIN tipos_evaluacion
+            ON evaluaciones.tipo_id = tipos_evaluacion.id
+
+        WHERE equipos.id = %s""", (equipo_id,))
+
+     notas_equipo = cursor.fetchall()
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-    
+
+    finally:
+     cursor.close()
+     conn.close()
+
+    return jsonify(notas_equipo), 200
+
 
 @notas_bp.route("/notas/<int:nota_id>", methods=["PUT"])
 def modificar_nota(nota_id):
     data = request.get_json()
     nota_alumno = data.get("nota_alumno")
 
-    if nota_alumno is None:
-        return jsonify({"error": "nota_alumno es obligatoria"}), 400
+    conn = get_db()
+    cursor = conn.cursor()
 
     try:
-        nota_alumno = float(nota_alumno)
+     cursor.execute("""UPDATE notas SET nota_alumno = %s WHERE id = %s""", (nota_alumno, nota_id))
+     conn.commit()
 
-    except (TypeError, ValueError):
-        return jsonify({"error": "nota_alumno debe ser numérica"}), 400
-    
-    if nota_alumno < 0 or nota_alumno > 10:
-        return jsonify({"error": "La nota debe estar entre 0 y 10"}), 400
-
-    try:
-        modificar = modificar_nota_db(nota_id, nota_alumno)
-
-        if modificar == 0:
-            return jsonify({"error": "Nota no encontrada"}), 404
-
-        return jsonify({"mensaje": "Nota modificada correctamente"}), 200
+     if cursor.rowcount == 0:
+        return jsonify({"error": "Nota no encontrada"}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify({"mensaje": "Nota modificada correctamente"}), 200
 
 @notas_bp.route("/notas/<int:nota_id>", methods=["DELETE"])
 def eliminar_nota(nota_id):
+    conn = get_db()
+    cursor = conn.cursor()
 
     try:
-        eliminar = eliminar_nota_db(nota_id)
+     cursor.execute("""DELETE FROM notas WHERE id = %s""", (nota_id,))
+     conn.commit()
 
-        if eliminar == 0:
-
-            return jsonify({"error": "Nota no encontrada"}), 404
-        return jsonify({"mensaje": "Nota eliminada correctamente"}), 200
+     if cursor.rowcount == 0:
+         cursor.close()
+         conn.close()
+         return jsonify({"error": "Nota no encontrada"}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    finally:
+     cursor.close()
+     conn.close()
+
+    return jsonify({"mensaje": "Nota eliminada correctamente"}), 200

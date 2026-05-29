@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
-from backend.db import get_db
-from backend.herramientas.importar_csv import importar_alumnos_csv
-from backend.herramientas.validaciones_alumnos import validar_email, validar_convertir_padron, validar_convertir_booleano, validar_convertir_string
+from db import get_db
+from herramientas.importar_csv import importar_alumnos_csv
+from herramientas.validaciones_alumnos import validar_email, validar_convertir_padron, validar_convertir_booleano, validar_convertir_string
 import os
 import mysql.connector
 
