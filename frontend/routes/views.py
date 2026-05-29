@@ -1,12 +1,7 @@
-
-from flask import Blueprint, render_template, redirect, url_for, request, abort, flash
-
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
-import requests
 from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
 from services.curso import obtener_cursos
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
-
 
 views_bp = Blueprint("views", __name__)
 
@@ -137,7 +132,6 @@ def equipo_detalle(equipo_id):
     return render_template("equipos/abm.html", equipo=equipo, miembros=miembros)
 
 
-
 @views_bp.route("/equipos/<int:equipo_id>/delete", methods=["POST"])
 def equipo_delete(equipo_id):
     equipo = get_equipo(equipo_id)
@@ -146,73 +140,7 @@ def equipo_delete(equipo_id):
     EQUIPOS.remove(equipo)
     flash("Equipo eliminado correctamente.", "success")
     return redirect(url_for("views.equipos"))
-
-@views_bp.route("/cursos/<int:id>/eliminar", methods=["POST"])
-def curso_eliminar(id):
-    global CURSOS
-    CURSOS = [c for c in CURSOS if c["id"] != id]
-    return redirect(url_for("views.cursos"))
-
-@views_bp.route("/profesores")
-def profesores():
-    return render_template("profesores/profesores.html", profesores=PROFESORES)
-
-
-@views_bp.route("/profesores/nuevo", methods=["GET", "POST"])
-def profesor_nuevo():
-    if request.method == "POST":
-        nuevo = {
-            "id": len(PROFESORES) + 1,
-            "nombre": request.form.get("nombre"),
-            "apellido": request.form.get("apellido"),
-            "email": request.form.get("email"),
-            "telefono": request.form.get("telefono"),
-            "asignatura": request.form.get("asignatura"),
-            "estado": request.form.get("estado", "Inactivo"),
-        }
-        PROFESORES.append(nuevo)
-        return redirect(url_for("views.profesores"))
-    return render_template("profesores/profesor_form.html", profesor=None)
-
-
-@views_bp.route("/profesores/<int:id>")
-def profesor_detalle(id):
-    profesor = next((p for p in PROFESORES if p["id"] == id), None)
-    if not profesor:
-        return redirect(url_for("views.profesores"))
-    return render_template("profesores/profesor_detalle.html", profesor=profesor)
-
-
-@views_bp.route("/profesores/<int:id>/editar", methods=["GET", "POST"])
-def profesor_editar(id):
-    profesor = next((p for p in PROFESORES if p["id"] == id), None)
-    if not profesor:
-        return redirect(url_for("views.profesores"))
-    if request.method == "POST":
-        profesor["nombre"] = request.form.get("nombre")
-        profesor["apellido"] = request.form.get("apellido")
-        profesor["email"] = request.form.get("email")
-        profesor["telefono"] = request.form.get("telefono")
-        profesor["asignatura"] = request.form.get("asignatura")
-        profesor["estado"] = request.form.get("estado", "Inactivo")
-        return redirect(url_for("views.profesor_detalle", id=id))
-    return render_template("profesores/profesor_form.html", profesor=profesor)
-
-
-@views_bp.route("/profesores/<int:id>/eliminar", methods=["POST"])
-def profesor_eliminar(id):
-    global PROFESORES
-    PROFESORES = [p for p in PROFESORES if p["id"] != id]
-    return redirect(url_for("views.profesores"))
-
-
-@views_bp.route("/asistencia")
-def asistencia():
-    cursos = obtener_cursos()
-    clases = obtener_clases_presenciales()
-    clasesMes = calcular_clases_mes(clases)
-    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
-
+  
 @views_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -237,4 +165,3 @@ def logout():
     limpiar_sesion()
     flash('Cerraste sesión.', 'success')
     return redirect(url_for("views.login"))
-
