@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, redirect, request, url_for, flash
-from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
-from services.curso import obtener_cursos
-import backend.routes.alumnos as importar_lista
+from flask import Blueprint, render_template, redirect, request, session, url_for, flash
+from frontend.services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from frontend.services.curso import obtener_cursos
+from backend.herramientas.importar_csv import importar_alumnos_csv
+from frontend.services.login import guardar_sesion, limpiar_sesion, usuario_logueado
 
 views_bp = Blueprint("views", __name__)
+
 
 # Datos hardcodeados para probar
 CURSOS = [
@@ -165,7 +167,7 @@ def asistencia():
     clasesMes = calcular_clases_mes(clases)
     return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
 
-"""
+'''
 @views_bp.route("/alumnos")
 def vista_alumnos():
     response = requests.get("http://localhost:5000/alumnos/")
@@ -180,7 +182,7 @@ def detalle_alumno(id):
     alumno = response.json()
 
     return render_template("alumnos/abm.html", alumno=alumno)
-"""
+'''
 
 
 @views_bp.route("/alumnos")
@@ -197,7 +199,6 @@ def detalle_alumno(id):
     return render_template("alumnos/abm.html", alumno=alumno)
 
 
-
 @views_bp.route("/alumnos/importar", methods=["GET", "POST"])
 def importar_csv():
     if request.method == "POST":
@@ -206,13 +207,21 @@ def importar_csv():
             flash("Por favor, subí un archivo CSV", "error")
             return redirect(url_for("views.importar_csv"))
         
-        resultado = importar_lista(file)
+        resultado = importar_alumnos_csv(file)
 
         if "error" in resultado:
-            flash(resultado["error"], "error")
+               flash(resultado["error"], "error")
+    
+        elif len(resultado["errores"]) > 0:
+              flash(resultado["errores"], "error")
+     
         else:
-            flash(f"Alumnos importados: {resultado['insertados']}", "success")
-    return render_template("csv.html")@views_bp.route("/login", methods=["GET", "POST"])
+             flash(f"Alumnos importados: {len(resultado['alumnos'])}", "success")
+
+    return render_template("alumnos/csv.html")
+
+
+@views_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form.get("email")
