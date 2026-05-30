@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/evaluaciones.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="table-card">
+    <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem;">
+        <h2 style="font-size: 1.5rem; color: #111827; margin: 0;">
+            Carga de notas - {{ evaluacion_titulo }}
+        </h2>
+        
+        <a href="#" class="btn-primary" style="text-decoration: none;">+ Cargar notas</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Alumno</th>
+                <th>Padron</th>
+                <th>Nota</th>
+                <th>Estado</th>
+                <th>Observación</th>
+                <th>Acciones</th> 
+            </tr>
+        </thead>
+        <tbody>
+            {% for n in notas %}
+            {% set nota_id = n['id'] if 'id' in n else n.get('id_nota', 0) %}
+            
+            <tr>
+                <td>{{ n['nombre_alumno'] }}</td>
+                <td>{{ n['padron'] }}</td>
+                <td>{{ n['nota'] }}/10</td>
+                <td>{{ n['estado'] }}</td>
+                <td>{{ n['observacion'] }}</td>
+                
+                <td class="acciones">
+                    <a href="{{ url_for('evaluaciones.vista_editar_nota', id_nota=nota_id) }}" class="btn-accion editar">Editar</a>
+                    
+                    <form action="{{ url_for('evaluaciones.eliminar_nota', id_nota=nota_id, id_evaluacion=id_evaluacion) }}" method="POST" style="display:inline;">
+    <button type="submit" class="btn-accion eliminar" onclick="return confirm('¿Seguro?')">Eliminar</button>
+</form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="vacio">No hay notas cargadas para esta evaluación.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

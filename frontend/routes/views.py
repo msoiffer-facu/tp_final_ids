@@ -6,6 +6,13 @@ from services.curso import obtener_cursos
 views_bp = Blueprint("views", __name__)
 
 # Datos hardcodeados para probar
+
+EVALUACIONES = [
+    {"id": 1, "titulo": "Primer Parcial", "fecha": "2026-06-01"},
+    {"id": 2, "titulo": "Segundo Parcial", "fecha": "2026-06-15"},
+]
+
+
 CURSOS = [
     {"id": 1, "nombre": "Introducción al Desarrollo de Software", "anio": 2025, "cuatrimestre": "1", "cantidad_alumnos": 30, "modificacion": "ninguna"},
     {"id": 2, "nombre": "Bases de Datos", "anio": 2025, "cuatrimestre": "2", "cantidad_alumnos": 25, "modificacion": "ninguna"},
@@ -163,3 +170,19 @@ def asistencia():
     clasesMes = calcular_clases_mes(clases)
     return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
 
+@views_bp.route("/evaluaciones")
+def evaluaciones():
+    lista_evaluaciones = [
+        {"titulo": "Primer Parcial", "fecha": "2026-06-01"},
+        {"titulo": "Segundo Parcial", "fecha": "2026-06-15"}
+    ]
+    return render_template("evaluaciones/evaluaciones.html", evaluaciones=lista_evaluaciones)
+
+
+@views_bp.route("/evaluaciones/nueva", methods=["GET", "POST"])
+def evaluacion_nueva():
+    if request.method == "POST":
+        titulo = request.form.get("titulo")
+        fecha = request.form.get("fecha")
+        return redirect(url_for("views.evaluaciones"))
+    return render_template("evaluaciones/evaluacion_form.html")

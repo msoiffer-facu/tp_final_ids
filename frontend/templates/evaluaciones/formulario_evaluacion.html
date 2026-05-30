@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    {# Título dinámico #}
+    <h2>{{ "Editar Evaluación" if id_evaluacion else "Nueva Evaluación" }}</h2>
+    
+    <form id="form-evaluacion">
+        <label for="titulo">Título:</label>
+        {# Agregamos value por si estamos editando #}
+        <input type="text" id="titulo" name="titulo" value="{{ evaluacion.titulo if evaluacion else '' }}" required>
+        
+        <label for="fecha">Fecha:</label>
+        <input type="date" id="fecha" name="fecha" value="{{ evaluacion.fecha if evaluacion else '' }}" required>
+        
+        <label for="tipo_id">Tipo de Evaluación:</label>
+        <select id="tipo_id" name="tipo_id" required>
+            {% for t in tipos %}
+                {# Seleccionamos el tipo actual si estamos editando #}
+                <option value="{{ t.id }}" {{ 'selected' if evaluacion and evaluacion.tipo_id == t.id }}>{{ t.nombre }}</option>
+            {% endfor %}
+        </select>
+        
+        <label for="curso_id">Curso:</label>
+        <select id="curso_id" name="curso_id" required>
+            {% for c in cursos %}
+                <option value="{{ c.id }}" {{ 'selected' if evaluacion and evaluacion.curso_id == c.id }}>{{ c.nombre }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Guardar Evaluación</button>
+    </form>
+</div>
+
+<script>
+const id_evaluacion = "{{ id_evaluacion if id_evaluacion else '' }}";
+
+document.getElementById('form-evaluacion').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const data = {
+        titulo: document.getElementById('titulo').value,
+        fecha: document.getElementById('fecha').value,
+        tipo_id: parseInt(document.getElementById('tipo_id').value),
+        curso_id: parseInt(document.getElementById('curso_id').value)
+    };
+
+    const url = id_evaluacion ? `/evaluaciones/${id_evaluacion}` : '/evaluaciones/api';
+    const method = id_evaluacion ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        alert(result.mensaje);
+        window.location.href = '/evaluaciones/';
+    })
+    .catch(error => console.error('Error:', error));
+});
+</script>
+{% endblock %}
