@@ -1,5 +1,5 @@
 from flask import Flask
-from routes.views import views_bp
+from frontend.routes.views import views_bp
 
 app = Flask(__name__)
 

@@ -274,3 +274,83 @@ def asistencia():
     clases = obtener_clases_presenciales()
     clasesMes = calcular_clases_mes(clases)
     return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
+
+'''
+@views_bp.route("/alumnos")
+def vista_alumnos():
+    response = requests.get("http://localhost:5000/alumnos/")
+    alumnos = response.json()
+
+    return render_template("alumnos/listado.html", alumnos=alumnos)
+
+
+@views_bp.route("/alumnos/<int:id>")
+def detalle_alumno(id):
+    response = requests.get(f"http://localhost:5000/alumnos/{id}")
+    alumno = response.json()
+
+    return render_template("alumnos/abm.html", alumno=alumno)
+'''
+
+
+@views_bp.route("/alumnos")
+def vista_alumnos():
+    alumnos = [{"id": 1, "nombre": "Juan", "apellido": "Perez", "email": "juan@gmail.com", "padron": 12345, "abandono": False},
+        {"id": 2, "nombre": "Ana", "apellido": "Gomez", "email": "ana@gmail.com", "padron": 54321, "abandono": True}]
+
+    return render_template("alumnos/listado.html", alumnos=alumnos)
+
+@views_bp.route("/alumnos/<int:id>")
+def detalle_alumno(id):
+    alumno = {"id": id, "nombre": "Juan", "apellido": "Perez", "email": "juan@gmail.com", "padron": 12345, "abandono": False}
+
+    return render_template("alumnos/abm.html", alumno=alumno)
+
+
+@views_bp.route("/alumnos/importar", methods=["GET", "POST"])
+def importar_csv():
+    if request.method == "POST":
+        file = request.files.get("file")
+        if file is None:
+            flash("Por favor, subí un archivo CSV", "error")
+            return redirect(url_for("views.importar_csv"))
+        
+        resultado = importar_alumnos_csv(file)
+
+        if "error" in resultado:
+               flash(resultado["error"], "error")
+    
+        elif len(resultado["errores"]) > 0:
+              flash(resultado["errores"], "error")
+     
+        else:
+             flash(f"Alumnos importados: {len(resultado['alumnos'])}", "success")
+
+    return render_template("alumnos/csv.html")
+
+
+@views_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        if email == "a@test.com" and password == "1234":
+            session["user"] = {
+                "email": email,
+                "name": "Martin"
+            }
+            session["token"] = "prueba"
+
+            guardar_sesion(session["token"], session["user"])
+            flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
+            return redirect(url_for("views.dashboard"))
+
+    return render_template("login.html")
+
+@views_bp.route("/logout", methods=['POST'])
+def logout():
+    limpiar_sesion()
+    flash('Cerraste sesión.', 'success')
+    return redirect(url_for("views.login"))
+    
