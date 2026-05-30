@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Equipos - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/equipos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Equipos</p>
+        <h1>Listado de equipos</h1>
+        <p class="subtitle">Selecciona un equipo para ver sus datos, editarlo o eliminarlo.</p>
+    </div>
+    <a href="{{ url_for('views.equipo_nuevo') }}" class="btn primary">+ Nuevo equipo</a>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-header">
+        <div>
+            <h2>Equipos del curso</h2>
+            <p>En esta vista puedes eliminar, ver o modificar un equipo.</p>
+        </div>
+        <span class="badge">{{ equipos|length }} equipos</span>
+    </div>
+
+    <div class="team-table-wrap">
+        <table class="team-table">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Descripción</th>
+                    <th>Miembros</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for equipo in equipos %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="link-title">{{ equipo.nombre }}</a>
+                        <p class="row-meta">{{ equipo.curso }}</p>
+                    </td>
+                    <td>{{ equipo.descripcion }}</td>
+                    <td>{{ equipo.miembros }}</td>
+                    <td><span class="status {{ equipo.estado|lower }}">{{ equipo.estado }}</span></td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="btn small">Ver</a>
+                        <form method="POST" action="{{ url_for('views.equipo_delete', equipo_id=equipo.id) }}" style="display:inline;">
+                            <button type="submit" class="btn small danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
