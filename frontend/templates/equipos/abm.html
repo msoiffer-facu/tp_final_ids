@@ -1,1 +1,120 @@
-#ASOCIAR ALUMNOS
+{% extends "base.html" %}
+
+{% block title %}Detalle del Equipo - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/equipos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Equipos</p>
+        <h1>Detalle del equipo</h1>
+        <p class="subtitle">Revisa los datos del equipo, edítalos o elimínalo.</p>
+    </div>
+    <a href="{{ url_for('views.equipos') }}" class="btn secondary">Volver al listado</a>
+</div>
+
+<div class="detail-grid">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div>
+                <h2>{{ equipo.nombre }}</h2>
+                <p>{{ equipo.descripcion }}</p>
+            </div>
+            <span class="badge">{{ equipo.estado }}</span>
+        </div>
+
+        <dl class="detail-list">
+            <div>
+                <dt>Curso</dt>
+                <dd>{{ equipo.curso }}</dd>
+            </div>
+            <div>
+                <dt>Miembros</dt>
+                <dd>{{ equipo.miembros }}</dd>
+            </div>
+            <div>
+                <dt>Fecha de creación</dt>
+                <dd>{{ equipo.fecha_creacion }}</dd>
+            </div>
+            <div>
+                <dt>Estado</dt>
+                <dd>{{ equipo.estado }}</dd>
+            </div>
+        </dl>
+
+        <div class="section-divider"></div>
+        <div>
+            <p class="description-label">Descripción</p>
+            <p class="description-text">{{ equipo.descripcion }}</p>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div>
+                <h2>Editar equipo</h2>
+                <p>Modifica los campos editables y guarda los cambios.</p>
+            </div>
+        </div>
+
+        <form method="POST" class="form-grid">
+            <label>
+                Nombre del equipo
+                <input type="text" name="nombre" value="{{ equipo.nombre }}">
+            </label>
+            <label>
+                Descripción
+                <textarea name="descripcion" rows="4">{{ equipo.descripcion }}</textarea>
+            </label>
+            <label>
+                Curso
+                <input type="text" name="curso" value="{{ equipo.curso }}" readonly>
+            </label>
+            <label>
+                Estado
+                <input type="text" name="estado" value="{{ equipo.estado }}">
+            </label>
+
+            <div class="form-actions full-width">
+                <button type="submit" name="action" value="save" class="btn primary">Guardar cambios</button>
+                <button type="submit" name="action" value="delete" class="btn danger">Eliminar equipo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="members-card">
+    <div class="members-header">
+        <div>
+            <h2>Miembros del equipo</h2>
+            <p>Lista de los alumnos asignados al equipo.</p>
+        </div>
+        <span class="badge">{{ miembros|length }} alumnos</span>
+    </div>
+
+    <div class="team-table-wrap">
+        <table class="team-table">
+            <thead>
+                <tr>
+                    <th>Padrón</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alumno in miembros %}
+                <tr>
+                    <td>{{ alumno.padron }}</td>
+                    <td>{{ alumno.nombre }}</td>
+                    <td>{{ alumno.apellido }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
