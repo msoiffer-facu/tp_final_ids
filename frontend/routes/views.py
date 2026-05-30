@@ -140,31 +140,7 @@ def equipo_delete(equipo_id):
     EQUIPOS.remove(equipo)
     flash("Equipo eliminado correctamente.", "success")
     return redirect(url_for("views.equipos"))
-  
-@views_bp.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
 
-        if email == "a@test.com" and password == "1234":
-            session["user"] = {
-                "email": email,
-                "name": "Martin"
-            }
-            session["token"] = "prueba"
-
-            guardar_sesion(session["token"], session["user"])
-            flash(f"¡Bienvenido, {session['user']['name']}!", "success")
-            return redirect(url_for("views.dashboard"))
-
-    return render_template("login.html")
-
-@views_bp.route("/logout", methods=['POST'])
-def logout():
-    limpiar_sesion()
-    flash('Cerraste sesión.', 'success')
-    return redirect(url_for("views.login"))
 
 @views_bp.route("/cursos")
 def cursos():
