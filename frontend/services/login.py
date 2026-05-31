@@ -3,7 +3,7 @@ import os
 import requests
 from flask import session
 
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.environ.get("BACKEND_URL", f"http://localhost:{os.environ.get('PORT', 5000)}")
 
 
 def usuario_logueado():
