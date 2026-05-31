@@ -13,12 +13,14 @@
     <header>
         {% set current = request.path %}
         <nav>
+            <a href="/cursos" class="{% if current.startswith('/cursos') %}active{% endif %}">Cursos</a>
             <a href="/dashboard"     class="{% if current == '/dashboard' %}active{% endif %}">Dashboard</a>
             <a href="/alumnos"       class="{% if current.startswith('/alumnos') %}active{% endif %}">Alumnos</a>
+            <a href="/profesores"    class="{% if current.startswith('/profesores') %}active{% endif %}">Profesores</a>
             <a href="/evaluaciones"  class="{% if current.startswith('/evaluaciones') %}active{% endif %}">Evaluaciones</a>
             <a href="/equipos"       class="{% if current.startswith('/equipos') %}active{% endif %}">Equipos</a>
             <a href="/asistencia"    class="{% if current.startswith('/asistencia') %}active{% endif %}">Asistencia</a>
-            <a href="/material"      class="{% if current.startswith('/material') %}active{% endif %}">Material</a>
+            <!-- <a href="/material"      class="{% if current.startswith('/material') %}active{% endif %}">Material</a> -->
         </nav>
         <div class="user-badge">
             {% if session.get('user') %}
@@ -28,7 +30,7 @@
                     <button type="submit" class="logout-button">Cerrar sesión</button>
                 </form>
             {% else %}
-                <a href="{{ url_for('views.login') }}" class="login-link">Ingresar</a>
+              <a href="{{ url_for('views.login') }}" class="login-link">Ingresar</a>
             {% endif %}
         </div>
     </header>

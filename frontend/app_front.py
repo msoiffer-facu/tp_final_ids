@@ -4,7 +4,7 @@ from routes.views import views_bp
 app = Flask(__name__)
 
 app.register_blueprint(views_bp)
-
+app.config["SECRET_KEY"] = "clave-secreta"
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

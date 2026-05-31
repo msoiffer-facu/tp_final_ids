@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/alumnos.css') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div class="table-card">
+    <div class="table-card-header">
+        <h2>Listado de alumnos</h2>
+        <div class="table-filters">
+            <input
+                type="text"
+                id="buscador"
+                class="search-input"
+                placeholder="Buscar por padrón, nombre o apellido..."
+                onkeyup="filtrarAlumnos()"
+            >
+            <button
+                class="btn-buscar"
+                onclick="filtrarAlumnos()"
+            >
+                Buscar
+            </button>
+
+            <select
+                id="filtroEstado"
+                class="search-input"
+                onchange="filtrarAlumnos()"
+            >
+                <option value="">Todos</option>
+                <option value="activo">Activos</option>
+                <option value="abandono">Abandonados</option>
+            </select>
+        </div>
+
+        <a
+            href="/alumnos/importar"
+            class="btn-agregar"
+        >
+            Importar CSV
+        </a>
+
+    </div>
+
+    <table id="tablaAlumnos">
+        <thead>
+            <tr>
+                <th class="text-center">Padrón</th>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Apellido</th>
+                <th class="text-center">Email</th>
+                <th class="text-center">Equipo</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr class="fila-alumno">
+                <td class="padron text-center">
+                    {{ alumno.padron }}
+                </td>
+                <td class="nombre text-center">
+                    {{ alumno.nombre }}
+                </td>
+                <td class="apellido text-center">
+                    {{ alumno.apellido }}
+                </td>
+                <td class="text-center">
+                    {{ alumno.email }}
+                </td>
+                <td class="text-center">
+                    {{ alumno.equipo if alumno.equipo else "Sin equipo" }}
+                </td>
+                <td
+                    class="estado text-center"
+                    data-estado="{% if alumno.abandono %}abandono{% else %}activo{% endif %}"
+                >
+                    {% if alumno.abandono %}
+                        <span class="badge badge-warning">
+                            Abandonó
+                        </span>
+                    {% else %}
+                        <span class="badge badge-success">
+                            Activo
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td class="acciones-cell text-center">
+                    <a
+                        href="/alumnos/{{ alumno.id }}"
+                        class="btn-accion btn-ver"
+                        title="Ver alumno"
+                    >
+                        👤
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function filtrarAlumnos() {
+
+    const buscador = document.getElementById("buscador").value.toLowerCase();
+    const estadoFiltro = document.getElementById("filtroEstado").value;
+    const filas = document.querySelectorAll(".fila-alumno");
+
+    for (let i = 0; i < filas.length; i++) {
+        let fila = filas[i];
+        let padron = fila.querySelector(".padron").textContent;
+        let nombre = fila.querySelector(".nombre").textContent;
+        let apellido = fila.querySelector(".apellido").textContent;
+        let estado = fila.querySelector(".estado").dataset.estado;
+
+        let coincideBusqueda = padron.includes(buscador) || nombre.includes(buscador) || apellido.includes(buscador);
+
+        let coincide_Estado =
+            estadoFiltro === "" ||
+            estado === estadoFiltro;
+
+        if (coincideBusqueda && coincide_Estado) {fila.style.display = "";} else {fila.style.display = "none";}
+    }
+
+}
+
+</script>
+
+{% endblock %}
