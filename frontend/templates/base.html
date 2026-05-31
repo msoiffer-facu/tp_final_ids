@@ -9,7 +9,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-
+    {% if request.path != '/login' %}
     <header>
         {% set current = request.path %}
         <nav>
@@ -21,10 +21,18 @@
             <a href="/material"      class="{% if current.startswith('/material') %}active{% endif %}">Material</a>
         </nav>
         <div class="user-badge">
-            <div class="user-avatar">M</div>
-            <span>Matias</span>
+            {% if session.get('user') %}
+                <div class="user-avatar">{{ session["user"]["name"][0]|upper }}</div>
+                <span>{{ session["user"]["name"] }}</span>
+                <form action="{{ url_for('views.logout') }}" method="POST">
+                    <button type="submit" class="logout-button">Cerrar sesión</button>
+                </form>
+            {% else %}
+                <a href="{{ url_for('views.login') }}" class="login-link">Ingresar</a>
+            {% endif %}
         </div>
     </header>
+    {% endif %}
 
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}

@@ -1,6 +1,6 @@
 import csv
 import io
-from herramientas.validaciones_alumnos import validar_convertir_padron, validar_email, validar_convertir_booleano, validar_convertir_string
+from herramientas.validaciones_alumnos import validar_data_alumno
 
 def importar_alumnos_csv(archivo):
     alumnos = []
@@ -45,46 +45,30 @@ def importar_alumnos_csv(archivo):
 
             errores_fila = []
 
-            nombre = validar_convertir_string(fila["nombre"])
-            apellido = validar_convertir_string(fila["apellido"])
-            email = fila["email"]
-            padron = validar_convertir_padron(fila["padron"])
-            abandono = validar_convertir_booleano(fila["abandono"])
+            alumno_fila = validar_data_alumno(fila)
 
-            if nombre is None:
-                errores_fila.append("nombre invalido")
+            errores_fila = alumno_fila["errores"]
 
-            if apellido is None:
-                errores_fila.append("apellido invalido")
-
-            if not validar_email(email):
-                errores_fila.append("email invalido")
-            elif email in emails:
-                errores_fila.append("email duplicado")
-
-            if padron is None:
-                errores_fila.append("padron invalido")
-            elif padron in padrones:
+            if alumno_fila["padron"] in padrones:
                 errores_fila.append("padron duplicado")
-
-            if abandono is None:
-                errores_fila.append("abandono invalido")
+            if alumno_fila["email"] in emails:
+                errores_fila.append("email duplicado")
 
             if errores_fila:
                 errores.append(f"Fila {index}: {', '.join(errores_fila)}")
                 continue
 
             alumno = {
-                "nombre": nombre,
-                "apellido": apellido,
-                "email": email,
-                "padron": padron,
-                "abandono": abandono,
+                "nombre": alumno_fila["nombre"],
+                "apellido": alumno_fila["apellido"],
+                "email": alumno_fila["email"],
+                "padron": alumno_fila["padron"],
+                "abandono": alumno_fila["abandono"],
                 "estado": True
                 }
             alumnos.append(alumno)
-            padrones.add(padron)
-            emails.add(email)
+            padrones.add(alumno_fila["padron"])
+            emails.add(alumno_fila["email"])
 
     except Exception as err:
         return {"error": str(err)}
