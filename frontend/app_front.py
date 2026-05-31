@@ -1,15 +1,20 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+
 from flask import Flask, redirect, request, url_for
 from routes.authenticacion_views import auth_bp
 from routes.views import views_bp
 from services.login import usuario_logueado
 
+
 app = Flask(__name__)
 
 app.register_blueprint(views_bp)
 app.register_blueprint(auth_bp)
-app.config["SECRET_KEY"] = "clave-secreta"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "clave-secreta")
 
 
 @app.before_request

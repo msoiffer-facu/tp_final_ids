@@ -1,9 +1,7 @@
-import os
-
 import requests
 from flask import session
 
-BACKEND_URL = os.environ.get("BACKEND_URL", f"http://localhost:{os.environ.get('PORT', 5000)}")
+from services.config import BACKEND_URL
 
 
 def usuario_logueado():
@@ -23,8 +21,6 @@ def limpiar_sesion():
 def autenticar(email, password):
     """Autentica contra el backend. Devuelve (ok, usuario) o (False, mensaje_error)."""
 
-    print(email, password)
-    
     try:
         resp = requests.post(
             f"{BACKEND_URL}/profesores/login",
