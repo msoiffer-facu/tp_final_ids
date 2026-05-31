@@ -6,17 +6,14 @@ def importar_alumnos_csv(archivo):
     alumnos = []
     errores = []
     faltantes = []
+
     try:
-        
         contenido = archivo.read().decode("utf-8-sig")
 
         reader = csv.DictReader(io.StringIO(contenido))
 
         if reader.fieldnames is None:
-            return {
-                "error": "CSV vacio"
-            }
-        
+            return {"error": "CSV vacio"}
         
         columnas_obligatorias = [
             "nombre",
@@ -48,52 +45,46 @@ def importar_alumnos_csv(archivo):
 
             errores_fila = []
 
-            try:
-                nombre = validar_convertir_string(fila["nombre"])
-                apellido = validar_convertir_string(fila["apellido"])
-                email = fila["email"]
-                padron = validar_convertir_padron(fila["padron"])
-                abandono = validar_convertir_booleano(fila["abandono"])
+            nombre = validar_convertir_string(fila["nombre"])
+            apellido = validar_convertir_string(fila["apellido"])
+            email = fila["email"]
+            padron = validar_convertir_padron(fila["padron"])
+            abandono = validar_convertir_booleano(fila["abandono"])
 
-                if nombre is None:
-                    errores_fila.append("nombre invalido")
+            if nombre is None:
+                errores_fila.append("nombre invalido")
 
-                if apellido is None:
-                    errores_fila.append("apellido invalido")
+            if apellido is None:
+                errores_fila.append("apellido invalido")
 
-                if not validar_email(email):
-                    errores_fila.append("email invalido")
-                elif email in emails:
-                    errores_fila.append("email duplicado")
+            if not validar_email(email):
+                errores_fila.append("email invalido")
+            elif email in emails:
+                errores_fila.append("email duplicado")
 
-                if padron is None:
-                    errores_fila.append("padron invalido")
-                else:
-                    if padron in padrones:
-                        errores_fila.append("padron duplicado")
+            if padron is None:
+                errores_fila.append("padron invalido")
+            elif padron in padrones:
+                errores_fila.append("padron duplicado")
 
-                if abandono is None:
-                    errores_fila.append("abandono invalido")
+            if abandono is None:
+                errores_fila.append("abandono invalido")
 
-                if errores_fila:
-                    errores.append(f"Fila {index}: {', '.join(errores_fila)}")
-                    continue
+            if errores_fila:
+                errores.append(f"Fila {index}: {', '.join(errores_fila)}")
+                continue
 
-                alumno = {
-                    "nombre": nombre,
-                    "apellido": apellido,
-                    "email": email,
-                    "padron": padron,
-                    "abandono": abandono,
-                    "estado": True
+            alumno = {
+                "nombre": nombre,
+                "apellido": apellido,
+                "email": email,
+                "padron": padron,
+                "abandono": abandono,
+                "estado": True
                 }
-                alumnos.append(alumno)
-                
-                padrones.add(padron)
-                emails.add(email)
-
-            except Exception as err:
-                errores.append(f"Fila {index}: {str(err)}")
+            alumnos.append(alumno)
+            padrones.add(padron)
+            emails.add(email)
 
     except Exception as err:
         return {"error": str(err)}
