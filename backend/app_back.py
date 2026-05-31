@@ -34,4 +34,4 @@ def home():
     return "Hola Flask"
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    app.run(debug=True, port=os.environ.get("PORT", 5000))

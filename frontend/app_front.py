@@ -1,6 +1,8 @@
+import os
+
 from flask import Flask, redirect, request, url_for
-from routes.views import views_bp
 from routes.authenticacion_views import auth_bp
+from routes.views import views_bp
 from services.login import usuario_logueado
 
 app = Flask(__name__)
@@ -29,4 +31,4 @@ def control_acceso():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=os.environ.get("PORT", 5001))
