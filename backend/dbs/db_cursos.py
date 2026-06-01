@@ -1,24 +1,11 @@
-import mysql.connector
-import os
-from pathlib import Path
-from dotenv import load_dotenv
 
-env_path = Path(__file__).parent.parent.parent / ".env"
-load_dotenv(dotenv_path=env_path)
-
-def get_connection():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", "root"),
-        database=os.getenv("DB_NAME", "tp_final_ids_db")
-    )
+from db import get_db
 
 
 # ─── CURSOS ───
 
 def db_get_cursos():
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM cursos")
     cursos = cursor.fetchall()
@@ -27,7 +14,7 @@ def db_get_cursos():
     return cursos
 
 def db_get_curso_by_id(id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM cursos WHERE id = %s", (id,))
     curso = cursor.fetchone()
@@ -36,7 +23,7 @@ def db_get_curso_by_id(id):
     return curso
 
 def db_create_curso(nombre, cuatrimestre, anio, modificacion):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO cursos (nombre, cuatrimestre, anio, modificacion) VALUES (%s, %s, %s, %s)",
@@ -49,7 +36,7 @@ def db_create_curso(nombre, cuatrimestre, anio, modificacion):
     return nuevo_id
 
 def db_update_curso(id, nombre, cuatrimestre, anio, modificacion):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "UPDATE cursos SET nombre = %s, cuatrimestre = %s, anio = %s, modificacion = %s WHERE id = %s",
@@ -60,7 +47,7 @@ def db_update_curso(id, nombre, cuatrimestre, anio, modificacion):
     conn.close()
 
 def db_delete_curso(id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM cursos WHERE id = %s", (id,))
     conn.commit()
@@ -71,7 +58,7 @@ def db_delete_curso(id):
 # ─── ALUMNOS DEL CURSO ───
 
 def db_get_alumnos_curso(curso_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
         SELECT a.id, a.padron, a.nombre, a.apellido, a.email, a.abandono, a.estado
@@ -86,7 +73,7 @@ def db_get_alumnos_curso(curso_id):
     return alumnos
 
 def db_inscribir_alumno(curso_id, alumno_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO alumnos_curso (alumnos_id, curso_id) VALUES (%s, %s)",
@@ -97,7 +84,7 @@ def db_inscribir_alumno(curso_id, alumno_id):
     conn.close()
 
 def db_desinscribir_alumno(curso_id, alumno_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "DELETE FROM alumnos_curso WHERE curso_id = %s AND alumnos_id = %s",
@@ -113,7 +100,7 @@ def db_desinscribir_alumno(curso_id, alumno_id):
 # ─── CLASES PRESENCIALES ───
 
 def db_get_clases(curso_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s ORDER BY fecha", (curso_id,))
     clases = cursor.fetchall()
@@ -122,7 +109,7 @@ def db_get_clases(curso_id):
     return clases
 
 def db_create_clase(curso_id, fecha):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO clase_presencial (curso_id, fecha) VALUES (%s, %s)",
@@ -135,7 +122,7 @@ def db_create_clase(curso_id, fecha):
     return nuevo_id
 
 def db_delete_clase(clase_id, curso_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "DELETE FROM clase_presencial WHERE id = %s AND curso_id = %s",
@@ -151,7 +138,7 @@ def db_delete_clase(clase_id, curso_id):
 # ─── EQUIPOS ───
 
 def db_get_equipos(curso_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM equipos WHERE curso_id = %s", (curso_id,))
     equipos = cursor.fetchall()
@@ -160,7 +147,7 @@ def db_get_equipos(curso_id):
     return equipos
 
 def db_create_equipo(nombre, descripcion, curso_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO equipos (nombre, descripcion, curso_id) VALUES (%s, %s, %s)",
@@ -173,7 +160,7 @@ def db_create_equipo(nombre, descripcion, curso_id):
     return nuevo_id
 
 def db_get_alumnos_equipo(equipo_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
         SELECT a.id, a.padron, a.nombre, a.apellido, a.email
@@ -188,7 +175,7 @@ def db_get_alumnos_equipo(equipo_id):
     return alumnos
 
 def db_agregar_alumno_equipo(equipo_id, alumno_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO equipo_alumnos (equipo_id, alumno_id) VALUES (%s, %s)",
@@ -199,7 +186,7 @@ def db_agregar_alumno_equipo(equipo_id, alumno_id):
     conn.close()
 
 def db_quitar_alumno_equipo(equipo_id, alumno_id):
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "DELETE FROM equipo_alumnos WHERE equipo_id = %s AND alumno_id = %s",

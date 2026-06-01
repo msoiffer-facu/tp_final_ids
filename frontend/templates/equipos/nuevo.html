@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Equipo - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/equipos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Equipos</p>
+        <h1>Crear nuevo equipo</h1>
+        <p class="subtitle">Completa los datos para agregar un equipo nuevo al curso.</p>
+    </div>
+    <a href="{{ url_for('views.equipos') }}" class="btn secondary">Volver al listado</a>
+</div>
+
+<div class="detail-card">
+    <div class="detail-card-header">
+        <div>
+            <h2>Nuevo equipo</h2>
+            <p>Rellena la información y haz clic en guardar para crear el equipo.</p>
+        </div>
+    </div>
+
+    <form method="POST" class="form-grid">
+        <label>
+            Nombre del equipo
+            <input type="text" name="nombre" value="{{ equipo.nombre if equipo else '' }}" required>
+        </label>
+        <label>
+            Descripción
+            <textarea name="descripcion" rows="4" required>{{ equipo.descripcion if equipo else '' }}</textarea>
+        </label>
+        <label>
+            Curso
+            <input type="text" name="curso" value="{{ equipo.curso if equipo else 'IDS 2026' }}" required>
+        </label>
+        <label>
+            Estado
+            <input type="text" name="estado" value="{{ equipo.estado if equipo else 'Activo' }}">
+        </label>
+
+        <div class="form-actions full-width">
+            <button type="submit" class="btn primary">Crear equipo</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

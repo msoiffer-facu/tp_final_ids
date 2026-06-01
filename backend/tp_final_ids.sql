@@ -10,6 +10,7 @@ create table cursos (
     modificacion varchar(255)
 );
 
+
 create table clase_presencial
 (
     id       int auto_increment primary key,
@@ -52,7 +53,7 @@ create table profesores (
 create table tipos_evaluacion (
     id int not null auto_increment primary key,
     nombre varchar(100)
-);
+    );
 
 create table evaluaciones (
     id int not null auto_increment primary key,
@@ -72,7 +73,8 @@ create table notas (
     id int  not null  auto_increment primary key,
     alumno_id int not null ,
     evaluacion_id int not null ,
-    nota_alumno decimal(10),
+    nota_alumno decimal(4,2) not null,
+
 
     foreign key (alumno_id)
         references alumnos(id),
@@ -108,7 +110,7 @@ create table asistencias (
     alumno_id int not null,
     clase_presencial_id int not null,
     presente boolean,
-    codigo_qr varchar(100),
+    codigo_qr varchar(1024),
 
     foreign key (alumno_id)
         references alumnos(id),
@@ -116,7 +118,7 @@ create table asistencias (
         references clase_presencial(id)
 );
 
-create table login (
+create table login(
     id int not null auto_increment primary key,
     profesor_id int not null ,
     fecha timestamp default current_timestamp,
