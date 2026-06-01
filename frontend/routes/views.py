@@ -1,8 +1,10 @@
+import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
 from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from services.config import BACKEND_URL
 from services.curso import obtener_cursos
-from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
+from services.login import usuario_logueado
 
 views_bp = Blueprint("views", __name__)
 
@@ -24,7 +26,7 @@ CLASES = [
 def index():
     if usuario_logueado():
         return redirect(url_for("views.dashboard"))
-    return redirect(url_for("views.login"))
+    return redirect(url_for("auth.login"))
 
 
 @views_bp.route("/dashboard")
@@ -249,7 +251,7 @@ def asistencia():
 '''
 @views_bp.route("/alumnos")
 def vista_alumnos():
-    response = requests.get("http://localhost:5000/alumnos/")
+    response = requests.get(f"{BACKEND_URL}/alumnos/")
     alumnos = response.json()
 
     return render_template("alumnos/listado.html", alumnos=alumnos)
@@ -257,7 +259,7 @@ def vista_alumnos():
 
 @views_bp.route("/alumnos/<int:id>")
 def detalle_alumno(id):
-    response = requests.get(f"http://localhost:5000/alumnos/{id}")
+    response = requests.get(f"{BACKEND_URL}/alumnos/{id}")
     alumno = response.json()
 
     return render_template("alumnos/abm.html", alumno=alumno)
@@ -298,29 +300,3 @@ def importar_csv():
              flash(f"Alumnos importados: {len(resultado['alumnos'])}", "success")
 
     return render_template("alumnos/csv.html")
-
-
-@views_bp.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        if email == "a@test.com" and password == "1234":
-            session["user"] = {
-                "email": email,
-                "name": "Martin"
-            }
-            session["token"] = "prueba"
-
-            guardar_sesion(session["token"], session["user"])
-            flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
-            return redirect(url_for("views.dashboard"))
-
-    return render_template("login.html")
-
-@views_bp.route("/logout", methods=['POST'])
-def logout():
-    limpiar_sesion()
-    flash('Cerraste sesión.', 'success')
-    return redirect(url_for("views.login"))
