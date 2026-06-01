@@ -17,14 +17,20 @@ def get_connection():
 
 # ─── CURSOS ───
 
-def db_get_cursos():
+def db_get_cursos(page=1, per_page=10):
+    offset = (page - 1) * per_page
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM cursos")
+    
+    cursor.execute("SELECT COUNT(*) as total FROM cursos")
+    total = cursor.fetchone()["total"]
+    
+    cursor.execute("SELECT * FROM cursos LIMIT %s OFFSET %s", (per_page, offset))
     cursos = cursor.fetchall()
+    
     cursor.close()
     conn.close()
-    return cursos
+    return cursos, total
 
 def db_get_curso_by_id(id):
     conn = get_connection()
