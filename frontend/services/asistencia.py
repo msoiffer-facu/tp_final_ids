@@ -1,30 +1,9 @@
 from datetime import datetime
 
-def calcular_clases_mes(clases):
-    ahora = datetime.now()
-    total_clases = 0
-    errores = 0
-
-    for clase in clases:
-        fecha_texto = clase.get('fecha')
-        if not fecha_texto:
-            continue
-        try:
-            fecha = fecha_texto.split(' ')[0]
-            _, mes, anio = fecha.split('/')
-            if mes == f'0{ahora.month}' and anio == f'{(ahora.year % 100)}':
-                total_clases += 1
-        except ValueError:
-            errores += 1
-            continue
-    fecha = clases[1].get('fecha')
-    _, mes, anio = fecha.split('/')
-    return total_clases
-
 def obtener_clases_presenciales():
     clases_p = [
         {
-            "id": "1",
+            "id": 1,
             "curso": {
                 "id":1,
                 "nombre":"curso 3b",
@@ -36,7 +15,7 @@ def obtener_clases_presenciales():
             "pedir_asistencia": True,
         },
         {
-            "id": "2",
+            "id": 2,
             "curso": {
                 "id":1,
                 "nombre":"curso 4a",
@@ -48,7 +27,7 @@ def obtener_clases_presenciales():
             "pedir_asistencia": False,
         },
         {
-            "id": "3",
+            "id": 3,
             "curso": {
                 "id":1,
                 "nombre":"curso 12c",
@@ -59,7 +38,7 @@ def obtener_clases_presenciales():
             "pedir_asistencia": True,
         },
         {
-            "id": "4",
+            "id": 4,
             "curso": {
                 "id":1,
                 "nombre":"curso 14l",
@@ -70,7 +49,7 @@ def obtener_clases_presenciales():
             "pedir_asistencia": False,
         },
         {
-            "id": "5",
+            "id": 5,
             "curso": {
                 "id":1,
                 "nombre":"curso 1g",

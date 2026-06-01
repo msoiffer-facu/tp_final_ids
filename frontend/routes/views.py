@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
-from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from services.asistencia import obtener_clases_presenciales 
 from services.curso import obtener_cursos
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
 
@@ -248,8 +248,15 @@ def profesor_eliminar(id):
 def asistencia():
     cursos = obtener_cursos()
     clases = obtener_clases_presenciales()
-    clasesMes = calcular_clases_mes(clases)
-    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
+    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos)
+
+@views_bp.route("/asistencia/<int:id>")
+def asistencia_detalle(id):
+    clases = obtener_clases_presenciales()
+    clase = next((c for c in clases if c["id"] == id), None)
+    # if not clase:
+    #     return redirect(url_for("views.asistencia"))
+    return render_template("alumnos/asistencia_detalle.html", alumnos=ALUMNOS, equipos=EQUIPOS, registro=clase)
 
 '''
 @views_bp.route("/alumnos")
@@ -329,4 +336,3 @@ def logout():
     limpiar_sesion()
     flash('Cerraste sesión.', 'success')
     return redirect(url_for("views.login"))
-    

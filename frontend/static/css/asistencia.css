@@ -43,13 +43,6 @@
     letter-spacing: 0.05em;
     color: #6b7280;
 }
-
-.metric-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #111827;
-    margin-top: 0.25rem;
-}
 /* Tarjeta de métrica que actúa como botón/acción */
 .metric-card-action {
     background-color: #f0f5ff; /* Un fondo azul muy sutil para destacar que es clickeable */
@@ -64,6 +57,18 @@
     border-color: #3b82f6;
     transform: translateY(-2px); /* Pequeño efecto de elevación */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* --- NUEVA CLASE PARA EL BOTÓN DE ENVIAR (VERDE) --- */
+.metric-card-send {
+    background-color: #f0fdf4; /* Un fondo verde muy sutil (Soft Green) */
+    border-color: #bbf7d0;     /* Borde verde claro */
+}
+
+/* Efecto Hover para la tarjeta de enviar */
+.metric-card-send:hover {
+    background-color: #dcfce7; /* Verde un poco más oscuro al pasar el mouse */
+    border-color: #22c55e;     /* Borde verde brillante al hacer hover */
 }
 
 /* Distribución interna del icono y los textos */
@@ -87,6 +92,10 @@
     font-weight: 700;
     color: #1e429f; /* Texto azul haciendo juego con el fondo */
     margin-top: 2px;
+}
+
+.metric-send-title{
+    color: #16a34a;
 }
 
 /* ── Mejoras en Filtros del Header ── */
@@ -117,31 +126,6 @@
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
-/* ── Badges/Etiquetas de Estado ── */
-.badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 9999px;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-}
-
-.badge-success {
-    background-color: #def7ec;
-    color: #03543f;
-}
-
-.badge-warning {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.badge-info {
-    background-color: #e1effe;
-    color: #1e429f;
-}
 
 /* ── Ajustes de Alineación de Celdas y Botones ── */
 .text-right {
@@ -193,6 +177,12 @@
     color: #6b7280;
 }
 
+.table-header-left{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .table-card table {
     width: 100%;
     border-collapse: collapse;
@@ -238,36 +228,6 @@
     align-items: center;
 }
 
-/* Estilo base para todos los botones de acción */
-.btn-accion {
-    background: none;
-    border: none;
-    padding: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-.btn-ver {
-    color: #2196F3;
-}
-.btn-ver:hover {
-    background-color: rgba(33, 150, 243, 0.1);
-}
-
-.btn-editar {
-    color: #FFC107;
-}
-.btn-editar:hover {
-    background-color: rgba(255, 193, 7, 0.1);
-}
-
-.btn-borrar {
-    color: #F44336; /* Rojo */
-}
-.btn-borrar:hover {
-    background-color: rgba(244, 67, 54, 0.1);
-}
 
 .text-center {
     text-align: center;
@@ -330,20 +290,6 @@
 /* ---------------------------------------------------------------
    Formulario
    --------------------------------------------------------------- */
-.form__group {
-    margin-bottom: 1.2rem;
-}
-
-.form__row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1.2rem;
-}
-
-.form__row .form__group {
-    margin-bottom: 0;
-}
 
 .form__label {
     display: block;
@@ -402,12 +348,12 @@
     font-family: inherit;
 }
 
-.form__btn--submit, .form__btn--edit {
+.form__btn--submit {
     background: var(--color-primary);
     color: var(--color-white);
 }
 
-.form__btn--submit:hover, .form__btn--edit:hover {
+.form__btn--submit:hover {
     background: var(--color-primary-dk);
     transform: translateY(-1px);
     box-shadow: var(--shadow);
@@ -500,3 +446,70 @@
     margin-bottom: 1.5rem;
     font-size: 0.92rem;
 }
+
+/* -- Pagina detalles asistencia -- */
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+.btn-volver {
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.btn-volver:hover { color: #111827; }
+
+/* ── Cards de detalle ── */
+.detalle-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.detalle-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.detalle-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.detalle-valor {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.5rem;
+}
+
+/* ── Badges ── */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge.verde { background: #dcfce7; color: #16a34a; }
+.badge.rojo  { background: #fee2e2; color: #dc2626; }
+.badge.gris  { background: #f3f4f6; color: #6b7280; }
