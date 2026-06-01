@@ -60,7 +60,7 @@ def create_curso():
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
 
-@cursos_bp.route("/cursos/<int:id>", methods=["PUT"])
+@cursos_bp.route("/<int:id>", methods=["PUT"])
 def update_curso(id):
     if not db_get_curso_by_id(id):
         return jsonify({"error": "Curso no encontrado."}), 404
@@ -98,7 +98,7 @@ def delete_curso(id):
 
 # ─── ALUMNOS DEL CURSO ───
 
-@cursos_bp.route("/cursos/<int:id>/alumnos", methods=["GET"])
+@cursos_bp.route("/<int:id>/alumnos", methods=["GET"])
 def get_alumnos_curso(id):
     try:
         if not db_get_curso_by_id(id):
