@@ -81,7 +81,7 @@ def update_curso(id):
 
         db_update_curso(id, nombre, cuatrimestre, anio, modificacion)
     except:
-        return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
+        return jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso actualizado exitosamente."}), 200
 
 
