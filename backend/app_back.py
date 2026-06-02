@@ -1,5 +1,9 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+
 from flask import Flask
 from routes.asistencia import asistencia_bp
 from routes.profesores import profesores_bp
@@ -33,4 +37,4 @@ def home():
     return "Hola Flask"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=os.environ.get("PORT", 5000))
