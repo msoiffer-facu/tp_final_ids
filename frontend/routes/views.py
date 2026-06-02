@@ -1,5 +1,6 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
+import requests
 from services.asistencia import obtener_clases_presenciales
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos
@@ -124,25 +125,45 @@ def equipo_delete(equipo_id):
 
 @views_bp.route("/cursos")
 def cursos():
-    try:
-        response = requests.get(f"{BACKEND_URL}/cursos/cursos")
-        cursos = response.json()
-    except:
-        cursos = []
-    return render_template("cursos/cursos.html", cursos=cursos)
-
+    page = int(request.args.get("page", 1))
+    per_page = 10
+    response = requests.get(
+        f"http://localhost:5000/cursos",   
+        params={"page": page, "per_page": per_page}
+    )
+    data = response.json()
+    return render_template(
+        "cursos/cursos.html",
+        cursos=data["cursos"],
+        page=data["page"],
+        total_pages=data["total_pages"]
+    )
 
 @views_bp.route("/cursos/<int:id>")
 def curso_detalle(id):
     try:
-        curso = requests.get(f"{BACKEND_URL}/cursos/cursos/{id}").json()
-        alumnos = requests.get(f"{BACKEND_URL}/cursos/cursos/{id}/alumnos").json()
-        equipos = requests.get(f"{BACKEND_URL}/cursos/cursos/{id}/equipos").json()
-        clases = requests.get(f"{BACKEND_URL}/cursos/cursos/{id}/clases").json()
+        alumno_page = int(request.args.get("alumno_page", 1))
+        alumno_per_page = 10
+        equipo_page = int(request.args.get("equipo_page", 1))
+        equipo_per_page = 10
+
+        curso = requests.get(f"http://localhost:5000/cursos/{id}").json()
+        alumnos_data = requests.get(f"http://localhost:5000/cursos/{id}/alumnos",
+            params={"page": alumno_page, "per_page": alumno_per_page}).json()
+        equipos_data = requests.get(f"http://localhost:5000/cursos/{id}/equipos",
+            params={"page": equipo_page, "per_page": equipo_per_page}).json()
+        clases = requests.get(f"http://localhost:5000/cursos/{id}/clases").json()
     except:
         return redirect(url_for("views.cursos"))
-    return render_template("cursos/curso_detalle.html", curso=curso, alumnos=alumnos, equipos=equipos, clases=clases)
-
+    return render_template("cursos/curso_detalle.html",
+        curso=curso,
+        alumnos=alumnos_data["alumnos"],
+        alumno_page=alumnos_data["page"],
+        alumno_total_pages=alumnos_data["total_pages"],
+        equipos=equipos_data["equipos"],
+        equipo_page=equipos_data["page"],
+        equipo_total_pages=equipos_data["total_pages"],
+        clases=clases)
 
 @views_bp.route("/cursos/nuevo", methods=["GET", "POST"])
 def curso_nuevo():
@@ -153,7 +174,7 @@ def curso_nuevo():
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.post(f"{BACKEND_URL}/cursos/cursos", json=data)
+        requests.post("http://localhost:5000/cursos", json=data)
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_form.html", curso=None)
 
@@ -161,7 +182,7 @@ def curso_nuevo():
 @views_bp.route("/cursos/<int:id>/editar", methods=["GET", "POST"])
 def curso_editar(id):
     try:
-        curso = requests.get(f"{BACKEND_URL}/cursos/cursos/{id}").json()
+        curso = requests.get(f"http://localhost:5000/cursos/{id}").json()
     except:
         return redirect(url_for("views.cursos"))
     if request.method == "POST":
@@ -171,14 +192,14 @@ def curso_editar(id):
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.put(f"{BACKEND_URL}/cursos/cursos/{id}", json=data)
+        requests.put(f"http://localhost:5000/cursos/{id}", json=data)
         return redirect(url_for("views.curso_detalle", id=id))
     return render_template("cursos/curso_form.html", curso=curso)
 
 
 @views_bp.route("/cursos/<int:id>/eliminar", methods=["POST"])
 def curso_eliminar(id):
-    requests.delete(f"{BACKEND_URL}/cursos/cursos/{id}")
+    requests.delete(f"http://localhost:5000/cursos/{id}")
     return redirect(url_for("views.cursos"))
 
 @views_bp.route("/profesores")
