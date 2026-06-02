@@ -1,5 +1,9 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+
 from flask import Flask
 from routes.asistencia import asistencia_bp
 from routes.profesores import profesores_bp
@@ -21,8 +25,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 app.register_blueprint(profesores_bp, url_prefix="/profesores")
 app.register_blueprint(evaluaciones_bp, url_prefix="/evaluaciones")
 app.register_blueprint(reportes_bp)
-app.register_blueprint(cursos_bp, url_prefix="/api")
-
+app.register_blueprint(cursos_bp, url_prefix="/cursos")
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
 app.register_blueprint(alumnos_bp, url_prefix="/alumnos")
@@ -34,4 +37,4 @@ def home():
     return "Hola Flask"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=os.environ.get("PORT", 5000))
