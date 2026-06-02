@@ -16,13 +16,22 @@ def crear_nota():
     conn = get_db()
     cursor = conn.cursor()
 
-    if alumno_id is None or evaluacion_id is None:
-       return jsonify({"error": "alumno_id y evaluacion_id son obligatorios"}), 400
+    if alumno_id is None or evaluacion_id is None or nota_alumno is None:
+       return jsonify({"error": "alumno_id, evaluacion_id y nota_alumno son obligatorios"}), 400
+    
+    if nota_alumno >= 7:
+       estado = "PROMOCIONADO"
+       
+    elif nota_alumno >= 4:
+       estado = "APROBADO"
+       
+    else:
+       estado = "DESAPROBADO"
 
     try:
         cursor.execute("""
-            INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno)
-            VALUES (%s, %s, %s)""", (alumno_id, evaluacion_id, nota_alumno))
+            INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno, estado)
+            VALUES (%s, %s, %s, %s)""", (alumno_id, evaluacion_id, nota_alumno, estado))
 
         conn.commit()
 
@@ -35,7 +44,7 @@ def crear_nota():
         cursor.close()
         conn.close()
 
-    return jsonify({"mensaje": "Nota creada correctamente","id": nueva_nota_id}), 201
+    return jsonify({"mensaje": "Nota creada correctamente","id": nueva_nota_id, "estado": estado}), 201
 
 
 @notas_bp.route("/notas", methods=["GET"])
@@ -44,13 +53,22 @@ def obtener_notas():
     cursor = conn.cursor(dictionary=True)
 
     try:
-     cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre FROM notas
-            JOIN alumnos
-                ON notas.alumno_id = alumnos.id
-            JOIN evaluaciones
-                ON notas.evaluacion_id = evaluaciones.id
-        JOIN tipos_evaluacion
-            ON evaluaciones.tipo_id = tipos_evaluacion.id """)
+     cursor.execute("""SELECT
+        notas.id,
+        notas.nota_alumno,
+        notas.estado,
+        alumnos.nombre,
+        alumnos.apellido,
+        evaluaciones.titulo,
+        evaluaciones.fecha,
+        tipos_evaluacion.nombre AS tipo_evaluacion
+    FROM notas
+    JOIN alumnos
+        ON notas.alumno_id = alumnos.id
+    JOIN evaluaciones
+        ON notas.evaluacion_id = evaluaciones.id
+    JOIN tipos_evaluacion
+        ON evaluaciones.tipo_id = tipos_evaluacion.id """)
 
      notas = cursor.fetchall()
 
@@ -70,15 +88,24 @@ def alumno_notas(alumno_id):
     cursor = conn.cursor(dictionary=True)
 
     try:
-        cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre FROM notas
-     JOIN alumnos
+        cursor.execute("""SELECT
+        notas.id,
+        notas.nota_alumno,
+        notas.estado,
+        alumnos.nombre,
+        alumnos.apellido,
+        evaluaciones.titulo,
+        evaluaciones.fecha,
+        tipos_evaluacion.nombre
+    FROM notas
+    JOIN alumnos
         ON notas.alumno_id = alumnos.id
-     JOIN evaluaciones
+    JOIN evaluaciones
         ON notas.evaluacion_id = evaluaciones.id
-     JOIN tipos_evaluacion
+    JOIN tipos_evaluacion
         ON evaluaciones.tipo_id = tipos_evaluacion.id
-
-     WHERE notas.alumno_id = %s""", (alumno_id,))
+    WHERE notas.alumno_id = %s
+""", (alumno_id,))
 
         notas_alumno = cursor.fetchall()
 
@@ -98,7 +125,7 @@ def equipo_notas(equipo_id):
 
     try:
 
-     cursor.execute("""SELECT notas.id, notas.nota_alumno, alumnos.padron, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre AS tipo_evaluacion, equipos.nombre FROM notas
+     cursor.execute("""SELECT notas.id, notas.nota_alumno, notas.estado, alumnos.padron, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre, equipos.nombre FROM notas
         JOIN alumnos
             ON notas.alumno_id = alumnos.id
         JOIN equipo_alumnos
@@ -131,9 +158,21 @@ def modificar_nota(nota_id):
 
     conn = get_db()
     cursor = conn.cursor()
+    
+    if nota_alumno is None:
+       return jsonify({"error": "nota_alumno es obligatoria"}), 400
+    
+    if nota_alumno >= 7:
+       estado = "PROMOCIONADO"
+       
+    elif nota_alumno >= 4:
+       estado = "APROBADO"
+       
+    else:
+       estado = "DESAPROBADO"
 
     try:
-     cursor.execute("""UPDATE notas SET nota_alumno = %s WHERE id = %s""", (nota_alumno, nota_id))
+     cursor.execute("""UPDATE notas SET nota_alumno = %s, estado = %s WHERE id = %s""", (nota_alumno, estado, nota_id))
      conn.commit()
 
      if cursor.rowcount == 0:

@@ -75,29 +75,6 @@ def importar_lista():
     }), 200
 
 
-@alumnos_bp.route("/", methods=["GET"])
-def obtener_alumnos():
-    db = None
-    cursor = None
-
-    try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM alumnos")
-        alumnos = cursor.fetchall()
-
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
-
-    return jsonify(alumnos), 200
-
-
 @alumnos_bp.route("/<int:id>", methods=["GET"])
 def obtener_alumno(id):
     db = None

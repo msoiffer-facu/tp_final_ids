@@ -1,10 +1,10 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
-from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
-from services.config import BACKEND_URL
-from services.curso import obtener_cursos
-from services.login import usuario_logueado
+from frontend.services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from frontend.services.config import BACKEND_URL
+from frontend.services.curso import obtener_cursos
+from frontend.services.login import usuario_logueado
 
 views_bp = Blueprint("views", __name__)
 

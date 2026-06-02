@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
 from flask import Flask, redirect, request, url_for
-from routes.authenticacion_views import auth_bp
-from routes.views import views_bp
-from services.login import usuario_logueado
+from frontend.routes.authenticacion_views import auth_bp
+from frontend.routes.views import views_bp
+from frontend.services.login import usuario_logueado
 
 
 app = Flask(__name__)
