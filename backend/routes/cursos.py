@@ -103,10 +103,18 @@ def get_alumnos_curso(id):
     try:
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
-        alumnos = db_get_alumnos_curso(id)
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        alumnos, total = db_get_alumnos_curso(id, page, per_page)
     except:
-        return  jsonify({"error": "error en el servidor"}), 500
-    return jsonify(alumnos), 200
+        return jsonify({"error": "error en el servidor"}), 500
+    return jsonify({
+        "alumnos": alumnos,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    }), 200
 
 
 @cursos_bp.route("/<int:id>/alumnos", methods=["POST"])
@@ -197,10 +205,18 @@ def get_equipos(id):
     try:
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
-        equipos = db_get_equipos(id)
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        equipos, total = db_get_equipos(id, page, per_page)
     except:
-        return  jsonify({"error": "error en el servidor"}), 500
-    return jsonify(equipos), 200
+        return jsonify({"error": "error en el servidor"}), 500
+    return jsonify({
+        "equipos": equipos,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    }), 200
 
 
 @cursos_bp.route("/<int:id>/equipos", methods=["POST"])

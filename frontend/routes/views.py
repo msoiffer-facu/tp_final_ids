@@ -140,14 +140,28 @@ def cursos():
 @views_bp.route("/cursos/<int:id>")
 def curso_detalle(id):
     try:
+        alumno_page = int(request.args.get("alumno_page", 1))
+        alumno_per_page = 10
+        equipo_page = int(request.args.get("equipo_page", 1))
+        equipo_per_page = 10
+
         curso = requests.get(f"http://localhost:5000/cursos/{id}").json()
-        alumnos = requests.get(f"http://localhost:5000/cursos/{id}/alumnos").json()
-        equipos = requests.get(f"http://localhost:5000/cursos/{id}/equipos").json()
+        alumnos_data = requests.get(f"http://localhost:5000/cursos/{id}/alumnos",
+            params={"page": alumno_page, "per_page": alumno_per_page}).json()
+        equipos_data = requests.get(f"http://localhost:5000/cursos/{id}/equipos",
+            params={"page": equipo_page, "per_page": equipo_per_page}).json()
         clases = requests.get(f"http://localhost:5000/cursos/{id}/clases").json()
     except:
         return redirect(url_for("views.cursos"))
-    return render_template("cursos/curso_detalle.html", curso=curso, alumnos=alumnos, equipos=equipos, clases=clases)
-
+    return render_template("cursos/curso_detalle.html",
+        curso=curso,
+        alumnos=alumnos_data["alumnos"],
+        alumno_page=alumnos_data["page"],
+        alumno_total_pages=alumnos_data["total_pages"],
+        equipos=equipos_data["equipos"],
+        equipo_page=equipos_data["page"],
+        equipo_total_pages=equipos_data["total_pages"],
+        clases=clases)
 
 @views_bp.route("/cursos/nuevo", methods=["GET", "POST"])
 def curso_nuevo():

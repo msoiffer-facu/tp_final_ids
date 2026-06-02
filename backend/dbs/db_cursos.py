@@ -76,20 +76,26 @@ def db_delete_curso(id):
 
 # ─── ALUMNOS DEL CURSO ───
 
-def db_get_alumnos_curso(curso_id):
+def db_get_alumnos_curso(curso_id, page=1, per_page=10):
+    offset = (page - 1) * per_page
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("SELECT COUNT(*) as total FROM alumnos_curso WHERE curso_id = %s", (curso_id,))
+    total = cursor.fetchone()["total"]
+    
     cursor.execute("""
         SELECT a.id, a.padron, a.nombre, a.apellido, a.email, a.abandono, a.estado
         FROM alumnos_curso ac
         JOIN alumnos a ON ac.alumnos_id = a.id
         WHERE ac.curso_id = %s
         ORDER BY a.apellido, a.nombre
-    """, (curso_id,))
+        LIMIT %s OFFSET %s
+    """, (curso_id, per_page, offset))
     alumnos = cursor.fetchall()
     cursor.close()
     conn.close()
-    return alumnos
+    return alumnos, total
 
 def db_inscribir_alumno(curso_id, alumno_id):
     conn = get_connection()
@@ -156,14 +162,20 @@ def db_delete_clase(clase_id, curso_id):
 
 # ─── EQUIPOS ───
 
-def db_get_equipos(curso_id):
+def db_get_equipos(curso_id, page=1, per_page=10):
+    offset = (page - 1) * per_page
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM equipos WHERE curso_id = %s", (curso_id,))
+
+    cursor.execute("SELECT COUNT(*) as total FROM equipos WHERE curso_id = %s", (curso_id,))
+    total = cursor.fetchone()["total"]
+
+    cursor.execute("SELECT * FROM equipos WHERE curso_id = %s LIMIT %s OFFSET %s", 
+        (curso_id, per_page, offset))
     equipos = cursor.fetchall()
     cursor.close()
     conn.close()
-    return equipos
+    return equipos, total
 
 def db_create_equipo(nombre, descripcion, curso_id):
     conn = get_connection()
