@@ -6,7 +6,7 @@ from db import get_db
 
 def db_get_cursos(page=1, per_page=10):
     offset = (page - 1) * per_page
-    conn = get_connection()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     
     cursor.execute("SELECT COUNT(*) as total FROM cursos")
@@ -63,14 +63,9 @@ def db_delete_curso(id):
 
 # ─── ALUMNOS DEL CURSO ───
 
-<<<<<<< HEAD
 def db_get_alumnos_curso(curso_id, page=1, per_page=10):
     offset = (page - 1) * per_page
-    conn = get_connection()
-=======
-def db_get_alumnos_curso(curso_id):
     conn = get_db()
->>>>>>> 8498c495bdeed28a6842cd5af00621fcfa0e7c06
     cursor = conn.cursor(dictionary=True)
     
     cursor.execute("SELECT COUNT(*) as total FROM alumnos_curso WHERE curso_id = %s", (curso_id,))
@@ -154,14 +149,9 @@ def db_delete_clase(clase_id, curso_id):
 
 # ─── EQUIPOS ───
 
-<<<<<<< HEAD
 def db_get_equipos(curso_id, page=1, per_page=10):
     offset = (page - 1) * per_page
-    conn = get_connection()
-=======
-def db_get_equipos(curso_id):
     conn = get_db()
->>>>>>> 8498c495bdeed28a6842cd5af00621fcfa0e7c06
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("SELECT COUNT(*) as total FROM equipos WHERE curso_id = %s", (curso_id,))
