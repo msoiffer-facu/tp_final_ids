@@ -11,17 +11,24 @@ from dbs.db_cursos import (
 cursos_bp = Blueprint("cursos", __name__)
 
 
-# ─── CURSOS ───
 
-@cursos_bp.route("/cursos", methods=["GET"])
+@cursos_bp.route("/", methods=["GET"])
 def get_cursos():
     try:
-        cursos = db_get_cursos()
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        cursos, total = db_get_cursos(page, per_page)  # ← cambia la firma
     except:
-        return  jsonify({"error": "error en el servidor"}), 500
-    return jsonify(cursos), 200
+        return jsonify({"error": "error en el servidor"}), 500
+    return jsonify({
+        "cursos": cursos,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    }), 200
 
-@cursos_bp.route("/cursos/<int:id>", methods=["GET"])
+@cursos_bp.route("/<int:id>", methods=["GET"])
 def get_curso(id):
     try:
         curso = db_get_curso_by_id(id)
@@ -32,7 +39,7 @@ def get_curso(id):
     return jsonify(curso), 200
 
 
-@cursos_bp.route("/cursos", methods=["POST"])
+@cursos_bp.route("/", methods=["POST"])
 def create_curso():
     data = request.get_json()
     nombre = data.get("nombre")
@@ -53,7 +60,7 @@ def create_curso():
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
 
-@cursos_bp.route("/cursos/<int:id>", methods=["PUT"])
+@cursos_bp.route("/<int:id>", methods=["PUT"])
 def update_curso(id):
     if not db_get_curso_by_id(id):
         return jsonify({"error": "Curso no encontrado."}), 404
@@ -74,11 +81,11 @@ def update_curso(id):
 
         db_update_curso(id, nombre, cuatrimestre, anio, modificacion)
     except:
-        return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
+        return jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso actualizado exitosamente."}), 200
 
 
-@cursos_bp.route("/cursos/<int:id>", methods=["DELETE"])
+@cursos_bp.route("/<int:id>", methods=["DELETE"])
 def delete_curso(id):
     try:
         if not db_get_curso_by_id(id):
@@ -91,18 +98,26 @@ def delete_curso(id):
 
 # ─── ALUMNOS DEL CURSO ───
 
-@cursos_bp.route("/cursos/<int:id>/alumnos", methods=["GET"])
+@cursos_bp.route("/<int:id>/alumnos", methods=["GET"])
 def get_alumnos_curso(id):
     try:
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
-        alumnos = db_get_alumnos_curso(id)
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        alumnos, total = db_get_alumnos_curso(id, page, per_page)
     except:
-        return  jsonify({"error": "error en el servidor"}), 500
-    return jsonify(alumnos), 200
+        return jsonify({"error": "error en el servidor"}), 500
+    return jsonify({
+        "alumnos": alumnos,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    }), 200
 
 
-@cursos_bp.route("/cursos/<int:id>/alumnos", methods=["POST"])
+@cursos_bp.route("/<int:id>/alumnos", methods=["POST"])
 def inscribir_alumno(id):
 
     if not db_get_curso_by_id(id):
@@ -124,7 +139,7 @@ def inscribir_alumno(id):
         return  jsonify({"error": "error en el servidor"}), 500
 
 
-@cursos_bp.route("/cursos/<int:id>/alumnos/<int:alumno_id>", methods=["DELETE"])
+@cursos_bp.route("/<int:id>/alumnos/<int:alumno_id>", methods=["DELETE"])
 def desinscribir_alumno(id, alumno_id):
     try:
         if not db_get_curso_by_id(id):
@@ -139,7 +154,7 @@ def desinscribir_alumno(id, alumno_id):
 
 # ─── CLASES PRESENCIALES ───
 
-@cursos_bp.route("/cursos/<int:id>/clases", methods=["GET"])
+@cursos_bp.route("/<int:id>/clases", methods=["GET"])
 def get_clases(id):
     try:
         if not db_get_curso_by_id(id):
@@ -150,7 +165,7 @@ def get_clases(id):
     return jsonify(clases), 200
 
 
-@cursos_bp.route("/cursos/<int:id>/clases", methods=["POST"])
+@cursos_bp.route("/<int:id>/clases", methods=["POST"])
 def create_clase(id):
     try:
         
@@ -170,7 +185,7 @@ def create_clase(id):
     return jsonify({"message": "Clase creada exitosamente.", "id": nuevo_id}), 201
 
 
-@cursos_bp.route("/cursos/<int:id>/clases/<int:clase_id>", methods=["DELETE"])
+@cursos_bp.route("/<int:id>/clases/<int:clase_id>", methods=["DELETE"])
 def delete_clase(id, clase_id):
     try:
         if not db_get_curso_by_id(id):
@@ -185,18 +200,26 @@ def delete_clase(id, clase_id):
 
 # ─── EQUIPOS ───
 
-@cursos_bp.route("/cursos/<int:id>/equipos", methods=["GET"])
+@cursos_bp.route("/<int:id>/equipos", methods=["GET"])
 def get_equipos(id):
     try:
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
-        equipos = db_get_equipos(id)
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        equipos, total = db_get_equipos(id, page, per_page)
     except:
-        return  jsonify({"error": "error en el servidor"}), 500
-    return jsonify(equipos), 200
+        return jsonify({"error": "error en el servidor"}), 500
+    return jsonify({
+        "equipos": equipos,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": (total + per_page - 1) // per_page
+    }), 200
 
 
-@cursos_bp.route("/cursos/<int:id>/equipos", methods=["POST"])
+@cursos_bp.route("/<int:id>/equipos", methods=["POST"])
 def create_equipo(id):
     try:
         if not db_get_curso_by_id(id):
@@ -216,7 +239,7 @@ def create_equipo(id):
     return jsonify({"message": "Equipo creado exitosamente.", "id": nuevo_id}), 201
 
 
-@cursos_bp.route("/cursos/<int:id>/equipos/<int:equipo_id>/alumnos", methods=["GET"])
+@cursos_bp.route("/<int:id>/equipos/<int:equipo_id>/alumnos", methods=["GET"])
 def get_alumnos_equipo(id, equipo_id):
     try:
         alumnos = db_get_alumnos_equipo(equipo_id)
@@ -225,7 +248,7 @@ def get_alumnos_equipo(id, equipo_id):
     return jsonify(alumnos), 200
 
 
-@cursos_bp.route("/cursos/<int:id>/equipos/<int:equipo_id>/alumnos", methods=["POST"])
+@cursos_bp.route("/<int:id>/equipos/<int:equipo_id>/alumnos", methods=["POST"])
 def agregar_alumno_equipo(id, equipo_id):
     data = request.get_json()
     alumno_id = data.get("alumno_id")
@@ -241,7 +264,7 @@ def agregar_alumno_equipo(id, equipo_id):
         return jsonify({"error": "El alumno ya está en este equipo."}), 409
 
 
-@cursos_bp.route("/cursos/<int:id>/equipos/<int:equipo_id>/alumnos/<int:alumno_id>", methods=["DELETE"])
+@cursos_bp.route("/<int:id>/equipos/<int:equipo_id>/alumnos/<int:alumno_id>", methods=["DELETE"])
 def quitar_alumno_equipo(id, equipo_id, alumno_id):
     try:
         afectados = db_quitar_alumno_equipo(equipo_id, alumno_id)
