@@ -1,13 +1,42 @@
 from db import get_db
 
-def db_get_alumnos():
+def db_get_alumnos(offset, limit=10, busqueda="", abandono=""):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM alumnos")
+
+    texto = f"%{busqueda}%"
+    params = []
+    where_clauses = []
+
+    if busqueda != "":
+        where_clauses.append("(nombre LIKE %s OR apellido LIKE %s OR CAST(padron AS CHAR) LIKE %s OR email LIKE %s)")
+        params.extend([texto, texto, texto, texto])
+
+    if abandono != "":
+        where_clauses.append("abandono = %s")
+        params.append(abandono)
+
+    where_clause = ""
+    if where_clauses:
+        where_clause = " WHERE " + " AND ".join(where_clauses)
+
+    query = (
+        "SELECT a.id, a.padron, a.nombre, a.apellido, a.email, a.abandono, a.estado, "
+        "IF((SELECT COUNT(*) FROM equipo_alumnos ea WHERE ea.alumno_id = a.id) > 0, 1, 0) AS equipo "
+        "FROM alumnos a "
+        f"{where_clause} "
+        "LIMIT %s OFFSET %s"
+    )
+    cursor.execute(query, tuple(params + [limit, offset]))
     alumnos = cursor.fetchall()
+
+    count_query = f"SELECT COUNT(*) as total FROM alumnos a{where_clause}"
+    cursor.execute(count_query, tuple(params))
+    total = cursor.fetchone()["total"]
+
     cursor.close()
     db.close()
-    return alumnos
+    return alumnos, total
 
 def db_get_alumno_id(id):
     db = get_db()
@@ -32,7 +61,7 @@ def db_create_alumno(nombre, apellido, email, padron, abandono, estado):
     cursor.execute(
         "INSERT INTO alumnos (nombre, apellido, email, padron, abandono, estado) VALUES (%s, %s, %s, %s, %s, %s)",
         (nombre, apellido, email, padron, abandono, estado)
-    )
+        )
     db.commit()
     cursor.close()
     db.close()

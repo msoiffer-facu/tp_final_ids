@@ -70,8 +70,12 @@ def validar_data_alumno(data, id=None):
         errores.append("abandono invalido")
 
     estado_validado = validar_convertir_booleano(data.get("estado"))
+    # Permitir que 'estado' sea opcional en formularios que no lo envían (ej. edición desde frontend)
     if estado_validado is None:
-        errores.append("estado invalido")
+        if data.get("estado") is None:
+            estado_validado = True
+        else:
+            errores.append("estado invalido")
 
     alumno_padron = db_buscar_dato_alumno("padron", padron_validado, id)
     if alumno_padron:

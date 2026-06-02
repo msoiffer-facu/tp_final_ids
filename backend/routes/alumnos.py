@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, url_for
 from herramientas.importar_csv import importar_alumnos_csv
-from herramientas.validaciones_alumnos import  validar_data_alumno, importar_alumnos_db
-from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno
+from herramientas.validaciones_alumnos import  validar_data_alumno
+from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db
 import os
 import mysql.connector
 
@@ -20,33 +20,50 @@ def importar_lista():
     if extension != '.csv':
         return jsonify({"error": "Formato invalido"}), 400
 
-    resultado = importar_alumnos_csv(file)
-
-    if "error" in resultado:
-        return jsonify({"error": resultado["error"]}), 400 
-
     try:
+        resultado = importar_alumnos_csv(file)
 
-        resultado_db = importar_alumnos_db(resultado["alumnos"])
+        if "error" in resultado:
+            return jsonify({"error": resultado["error"]}), 400
 
+        resultado_db = cargar_alumnos_db(resultado["alumnos"])
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
+    except Exception as err:
+        return jsonify({"error": str(err)}), 500
 
     return jsonify({
         "insertados": resultado_db["insertados"],
-        "errores": resultado["errores"] + resultado_db["errores"]
+        "existentes": resultado_db["existentes"],
+        "errores": resultado["errores"]
     }), 200
 
 
 @alumnos_bp.route("/", methods=["GET"])
 def obtener_alumnos():
+    pagina = request.args.get("pagina", 1, type=int)
+    busqueda = request.args.get("busqueda", "", type=str).strip()
+    abandono = request.args.get("abandono", "", type=str).strip()
+
+    if pagina < 1:
+        return jsonify({"error": "Pagina invalida"}), 400
+
+    limit = 10
+    offset = (pagina - 1) * limit
+    
     try:
-        alumnos = db_get_alumnos()
+        alumnos_pagina, total_registros = db_get_alumnos(offset, limit, busqueda, abandono)
 
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
 
-    return jsonify(alumnos), 200
+    return jsonify({
+        "alumnos": alumnos_pagina,
+        "total": total_registros,
+        "pagina": pagina,
+        "limit": limit,
+        "total_pages": (total_registros + limit - 1) // limit
+    }), 200
 
 
 @alumnos_bp.route("/<int:id>", methods=["GET"])
@@ -90,7 +107,11 @@ def modificar_alumno(id):
         alumno_validado = validar_data_alumno(data, id)
         if alumno_validado["errores"]:
             return jsonify({"errores": alumno_validado["errores"]}), 400
-             
+
+        errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"], id)
+        if errores_db:
+            return jsonify({"errores": errores_db}), 400
+
         db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
 
     except mysql.connector.Error:
@@ -109,6 +130,10 @@ def crear_alumno():
         alumno_validado = validar_data_alumno(data)
         if alumno_validado["errores"]:
             return jsonify({"errores": alumno_validado["errores"]}), 400
+        
+        errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"])
+        if errores_db:
+            return jsonify({"errores": errores_db}), 400
 
         db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
 
