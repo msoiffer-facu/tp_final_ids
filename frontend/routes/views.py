@@ -183,7 +183,8 @@ def curso_eliminar(id):
 
 @views_bp.route("/profesores")
 def profesores():
-    return render_template("profesores/profesores.html", profesores=PROFESORES)
+    profesores = []
+    return render_template("profesores/profesores.html", profesores=profesores)
 
 
 @views_bp.route("/profesores/nuevo", methods=["GET", "POST"])
@@ -234,20 +235,62 @@ def profesor_eliminar(id):
     return redirect(url_for("views.profesores"))
 
 
-@views_bp.route("/asistencia")
+@views_bp.route("/asistencia", methods=["GET", "POST"])
 def asistencia():
+    if request.method == "POST":
+        data = {
+            "curso_id": request.form.get("curso")
+        }
+        requests.post(f"{BACKEND_URL}/asistencia", json=data)
+        return redirect(url_for("views.asistencia"))
     cursos = obtener_cursos()
-    clases = obtener_clases_presenciales()
+    clases_p = obtener_clases_presenciales()
+    clases = clases_p['clases_presenciales']
     return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos)
 
 @views_bp.route("/asistencia/<int:id>")
 def asistencia_detalle(id):
-    clases = obtener_clases_presenciales()
+    clases = obtener_clases_presenciales()['clases_presenciales']
     clase = next((c for c in clases if c["id"] == id), None)
-    # if not clase:
-    #     return redirect(url_for("views.asistencia"))
-    return render_template("alumnos/asistencia_detalle.html", alumnos=ALUMNOS, equipos=EQUIPOS, registro=clase)
+    if not clase:
+        return redirect(url_for("views.asistencia"))
 
+    alumnos = [
+    {"id": 1, "padron": 12345, "nombre": "Juan", "apellido": "Perez", "email": "juan@mail.com", "abandono": True, "estado": False},
+    {"id": 2, "padron": 67890, "nombre": "Maria", "apellido": "Garcia", "email": "maria@mail.com", "abandono": False, "estado": True},
+    ]
+    return render_template("alumnos/asistencia_detalle.html", alumnos=alumnos, registro=clase)
+
+@views_bp.route("/asistencia/pedir-asistencia", methods=["POST"])
+def asistencia_pedir():
+        data = {
+            "id_clase_p": request.form.get("asistencia")
+        }
+        requests.post(f"{BACKEND_URL}/asistencia/pedir-asistencia", json=data)
+        return redirect(url_for("views.asistencia"))
+
+@views_bp.route("/asistencia/verificar-asistencia", methods=["POST"])
+def asistencia_verificar():
+        token = request.form.get("token")
+        clase_id = request.form.get("asistencia")
+        if not token:
+            return "Token no enviado", 400
+        
+        if not clase_id:
+            return "clase no seleccionada", 400
+
+        try:
+            response = requests.post(
+                f"{BACKEND_URL}/asistencia/verificar-asistencia",
+                json={
+                    "token": token,
+                    "clase_id": clase_id},
+                timeout=10,
+            )
+        except Exception as e:
+            return f"Error interno al conectar con backend: {e}", 500
+
+        return response.text, response.status_code, {"Content-Type": "text/plain; charset=utf-8"}
 '''
 @views_bp.route("/alumnos")
 def vista_alumnos():
@@ -302,27 +345,27 @@ def importar_csv():
     return render_template("alumnos/csv.html")
 
 
-@views_bp.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
+# @views_bp.route("/login", methods=["GET", "POST"])
+# def login():
+#     if request.method == "POST":
+#         email = request.form.get("email")
+#         password = request.form.get("password")
 
-        if email == "a@test.com" and password == "1234":
-            session["user"] = {
-                "email": email,
-                "name": "Martin"
-            }
-            session["token"] = "prueba"
+#         if email == "a@test.com" and password == "1234":
+#             session["user"] = {
+#                 "email": email,
+#                 "name": "Martin"
+#             }
+#             session["token"] = "prueba"
 
-            guardar_sesion(session["token"], session["user"])
-            flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
-            return redirect(url_for("views.dashboard"))
+#             guardar_sesion(session["token"], session["user"])
+#             flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
+#             return redirect(url_for("views.dashboard"))
 
-    return render_template("login.html")
+#     return render_template("login.html")
 
-@views_bp.route("/logout", methods=['POST'])
-def logout():
-    limpiar_sesion()
-    flash('Cerraste sesión.', 'success')
-    return redirect(url_for("views.login"))
+# @views_bp.route("/logout", methods=['POST'])
+# def logout():
+#     limpiar_sesion()
+#     flash('Cerraste sesión.', 'success')
+#     return redirect(url_for("views.login"))

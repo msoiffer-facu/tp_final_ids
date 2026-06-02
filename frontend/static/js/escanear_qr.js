@@ -4,8 +4,61 @@ let estaProcesando = false;
 let ultimoCodigoLeido = "";
 let tiempoUltimoEscaneo = 0;
 
+function cerrarModal(id) {
+    const modal = document.getElementById(id);
+
+    modal.classList.remove('modal--open');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+const qrForm = document.getElementById('formClasePresencial');
+const qrTokenInput = document.getElementById('qrTokenInput');
+const qrFormTargetIframe = document.getElementById('qr-form-target');
+
+if (qrFormTargetIframe) {
+    qrFormTargetIframe.dataset.waiting = "false";
+    qrFormTargetIframe.onload = () => {
+        if (qrFormTargetIframe.dataset.waiting !== "true") {
+            return;
+        }
+
+        qrFormTargetIframe.dataset.waiting = "false";
+        const tituloModal = document.querySelector('#qr-modal h3');
+        const tituloOriginal = tituloModal ? tituloModal.innerText : "Escanear Asistencia QR";
+        let mensaje = "Error al procesar la asistencia";
+        let esExito = false;
+
+        try {
+            const texto = qrFormTargetIframe.contentDocument.body.innerText || "";
+            if (texto.toLowerCase().includes('se a verificado') || texto.toLowerCase().includes('registrada') || texto.toLowerCase().includes('verificado correctamente')) {
+                mensaje = "¡Asistencia Registrada!";
+                esExito = true;
+            } else {
+                mensaje = texto.trim() || mensaje;
+            }
+        } catch (err) {
+            console.error('No se pudo leer la respuesta del iframe:', err);
+        }
+
+        if (tituloModal) {
+            tituloModal.innerText = mensaje;
+            tituloModal.style.color = esExito ? "#10b981" : "#ef4444";
+        }
+
+        setTimeout(() => {
+            if (tituloModal) {
+                tituloModal.innerText = tituloOriginal;
+                tituloModal.style.color = "#000";
+            }
+            estaProcesando = false;
+        }, 1500);
+    };
+}
+
 function abrirEscannerQR() {
     document.getElementById('qr-modal').style.display = 'flex';
+
+    cerrarModal('modalClase');
 
     //Instanciar el lector sobre el div 'reader'
     html5QrCode = new Html5Qrcode("reader");
@@ -94,7 +147,7 @@ function onScanSuccess(decodedText, decodedResult) {
 
     console.log(`Código detectado (Escaneo continuo): ${decodedText}`);
 
-    // Ejecutamos el envío a Python (ya NO llamamos a cerrarEscannerQR)
+    // Ejecutamos el envío a Python
     enviarAsistenciaAlBackend(decodedText);
 }
 
@@ -117,63 +170,28 @@ function cerrarEscannerQR() {
 }
 
 function enviarAsistenciaAlBackend(textoQR) {
-    const payload = {
-        datos_qr: textoQR,
-        timestamp: new Date().toISOString()
-    };
-
-    // Cambiamos sutilmente el diseño del modal para avisar visualmente que está registrando
     const tituloModal = document.querySelector('#qr-modal h3');
-    const tituloOriginal = tituloModal.innerText;
-    tituloModal.innerText = "⏳ Procesando..."
-    tituloModal.style.color = "#3b82f6";
+    const tituloOriginal = tituloModal ? tituloModal.innerText : "Escanear Asistencia QR";
 
-    fetch('/api/asistencia/registrar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.success) {
-            // Éxito
-            tituloModal.innerText = "¡Asistencia Registrada!";
-            tituloModal.style.color = "#10b981";
-        } else {
-            // Error de lógica del negocio (ej. alumno ya tenía presente)
-            tituloModal.innerText = `${data.error}`;
+    if (!qrForm || !qrTokenInput) {
+        console.error('Formulario QR no encontrado en la página');
+        if (tituloModal) {
+            tituloModal.innerText = "Error interno: formulario no disponible";
             tituloModal.style.color = "#ef4444";
         }
-    })
-    .catch(err => {
-        console.error(err);
-        tituloModal.innerText = "Error de conexión";
-        tituloModal.style.color = "#ef4444";
-    })
-    .finally(() => {
-        setTimeout(() => {
-            tituloModal.innerText = tituloOriginal;
-            tituloModal.style.color = "#000";
-            estaProcesando = false;
-        }, 1500);
-    });
+        estaProcesando = false;
+        return;
+    }
 
-// Esto de abajo sirve para probar si funciona la lo de que la camara siga funcionando despues de escanear un qr
+    qrTokenInput.value = textoQR;
+    if (qrFormTargetIframe) {
+        qrFormTargetIframe.dataset.waiting = "true";
+    }
 
-    // try{
-    //     tituloModal.innerText = "¡Asistencia Registrada!";
-    //     tituloModal.style.color = "#10b981";
-    // }
-    // catch(error){
-    //     console.error(err);
-    //     tituloModal.innerText = "Error de conexión";
-    //     tituloModal.style.color = "#ef4444";
-    // }
-    // finally{
-    //     setTimeout(() => {
-    //         tituloModal.innerText = tituloOriginal;
-    //         tituloModal.style.color = "#000";
-    //         estaProcesando = false;
-    //     }, 1500);
-    // }
+    if (tituloModal) {
+        tituloModal.innerText = "⏳ Procesando...";
+        tituloModal.style.color = "#3b82f6";
+    }
+
+    qrForm.submit();
 }

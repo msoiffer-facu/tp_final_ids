@@ -1,24 +1,18 @@
+from services.config import BACKEND_URL
+import requests
+
 def obtener_cursos():
-    cursos = [
-        {
-            "id":1,
-            "nombre":"curso 3b",
-        },
-        {
-            "id":2,
-            "nombre":"curso 4a",
-        },
-        {
-            "id":3,
-            "nombre":"curso 12c",
-        },
-        {
-            "id":4,
-            "nombre":"curso 14l",
-        },
-        {
-            "id":5,
-            "nombre":"curso 1g",
-        },
-    ]
+    try:
+        response = requests.get(f"{BACKEND_URL}/cursos/cursos")
+        cursos = response.json()
+    except:
+        cursos = []
     return cursos
+
+def obtener_curso_con_nombre(nombre):
+    try:
+        response = requests.get(f"{BACKEND_URL}/asistencia")
+        clases_p = response.json()
+    except:
+        clases_p = []
+    return clases_p

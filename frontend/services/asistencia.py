@@ -1,63 +1,12 @@
 from datetime import datetime
+import requests
+
+from services.config import BACKEND_URL
 
 def obtener_clases_presenciales():
-    clases_p = [
-        {
-            "id": 1,
-            "curso": {
-                "id":1,
-                "nombre":"curso 3b",
-                "total_alumnos":40,
-                "presentes":10,
-            },
-            "fecha": "15/05/26 15:35",
-            "estado":"en_proceso",
-            "pedir_asistencia": True,
-        },
-        {
-            "id": 2,
-            "curso": {
-                "id":1,
-                "nombre":"curso 4a",
-                "total_alumnos":25,
-                "presentes":10,
-            },
-            "fecha": "14/05/26 21:35",
-            "estado":"completado",
-            "pedir_asistencia": False,
-        },
-        {
-            "id": 3,
-            "curso": {
-                "id":1,
-                "nombre":"curso 12c",
-                "total_alumnos":30,
-            },
-            "fecha": "14/05/26 13:02",
-            "estado":"pendiente",
-            "pedir_asistencia": True,
-        },
-        {
-            "id": 4,
-            "curso": {
-                "id":1,
-                "nombre":"curso 14l",
-                "total_alumnos":80,
-            },
-            "fecha": "14/04/26 13:02",
-            "estado":"pendiente",
-            "pedir_asistencia": False,
-        },
-        {
-            "id": 5,
-            "curso": {
-                "id":1,
-                "nombre":"curso 1g",
-                "total_alumnos":25,
-            },
-            "fecha": "14/04/26 13:02",
-            "estado":"pendiente",
-            "pedir_asistencia": True,
-        },
-    ]
+    try:
+        response = requests.get(f"{BACKEND_URL}/asistencia")
+        clases_p = response.json()
+    except:
+        clases_p = []
     return clases_p

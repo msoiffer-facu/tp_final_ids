@@ -34,7 +34,7 @@ window.addEventListener('keydown', function (event) {
 });
 
 function abrirModalCrear() {
-    // 1. Limpiar datos previos
+
     document.getElementById('formClasePresencial').reset();
     document.getElementById('claseId').value = "";
 
@@ -46,6 +46,13 @@ function abrirModalCrear() {
     document.getElementById('selectCurso').style.display = 'inline-block';
     document.getElementById('selectAsistencia').style.display = 'none';
 
+    document.getElementById('formClasePresencial').action = '/asistencia';
+
+    document.getElementById('selectCurso').required = true;
+    document.getElementById('selectAsistencia').required = false;
+
+
+
 
 
     // 5. Abrir Modal
@@ -56,8 +63,7 @@ function abrirModalCrear() {
 // ESTADO 2: Enviar qr
 // ==========================================
 function abrirModalEnviarQR() {
-    // 1. Cargar los datos de la fila seleccionada
-    // 2. Textos de visualización
+
     document.getElementById('modalTitle').innerText = "Enviar QR";
     document.getElementById('modalSubtitle').innerText = "Enviar qr de asistencia a la clase seleccionada";
 
@@ -69,6 +75,11 @@ function abrirModalEnviarQR() {
     document.getElementById('selectAsistencia').style.display = 'inline-block';
     document.getElementById('selectCurso').style.display = 'none';
 
+    document.getElementById('formClasePresencial').action = '/asistencia/pedir-asistencia';
+
+    document.getElementById('selectAsistencia').required = true;
+    document.getElementById('selectCurso').required = false;
+
 
     // 5. Abrir Modal
     abrirModal('modalClase');
@@ -78,12 +89,10 @@ function abrirModalEnviarQR() {
 // ESTADO 2: Enviar qr
 // ==========================================
 function abrirModalEscanearQR() {
-    // 1. Cargar los datos de la fila seleccionada
-    // 2. Textos de visualización
+
     document.getElementById('modalTitle').innerText = "Escanear QR";
     document.getElementById('modalSubtitle').innerText = "Escanear qr de asistencia de la clase seleccionada";
 
-    // 4. Mostrar botones correspondientes (Editar y Cancelar/Cerrar
     document.getElementById('btnEscanearQR').style.display = 'inline-block';
     document.getElementById('btnCrearClase').style.display = 'none';
     document.getElementById('btnEnviarQR').style.display = 'none';
@@ -93,6 +102,11 @@ function abrirModalEscanearQR() {
     document.getElementById('selectCurso').style.display = 'none';
 
 
-    // 5. Abrir Modal
+    document.getElementById('formClasePresencial').action = '/asistencia/verificar-asistencia';
+
+    document.getElementById('selectAsistencia').required = true;
+    document.getElementById('selectCurso').required = false;
+
+
     abrirModal('modalClase');
 }

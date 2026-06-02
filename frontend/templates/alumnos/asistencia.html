@@ -48,7 +48,7 @@
                 <th style="width: 80px;">id</th>
                 <th>curso</th>
                 <th>fecha</th>
-                <th>alumnos para dar asistencia</th>
+                <th>pedir asistencia</th>
             </tr>
         </thead>
         <tbody>
@@ -60,7 +60,7 @@
                 <td class="hora">{{ registro.fecha }}</td>
 
                 <td class=" visual-data" >
-                    {{ registro.curso.total_alumnos | default('100') }}
+                    {{ registro.pedir_asistencia | default('100') }}
                 </td>
 
             </tr>
@@ -85,32 +85,33 @@
         <h2 class="modal__title" id="modalTitle">Agregar clase presencial</h2>
         <p class="modal__subtitle" id="modalSubtitle">Registra una nueva asistencia</p>
 
-        <form method="POST" class="form" id="formClasePresencial">
+        <form method="POST" class="form" id="formClasePresencial" action="/asistencia" target="qr-form-target">
             <input type="hidden" id="claseId" name="clase_id" value="">
 
             <div class="form__group">
                 <label id="text-select" for="curso" class="form__label">Curso</label>
-                <select id="selectCurso" name="curso" class="form__input" required>
+                <select id="selectCurso" name="curso" class="form__input">
                     <option value="" disabled selected>Selecciona un curso...</option>
                     {% for curso in cursos %}
-                    <option value="{{ curso.nombre }}">{{ curso.nombre }}</option>
+                    <option value="{{ curso.id }}">{{ curso.nombre }}</option>
                     {% endfor %}
                 </select>
-                <select id="selectAsistencia" name="curso" class="form__input" required>
+                <select id="selectAsistencia" name="asistencia" class="form__input">
                     <option value="" disabled selected>Selecciona una clase...</option>
                     {% for registro in clases %}
-                    {% if registro.pedir_asistencia %}
+                    {% if registro.pedir_asistencia == 0%}
                     <option value="{{ registro.id }}">{{registro.id}} - {{registro.curso.nombre}}, {{ registro.fecha }}</option>
                     {% endif %}
                     {% endfor %}
                 </select>
             </div>
+            <input type="hidden" name="token" id="qrTokenInput" value="">
 
             <div class="form__actions">
                 <button type="button" id="btnCancelar" class="form__btn form__btn--cancel" onclick="cerrarModalClase()">Cancelar</button>
                 <button type="submit" id="btnCrearClase" class="form__btn form__btn--submit">Crear Asistencia</button>
                 <button type="submit" id="btnEnviarQR" class="form__btn form__btn--submit">Enviar QR asistencia</button>
-                <button type="submit" id="btnEscanearQR" class="form__btn form__btn--submit" onclick="abrirEscannerQR()">Escanear QR asistencia</button>
+                <button type="button" id="btnEscanearQR" class="form__btn form__btn--submit" onclick="abrirEscannerQR()">Escanear QR asistencia</button>
             </div>
         </form>
     </div>
@@ -120,7 +121,7 @@
 <div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
     <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:500px; text-align:center;">
         <h3>Escanear Asistencia QR</h3>
-        
+
         <div style="margin-bottom: 15px;">
             <label for="camera-select" style="font-size: 0.85rem; color: #4b5563; display: block; margin-bottom: 5px;">Seleccionar Cámara:</label>
             <select id="camera-select" style="padding: 6px; width: 100%; border-radius: 4px; border: 1px solid #d1d5db;"></select>
@@ -131,6 +132,11 @@
         <button onclick="cerrarEscannerQR()" style="margin-top:15px; padding:8px 16px; background:#ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Cerrar</button>
     </div>
 </div>
+
+<!-- <form id="qr-verificar-form" action="/asistencia/verificar-asistencia" method="POST" target="qr-form-target" style="display:none;">
+    <input type="hidden" name="token" id="qrTokenInput" value="">
+</form> -->
+<iframe name="qr-form-target" id="qr-form-target" style="display:none;"></iframe>
 
 {% endblock %}
 

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, url_for
 
 from dbs.db_asistencia import *
+from services.asistencia import *
 from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
@@ -15,7 +16,7 @@ def get_clase_presencial():
     if offset < 0:
         return "El offset no puede ser menor a 0"
     try:
-        clases_p = obtener_clases_p()
+        clases_p = listar_clases()
     except Exception as err:
         return jsonify(err.__cause__),500
 
@@ -73,21 +74,20 @@ def get_clase_presencial():
 @asistencia_bp.route("/", methods=['POST'])
 def create_clase_presencial():
     data = request.get_json()
-    fecha = data.get("fecha")
-    id_curso = data.get("id_curso")
+    curso_id = data.get("curso_id")
 
-    if fecha is None or id_curso is None:
-        return "fecha y id_curso son requeridos",404
+    if curso_id is None:
+        return "curso_id es requerido",404
 
     try:
-        curso = buscar_curso(id_curso)
+        curso = buscar_curso(curso_id)
     except Exception as e:
         return f'Error interno al buscar el curso: {e}',500
 
     if not curso:
         return "El curso con el que quiere hacer la clase no existe", 404
     try:
-        crear_clase_p(fecha, curso)
+        crear_clase_p(curso)
     except Exception:
         return"Error interno al crear la clase presencial",500
 
@@ -97,10 +97,10 @@ def create_clase_presencial():
 def modificar_clase_presencial(id):
     data = request.get_json()
     fecha = data.get("fecha")
-    id_curso = data.get("id_curso")
+    curso_id = data.get("curso_id")
 
-    if fecha is None or id_curso is None:
-        return "fecha y id_curso son requeridos",404
+    if fecha is None or curso_id is None:
+        return "fecha y curso_id son requeridos",404
 
     try:
         clase_p = buscar_clase_p(id)
@@ -112,7 +112,7 @@ def modificar_clase_presencial(id):
 
     try:
         #TODO: hacer funcion en db para crear la clase presncial
-        actualizar_clase_p(id, fecha, id_curso)
+        actualizar_clase_p(id, fecha, curso_id)
     except Exception:
         return"Error interno al actualizar la clase presencial",500
 
@@ -173,6 +173,10 @@ def create_asistencia():
             crear_enviar_qr_alumnos(token)
     except Exception:
         return "Error interno crear o enviar el qr",500
+    try:
+        asistencia_enviada(id_clase)
+    except Exception as e:
+        return f"Error interno al cambiar el valor de pedir_asistencia: {e}",500
 
 
     # return jsonify(
@@ -185,12 +189,16 @@ def create_asistencia():
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     token = data.get("token")
+    clase_id = data.get("clase_id")
+
+    if not token:
+        return "Token no enviado", 400
 
     try:
-        respuesta = comprobar_token(token)
+        respuesta = comprobar_token(token, clase_id)
     except Exception as e:
-        return f'Error al revisar el token. {e}',500
+        return f'Error al revisar el token. {e}', 500
 
     return respuesta, 200
