@@ -1,6 +1,7 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
+# from backend.dbs.db_evaluaciones import db_obtener_tipo_de_evaluacion_bd
 from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos
@@ -277,8 +278,11 @@ def asistencia():
 @views_bp.route("/evaluaciones")
 def evaluaciones():
     lista_evaluaciones = [
-        {"titulo": "Primer Parcial", "fecha": "2026-06-01"},
-        {"titulo": "Segundo Parcial", "fecha": "2026-06-15"}
+        {"id": 1, "titulo": "Primer Parcial", "fecha": "2026-06-01", "tipo_nombre": "Escrito", "estado": "Finalizado"},
+        {"id": 2, "titulo": "Segundo Parcial", "fecha": "2026-06-15", "tipo_nombre": "Escrito", "estado": "Pendiente"},
+        {"id": 3, "titulo": "Trabajo Práctico Final", "fecha": "2026-06-20", "tipo_nombre": "Proyecto", "estado": "En curso"},
+        {"id": 4, "titulo": "Examen Final", "fecha": "2026-06-25", "tipo_nombre": "Escrito", "estado": "Pendiente"},
+        {"id": 5, "titulo": "recuperatorio", "fecha": "2026-06-30", "tipo_nombre": "Oral", "estado": "Finalizado"},
     ]
     return render_template("evaluaciones/evaluaciones.html", evaluaciones=lista_evaluaciones)
 
@@ -286,10 +290,40 @@ def evaluaciones():
 @views_bp.route("/evaluaciones/nueva", methods=["GET", "POST"])
 def evaluacion_nueva():
     if request.method == "POST":
-        titulo = request.form.get("titulo")
-        fecha = request.form.get("fecha")
+        data = {
+            "titulo": request.form.get("titulo"),
+            "fecha": request.form.get("fecha"),
+            "tipo_id": int(request.form.get("tipo_id")),
+            "curso_id": int(request.form.get("curso_id"))
+        }
+        
+        try:
+            requests.post(f"{BACKEND_URL}/evaluaciones/api", json=data)
+            flash("Evaluación guardada exitosamente", "success")
+        except Exception as e:
+            flash(f"Error al conectar con el servidor: {e}", "danger")
+            
         return redirect(url_for("views.evaluaciones"))
-    return render_template("evaluaciones/evaluacion_form.html")
+    
+    try:
+        resp_tipos = requests.get(f"{BACKEND_URL}/evaluaciones/tipos")
+        tipos = resp_tipos.json() if resp_tipos.status_code == 200 else []
+        
+        cursos = obtener_cursos() 
+    except:
+        tipos = []
+        cursos = []
+        
+    return render_template("evaluaciones/formulario_evaluacion.html", tipos=[{"id": 1, "nombre": "Parcial"}, {"id": 2, "nombre": "Recuperatorio"}], cursos=cursos)
+
+@views_bp.route("/evaluaciones/<int:id>/editar", methods=["GET", "POST"])
+def evaluacion_editar(id):
+    return "Editar evaluación " + str(id)
+
+@views_bp.route("/evaluaciones/<int:id>/eliminar", methods=["POST"])
+def evaluacion_eliminar(id):
+    return redirect(url_for("views.evaluaciones"))
+
 
 
 

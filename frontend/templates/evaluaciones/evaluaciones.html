@@ -10,36 +10,41 @@
         <h2>Listado de Evaluaciones</h2>
 
         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 1rem;">
-    
-    <select id="select-evaluacion" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; vertical-align: middle;">
-        <option value="">Seleccione una evaluación...</option>
-        {% for ev in evaluaciones %}
-            <option value="{{ ev.id }}">{{ ev.titulo }}</option>
-        {% endfor %}
-    </select>
+            <select id="select-evaluacion" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; vertical-align: middle;">
+                <option value="">Seleccione una evaluación...</option>
+                {% for ev in evaluaciones %}
+                    <option value="{{ ev.id }}">{{ ev.titulo }}</option>
+                {% endfor %}
+            </select>
 
-    <button onclick="irANotas()" class="btn-cargar">Cargar Notas</button>
-    
-    <a href="{{ url_for('evaluaciones.formulario_crear_evaluacion') }}" class="btn-primary">Nueva Evaluación</a>
-</div>
+            <button onclick="irANotas()" class="btn-cargar">Cargar Notas</button>
+            <a href="{{ url_for('views.evaluacion_nueva') }}" class="btn-primary">Nueva Evaluación</a>
+        </div>
+    </div>
 
     <table>
         <thead>
             <tr>
                 <th>Título</th>
-                <th>Tipo</th> <th>Fecha</th>
-                <th>Estado</th> <th>Acciones</th>
+                <th>Tipo</th> 
+                <th>Fecha</th>
+                <th>curso</th>
+                <th>Estado</th> 
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for ev in evaluaciones %}
             <tr>
                 <td class="nombre">{{ ev.titulo }}</td>
-                <td>{{ ev.tipo_nombre }}</td> <td>{{ ev.fecha }}</td>
-                <td>{{ ev.estado }}</td> <td class="acciones">
-                    <a href="{{ url_for('evaluaciones.vista_modificar_evaluacion', id_evaluacion=ev.id) }}" class="btn-accion editar">Editar</a>
+                <td>{{ ev.tipo_nombre }}</td> 
+                <td>{{ ev.fecha }}</td>
+                <td>{{ ev.curso_nombre }}</td>
+                <td>{{ ev.estado }}</td> 
+                <td class="acciones">
+                    <a href="{{ url_for('views.evaluacion_editar', id=ev.id) }}" class="btn-accion editar">Editar</a>
 
-                    <form action="{{ url_for('evaluaciones.eliminar_evaluacion', id_evaluacion=ev.id) }}" 
+                    <form action="{{ url_for('views.evaluacion_eliminar', id=ev.id) }}" 
                           method="POST" style="display:inline;">
                         <button type="submit" class="btn-accion eliminar" 
                                 onclick="return confirm('¿Estás seguro de eliminar esta evaluación?')">
@@ -50,7 +55,8 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="5" class="vacio">No hay evaluaciones cargadas.</td> </tr>
+                <td colspan="5" class="vacio">No hay evaluaciones cargadas.</td> 
+            </tr>
             {% endfor %}
         </tbody>
     </table>
@@ -64,9 +70,6 @@
         } else {
             alert('Por favor, seleccione una evaluación para cargar notas.');
         }
-        
     }
-    
 </script>
-
 {% endblock %}
