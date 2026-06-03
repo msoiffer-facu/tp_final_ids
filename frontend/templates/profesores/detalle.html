@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profesor.nombre }} {{ profesor.apellido }} - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('profesores_front.profesores') }}" class="btn-volver">← Volver</a>
+        <h1 class="page-title">{{ profesor.nombre }} {{ profesor.apellido }}</h1>
+    </div>
+    <div class="page-header-right">
+        <a href="{{ url_for('profesores_front.profesor_editar', profesor_id=profesor.id) }}" class="btn-secondary">Editar</a>
+    </div>
+</div>
+
+<div class="detalle-grid">
+    <div class="detalle-card">
+        <p class="detalle-label">ID</p>
+        <p class="detalle-valor">{{ profesor.id }}</p>
+    </div>
+    <div class="detalle-card">
+        <p class="detalle-label">Nombre</p>
+        <p class="detalle-valor">{{ profesor.nombre }}</p>
+    </div>
+    <div class="detalle-card">
+        <p class="detalle-label">Apellido</p>
+        <p class="detalle-valor">{{ profesor.apellido }}</p>
+    </div>
+    <div class="detalle-card">
+        <p class="detalle-label">Email</p>
+        <p class="detalle-valor">{{ profesor.email }}</p>
+    </div>
+</div>
+{% endblock %}
