@@ -1,10 +1,10 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
-from frontend.services.asistencia import obtener_clases_presenciales , calcular_clases_mes
-from frontend.services.config import BACKEND_URL
-from frontend.services.curso import obtener_cursos
-from frontend.services.login import usuario_logueado
+from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from services.config import BACKEND_URL
+from services.curso import obtener_cursos
+from services.login import usuario_logueado
 
 views_bp = Blueprint("views", __name__)
 
@@ -21,7 +21,6 @@ CLASES = [
     {"id": 2, "fecha": "2025-03-17"},
 ]
 
-
 @views_bp.route("/")
 def index():
     if usuario_logueado():
@@ -29,21 +28,42 @@ def index():
     return redirect(url_for("auth.login"))
 
 
+
 @views_bp.route("/dashboard")
 def dashboard():
-    stats = {
-        "total_alumnos": 240,
-        "total_equipos": 17,
-        "prom_asistencia": "88%",
-        "notas_subidas": 184,
-        "alumnos_promocionados": 46,
+    stats = {}
+    try:
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        total_alumnos = len(alumnos)
+
+        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
+        total_equipos = len(equipos)
+
+        notas = requests.get(f"{BACKEND_URL}/notas").json()
+        notas_subidas = len(notas)
+
+        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
+
+        alumnos_promocionados = 0
+        for nota in notas:
+            if nota.get("estado") == "PROMOCIONADO":
+                alumnos_promocionados += 1
+
+        stats = {
+        "total_alumnos": total_alumnos,
+        "total_equipos": total_equipos,
+        "prom_asistencia": round(promedio_asistencia, 2),
+        "notas_subidas": notas_subidas,
+        "alumnos_promocionados": alumnos_promocionados
     }
-    historial = [
-        {"usuario": "Jose", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "15/05/26 15:35"},
-        {"usuario": "Marcos", "accion": "Doy de baja a un martin padron 123...", "area": "Alumnos", "hora": "14/05/26 21:35"},
-        {"usuario": "Martin1", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "14/05/26 13:02"},
-    ]
-    return render_template("dashboard.html", stats=stats, historial=historial)
+    
+    except requests.RequestException:
+        flash("Error al obtener datos del backend.", "danger")
+   
+        return render_template(("dashboard.html"),stats= stats, historial=[])
+   
+    print("Promocionados:", alumnos_promocionados)
+    return render_template("dashboard.html", stats=stats, historial=[])
 
 
 @views_bp.route("/equipos")

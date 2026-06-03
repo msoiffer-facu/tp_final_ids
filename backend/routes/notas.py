@@ -4,7 +4,7 @@ from db import get_db
 
 notas_bp = Blueprint("notas", __name__)
 
-@notas_bp.route("/notas", methods=["POST"])
+@notas_bp.route("/", methods=["POST"])
 def crear_nota():
 
     data = request.get_json()
@@ -47,7 +47,7 @@ def crear_nota():
     return jsonify({"mensaje": "Nota creada correctamente","id": nueva_nota_id, "estado": estado}), 201
 
 
-@notas_bp.route("/notas", methods=["GET"])
+@notas_bp.route("/", methods=["GET"])
 def obtener_notas():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -61,7 +61,7 @@ def obtener_notas():
         alumnos.apellido,
         evaluaciones.titulo,
         evaluaciones.fecha,
-        tipos_evaluacion.nombre AS tipo_evaluacion
+        tipos_evaluacion.nombre
     FROM notas
     JOIN alumnos
         ON notas.alumno_id = alumnos.id
@@ -82,7 +82,7 @@ def obtener_notas():
     return jsonify(notas), 200
 
 
-@notas_bp.route("/notas/alumno/<int:alumno_id>", methods=["GET"])
+@notas_bp.route("/alumno/<int:alumno_id>", methods=["GET"])
 def alumno_notas(alumno_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -118,7 +118,7 @@ def alumno_notas(alumno_id):
 
     return jsonify(notas_alumno), 200
 
-@notas_bp.route("/notas/equipo/<int:equipo_id>", methods=["GET"])
+@notas_bp.route("/equipo/<int:equipo_id>", methods=["GET"])
 def equipo_notas(equipo_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -151,7 +151,7 @@ def equipo_notas(equipo_id):
     return jsonify(notas_equipo), 200
 
 
-@notas_bp.route("/notas/<int:nota_id>", methods=["PUT"])
+@notas_bp.route("/<int:nota_id>", methods=["PUT"])
 def modificar_nota(nota_id):
     data = request.get_json()
     nota_alumno = data.get("nota_alumno")
@@ -187,7 +187,7 @@ def modificar_nota(nota_id):
 
     return jsonify({"mensaje": "Nota modificada correctamente"}), 200
 
-@notas_bp.route("/notas/<int:nota_id>", methods=["DELETE"])
+@notas_bp.route("/<int:nota_id>", methods=["DELETE"])
 def eliminar_nota(nota_id):
     conn = get_db()
     cursor = conn.cursor()

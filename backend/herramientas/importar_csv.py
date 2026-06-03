@@ -1,6 +1,6 @@
 import csv
 import io
-from herramientas.validaciones_alumnos import validar_convertir_padron, validar_email, validar_convertir_booleano, validar_convertir_string
+from backend.herramientas.validaciones_alumnos import validar_convertir_padron, validar_email, validar_convertir_booleano, validar_convertir_string
 
 
 def importar_alumnos_csv(archivo):

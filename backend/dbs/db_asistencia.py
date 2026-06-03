@@ -3,7 +3,7 @@ import mysql.connector
 import secrets
 from datetime import datetime, timedelta
 import io
-import qrcode
+#import qrcode
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,6 +16,19 @@ SMTP_PORT = 587
 SMTP_USER = "correoprobar6@gmail.com"
 SMTP_PASSWORD = "voph xnfy xtmy bovm"
 
+
+def obtener_promedio_asistencia():
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""SELECT COUNT(*) FROM asistencias""")
+    total_alumno = cursor.fetchone()[0]
+
+    cursor.execute("""SELECT COUNT(*) FROM asistencias WHERE presente = TRUE""")
+    presentes = cursor.fetchone()[0]
+    
+    cursor.close()
+    return (presentes / total_alumno) * 100 if total_alumno > 0 else 0
 
 def obtener_clases_p():
     db = get_db()
