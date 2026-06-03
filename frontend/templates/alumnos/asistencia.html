@@ -33,11 +33,11 @@
 
             <div class="table-filters">
                 <select class="filter-select">
-                        <option value="">Todos los cursos</option>
-                        {%for curso in cursos%}
-                        <option value= "{{ curso.nombre }}">{{curso.nombre}}</option>
-                        {% endfor %}
-                    </select>
+                    <option value="" {% if curso_id is none %}selected{% endif %}>Todos los cursos</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}" {% if curso_id == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
         <button class="btn-agregar" onclick="abrirModalCrear()">+ Agregar Registro</button>
@@ -48,7 +48,8 @@
                 <th style="width: 80px;">id</th>
                 <th>curso</th>
                 <th>fecha</th>
-                <th>pedir asistencia</th>
+                <th>Asistencia pedida</th>
+                <th>Finalizada</th>
             </tr>
         </thead>
         <tbody>
@@ -60,21 +61,30 @@
                 <td class="hora">{{ registro.fecha }}</td>
 
                 <td class=" visual-data" >
-                    {{ registro.pedir_asistencia | default('100') }}
+                    {{ registro.pedir_asistencia and "Sí" or "No" }}
                 </td>
-
+                <td class=" visual-data" >
+                    {{ registro.finalizada and "Sí" or "No" }}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% if total_pages > 1 %}
     <div class="pagination">
-        <button>&lt;</button>
-        <span class="current">1</span>
-        <span>2</span>
-        <span>3</span>
-        <span>...</span>
-        <button>&gt;</button>
+        {% if page > 1 %}
+            <a href="?page={{ page - 1 }}" class="btn-pagina">&#60;</a>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+            <a href="?page={{ p }}" class="btn-pagina {% if p == page %}activa{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}" class="btn-pagina">&#62;</a>
+        {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <!-- Modal: Agregar/ver/modfiicar clase presencial -->
@@ -85,7 +95,7 @@
         <h2 class="modal__title" id="modalTitle">Agregar clase presencial</h2>
         <p class="modal__subtitle" id="modalSubtitle">Registra una nueva asistencia</p>
 
-        <form method="POST" class="form" id="formClasePresencial" action="/asistencia" target="qr-form-target">
+        <form method="POST" class="form" id="formClasePresencial" action="/asistencia">
             <input type="hidden" id="claseId" name="clase_id" value="">
 
             <div class="form__group">
@@ -98,8 +108,16 @@
                 </select>
                 <select id="selectAsistencia" name="asistencia" class="form__input">
                     <option value="" disabled selected>Selecciona una clase...</option>
-                    {% for registro in clases %}
-                    {% if registro.pedir_asistencia == 0%}
+                    {% for registro in clases_en_proceso %}
+                    {%if not registro.pedir_asistencia%}
+                    <option value="{{ registro.id }}">{{registro.id}} - {{registro.curso.nombre}}, {{ registro.fecha }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+                <select id="selectEscanear" name="asistenciaEscanear" class="form__input">
+                    <option value="" disabled selected>Selecciona una clase...</option>
+                    {% for registro in clases_en_proceso %}
+                    {%if registro.pedir_asistencia%}
                     <option value="{{ registro.id }}">{{registro.id}} - {{registro.curso.nombre}}, {{ registro.fecha }}</option>
                     {% endif %}
                     {% endfor %}

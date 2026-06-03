@@ -1,7 +1,7 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
-from services.asistencia import obtener_clases_presenciales
+from services.asistencia import obtener_clases_presenciales, obtener_clases_en_proceso
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos
 from services.login import usuario_logueado
@@ -128,7 +128,7 @@ def cursos():
     page = int(request.args.get("page", 1))
     per_page = 10
     response = requests.get(
-        f"http://localhost:5000/cursos",   
+        f"http://localhost:5000/cursos",
         params={"page": page, "per_page": per_page}
     )
     data = response.json()
@@ -258,16 +258,41 @@ def profesor_eliminar(id):
 
 @views_bp.route("/asistencia", methods=["GET", "POST"])
 def asistencia():
+    page = int(request.args.get("page", 1))
+    per_page = 10
+    curso_id = request.args.get("curso", type=int)
     if request.method == "POST":
+        curso_id_form = request.form.get("curso")
         data = {
-            "curso_id": request.form.get("curso")
+            "curso_id": curso_id_form
         }
-        requests.post(f"{BACKEND_URL}/asistencia", json=data)
+        try:
+            response = requests.post(f"{BACKEND_URL}/asistencia", json=data)
+            if response.ok:
+                flash("Asistencia creada correctamente.", "success")
+            else:
+                flash(f"Error al crear la asistencia: {response.text}", "error")
+        except Exception as e:
+            flash(f"Error de conexión al crear la asistencia: {e}", "error")
         return redirect(url_for("views.asistencia"))
     cursos = obtener_cursos()
-    clases_p = obtener_clases_presenciales()
-    clases = clases_p['clases_presenciales']
-    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos)
+    clases_p = obtener_clases_presenciales(page, per_page, curso_id)
+    clases_ep = obtener_clases_en_proceso()
+    if not clases_p:
+        clases_p = { "page":0, "total_pages": 0}
+        clases = []
+    else:
+        clases = clases_p['clases_presenciales']
+
+    return render_template(
+        "alumnos/asistencia.html",
+        clases=clases,
+        cursos=cursos,
+        curso_id=curso_id,
+        page=clases_p["page"],
+        total_pages=clases_p["total_pages"],
+        clases_en_proceso=clases_ep
+    )
 
 @views_bp.route("/asistencia/<int:id>")
 def asistencia_detalle(id):
@@ -284,16 +309,24 @@ def asistencia_detalle(id):
 
 @views_bp.route("/asistencia/pedir-asistencia", methods=["POST"])
 def asistencia_pedir():
+        clase_id = request.form.get("asistencia")
         data = {
-            "id_clase_p": request.form.get("asistencia")
+            "id_clase_p": clase_id
         }
-        requests.post(f"{BACKEND_URL}/asistencia/pedir-asistencia", json=data)
+        try:
+            response = requests.post(f"{BACKEND_URL}/asistencia/pedir-asistencia", json=data)
+            if response.ok:
+                flash("QR de asistencia enviado correctamente.", "success")
+            else:
+                flash(f"Error al enviar el QR de asistencia: {response.text}", "error")
+        except Exception as e:
+            flash(f"Error de conexión al enviar el QR de asistencia: {e}", "error")
         return redirect(url_for("views.asistencia"))
 
 @views_bp.route("/asistencia/verificar-asistencia", methods=["POST"])
 def asistencia_verificar():
         token = request.form.get("token")
-        clase_id = request.form.get("asistencia")
+        clase_id = request.form.get("asistenciaEscanear")
         if not token:
             return "Token no enviado", 400
         
@@ -305,8 +338,7 @@ def asistencia_verificar():
                 f"{BACKEND_URL}/asistencia/verificar-asistencia",
                 json={
                     "token": token,
-                    "clase_id": clase_id},
-                timeout=10,
+                    "clase_id": clase_id}
             )
         except Exception as e:
             return f"Error interno al conectar con backend: {e}", 500

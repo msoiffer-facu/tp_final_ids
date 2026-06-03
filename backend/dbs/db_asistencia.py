@@ -17,15 +17,34 @@ SMTP_USER = "correoprobar6@gmail.com"
 SMTP_PASSWORD = "voph xnfy xtmy bovm"
 
 
-def obtener_clases_p():
+def obtener_clases_p(page, per_page, curso_id=None):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM clase_presencial")
+
+    if curso_id is not None:
+        cursor.execute("SELECT COUNT(*) as total FROM clase_presencial WHERE curso_id = %s", (curso_id,))
+    else:
+        cursor.execute("SELECT COUNT(*) as total FROM clase_presencial")
+    total = cursor.fetchone()["total"]
+
+    offset = (page - 1) * per_page
+    if curso_id is not None:
+        cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s LIMIT %s OFFSET %s", (curso_id, per_page, offset))
+    else:
+        cursor.execute("SELECT * FROM clase_presencial LIMIT %s OFFSET %s", (per_page, offset))
+    clases_p = cursor.fetchall()
+    cursor.close()
+    return clases_p, total
+
+def obtener_clases_en_proceso():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM clase_presencial WHERE finalizada = 0")
     clases_p = cursor.fetchall()
     cursor.close()
     return clases_p
 
-def crear_clase_p( curso):
+def crear_clase_p(curso):
     db = get_db()
     print(curso['id'])
     cursor = db.cursor()
@@ -212,7 +231,8 @@ def listar_alumnos_por_curso(curso_id):
         INNER JOIN alumnos_curso ac ON a.id = ac.alumnos_id
         WHERE ac.curso_id = %s
     """
+
     cursor.execute(query, (curso_id,))
-    curso = cursor.fetchall()
+    resultado = cursor.fetchall()
     cursor.close()
-    return curso
+    return resultado

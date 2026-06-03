@@ -172,6 +172,7 @@ function cerrarEscannerQR() {
 function enviarAsistenciaAlBackend(textoQR) {
     const tituloModal = document.querySelector('#qr-modal h3');
     const tituloOriginal = tituloModal ? tituloModal.innerText : "Escanear Asistencia QR";
+    const claseSeleccionada = document.getElementById('selectEscanear')?.value;
 
     if (!qrForm || !qrTokenInput) {
         console.error('Formulario QR no encontrado en la página');
@@ -180,6 +181,21 @@ function enviarAsistenciaAlBackend(textoQR) {
             tituloModal.style.color = "#ef4444";
         }
         estaProcesando = false;
+        return;
+    }
+
+    if (!claseSeleccionada) {
+        if (tituloModal) {
+            tituloModal.innerText = "Selecciona la clase antes de escanear el QR.";
+            tituloModal.style.color = "#ef4444";
+        }
+        estaProcesando = false;
+        setTimeout(() => {
+            if (tituloModal) {
+                tituloModal.innerText = tituloOriginal;
+                tituloModal.style.color = "#000";
+            }
+        }, 2500);
         return;
     }
 

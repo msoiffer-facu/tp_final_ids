@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, url_for
+import math
 
 from dbs.db_asistencia import *
 from services.asistencia import *
@@ -8,68 +9,43 @@ asistencia_bp = Blueprint("asistencia", __name__)
 
 @asistencia_bp.route("/", methods=['GET'])
 def get_clase_presencial():
-    offset = request.args.get("_offset", 0, type=int)
-    limit = request.args.get("_limit", 10, type=int)
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    curso_id = request.args.get("curso", type=int)
 
-    if limit <= 0 or limit > 100:
-        return "El limite debe ser un numero entre 0 y 100",404
-    if offset < 0:
-        return "El offset no puede ser menor a 0"
+    if page <= 0:
+        return "El page debe ser mayor a 0",404
+    if per_page <= 0:
+        return "El per_page debe ser mayor a 0",404
     try:
-        clases_p = listar_clases()
+        clases_p,total_registros = listar_clases(page, per_page, curso_id)
     except Exception as err:
         return jsonify(err.__cause__),500
 
     if not clases_p:
-        return jsonify({}),204
+        return jsonify([]),200
 
-    total_registros = len(clases_p)
-
-    prev_url = None
-    prev_url = url_for(
-        "asistencia.get_clase_presencial",
-        _offset=max(0, offset - limit),
-        _limit=limit,
-        _external=True,
-    )
-
-    next_url = None
-    if offset < total_registros - limit:
-        next_url = url_for(
-            "asistencia.get_clase_presencial",
-            _offset=offset + limit,
-            _limit=limit,
-            _external=True,
-        )
-    else:
-        next_url = url_for(
-            "asistencia.get_clase_presencial",
-            _offset=max(0, ((total_registros - 1) // limit) * limit),
-            _limit=limit,
-            _external=True,
-        )
     return jsonify(
         {
             "clases_presenciales":clases_p,
-            "links": {
-                "_first": {
-                    "href": url_for(
-                        "asistencia.get_clase_presencial", _offset=0, _limit=limit, _external=True
-                    )
-                },
-                "_prev": {"href": prev_url},
-                "_next": {"href": next_url},
-                "_last": {
-                    "href": url_for(
-                        "asistencia.get_clase_presencial",
-                        _offset=max(0, ((total_registros - 1) // limit) * limit),
-                        _limit=limit,
-                        _external=True,
-                    )
-                },
-            },
+            "total": total_registros,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": math.ceil(total_registros / per_page)
         }
     ),200
+
+@asistencia_bp.route("/en-proceso", methods=['GET'])
+def get_clases_en_proceso():
+    try:
+        clases_ep = listar_clases_en_proceso()
+    except Exception as err:
+        return jsonify(err.__cause__),500
+
+    if not clases_ep:
+        return jsonify([]),200
+
+    return jsonify(clases_ep),200
 
 @asistencia_bp.route("/", methods=['POST'])
 def create_clase_presencial():
