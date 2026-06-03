@@ -1,24 +1,55 @@
+from services.config import BACKEND_URL
+import requests
+
 def obtener_cursos():
-    cursos = [
+    try:
+        # response = requests.get(f"{BACKEND_URL}/cursos/cursos")
+        # cursos = response.json()
+        cursos = [
         {
-            "id":1,
-            "nombre":"curso 3b",
+            "anio": 2026,
+            "cuatrimestre": "1",
+            "id": 1,
+            "modificacion": "nose",
+            "nombre": "clase 12"
         },
         {
-            "id":2,
-            "nombre":"curso 4a",
+            "anio": 2026,
+            "cuatrimestre": "2",
+            "id": 2,
+            "modificacion": "nose",
+            "nombre": "clase 12b"
         },
         {
-            "id":3,
-            "nombre":"curso 12c",
+            "anio": 2025,
+            "cuatrimestre": "1",
+            "id": 3,
+            "modificacion": "nose",
+            "nombre": "clase 1"
         },
         {
-            "id":4,
-            "nombre":"curso 14l",
+            "anio": 2025,
+            "cuatrimestre": "2",
+            "id": 4,
+            "modificacion": "nose",
+            "nombre": "clase 4"
         },
         {
-            "id":5,
-            "nombre":"curso 1g",
-        },
-    ]
+            "anio": 2024,
+            "cuatrimestre": "1",
+            "id": 5,
+            "modificacion": "ninguna",
+            "nombre": "curso 15"
+        }
+        ]
+    except:
+        cursos = []
     return cursos
+
+def obtener_curso_con_nombre(nombre):
+    try:
+        response = requests.get(f"{BACKEND_URL}/asistencia")
+        clases_p = response.json()
+    except:
+        clases_p = []
+    return clases_p

@@ -19,8 +19,8 @@ def listar_alumnos():
         cursor.execute("SELECT * FROM alumnos")
         alumnos = cursor.fetchall()
 
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
+    except mysql.connector.Error:
+        return jsonify({"error": "Error interno al listar alumnos"}), 500
     
     finally:
         if cursor:

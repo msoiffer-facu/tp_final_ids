@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %} Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/asistencia.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="/asistencia" class="btn-volver">← Volver</a>
+        <h1 class="page-title">Asistencia detalles</h1>
+    </div>
+</div>
+
+<!-- Datos de la asistencia -->
+<div class="detalle-grid">
+    <div class="detalle-card">
+        <p class="detalle-label">id</p>
+        <p class="detalle-valor">{{registro.id}}</p>
+    </div>
+    <div class="detalle-card">
+        <p class="detalle-label">Fecha</p>
+        <p class="detalle-valor">{{ registro.fecha }}</p>
+    </div>
+    <div class="detalle-card">
+        <p class="detalle-label">Curso</p>
+        <p class="detalle-valor">{{registro.curso.nombre}}</p>
+    </div>
+    <div class="detalle-card">
+        <p class="detalle-label">Cantidad alumnos del curso</p>
+        <p class="detalle-valor">{{ registro.curso.total_alumnos }}</p>
+    </div>
+</div>
+
+<!-- Alumnos presentes-->
+<div class="table-card" style="margin-top: 1.5rem;">
+    <div class="table-card-header">
+        <h2>Alumnos presentes</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Padrón</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.padron }}</td>
+                <td>{{ alumno.nombre }}</td>
+                <td>{{ alumno.apellido }}</td>
+                <td>{{ alumno.email }}</td>
+                <td>
+                    {% if alumno.abandono %}
+                        <span class="badge rojo">Abandonó</span>
+                    {% elif alumno.estado %}
+                        <span class="badge verde">Activo</span>
+                    {% else %}
+                        <span class="badge gris">Inactivo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="vacio">No hay alumnos inscriptos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Alumnos presentes-->
+<div class="table-card" style="margin-top: 1.5rem;">
+    <div class="table-card-header">
+        <h2>Alumnos que faltaron</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Padrón</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.padron }}</td>
+                <td>{{ alumno.nombre }}</td>
+                <td>{{ alumno.apellido }}</td>
+                <td>{{ alumno.email }}</td>
+                <td>
+                    {% if alumno.abandono %}
+                        <span class="badge rojo">Abandonó</span>
+                    {% elif alumno.estado %}
+                        <span class="badge verde">Activo</span>
+                    {% else %}
+                        <span class="badge gris">Inactivo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="vacio">No hay alumnos inscriptos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
