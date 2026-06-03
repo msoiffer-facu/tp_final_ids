@@ -7,6 +7,29 @@ import mysql.connector
 
 alumnos_bp = Blueprint("alumnos", __name__)
 
+@alumnos_bp.route("/", methods=["GET"])
+def listar_alumnos():
+    db = None
+    cursor = None
+
+    try:
+        db = get_db()
+        cursor = db.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM alumnos")
+        alumnos = cursor.fetchall()
+
+    except mysql.connector.Error:
+        return jsonify({"error": "Error interno al listar alumnos"}), 500
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if db:
+            db.close()
+
+    return jsonify(alumnos), 200
+
 @alumnos_bp.route("/importar", methods=["POST"])
 def importar_lista():
     file = request.files.get("file")
@@ -73,29 +96,6 @@ def importar_lista():
         "errores": errores,
         "insertados": insertados
     }), 200
-
-
-@alumnos_bp.route("/", methods=["GET"])
-def obtener_alumnos():
-    db = None
-    cursor = None
-
-    try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM alumnos")
-        alumnos = cursor.fetchall()
-
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
-
-    return jsonify(alumnos), 200
 
 
 @alumnos_bp.route("/<int:id>", methods=["GET"])

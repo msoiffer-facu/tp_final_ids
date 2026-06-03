@@ -1,93 +1,78 @@
 from flask import Blueprint, jsonify, request, url_for
+import math
 
 from dbs.db_asistencia import *
+from services.asistencia import *
 from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
 
+@asistencia_bp.route("/promedio", methods=['GET'])
+def promedio_asistencia():
+    try:
+        promedio_asistencia = obtener_promedio_asistencia()
+    except Exception:
+        return 'Error al calcular el promedio de asistencia',500
+
+    return jsonify({"promedio_asistencia": promedio_asistencia}, ), 200
+
 @asistencia_bp.route("/", methods=['GET'])
 def get_clase_presencial():
-    offset = request.args.get("_offset", 0, type=int)
-    limit = request.args.get("_limit", 10, type=int)
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    curso_id = request.args.get("curso", type=int)
 
-    if limit <= 0 or limit > 100:
-        return "El limite debe ser un numero entre 0 y 100",404
-    if offset < 0:
-        return "El offset no puede ser menor a 0"
+    if page <= 0:
+        return "El page debe ser mayor a 0",404
+    if per_page <= 0:
+        return "El per_page debe ser mayor a 0",404
     try:
-        clases_p = obtener_clases_p()
+        clases_p,total_registros = listar_clases(page, per_page, curso_id)
     except Exception as err:
         return jsonify(err.__cause__),500
 
     if not clases_p:
-        return jsonify({}),204
+        return jsonify([]),200
 
-    total_registros = len(clases_p)
-
-    prev_url = None
-    prev_url = url_for(
-        "asistencia.get_clase_presencial",
-        _offset=max(0, offset - limit),
-        _limit=limit,
-        _external=True,
-    )
-
-    next_url = None
-    if offset < total_registros - limit:
-        next_url = url_for(
-            "asistencia.get_clase_presencial",
-            _offset=offset + limit,
-            _limit=limit,
-            _external=True,
-        )
-    else:
-        next_url = url_for(
-            "asistencia.get_clase_presencial",
-            _offset=max(0, ((total_registros - 1) // limit) * limit),
-            _limit=limit,
-            _external=True,
-        )
     return jsonify(
         {
             "clases_presenciales":clases_p,
-            "links": {
-                "_first": {
-                    "href": url_for(
-                        "asistencia.get_clase_presencial", _offset=0, _limit=limit, _external=True
-                    )
-                },
-                "_prev": {"href": prev_url},
-                "_next": {"href": next_url},
-                "_last": {
-                    "href": url_for(
-                        "asistencia.get_clase_presencial",
-                        _offset=max(0, ((total_registros - 1) // limit) * limit),
-                        _limit=limit,
-                        _external=True,
-                    )
-                },
-            },
+            "total": total_registros,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": math.ceil(total_registros / per_page)
         }
     ),200
+
+@asistencia_bp.route("/en-proceso", methods=['GET'])
+def get_clases_en_proceso():
+    try:
+        clases_ep = listar_clases_en_proceso()
+    except Exception as err:
+        return jsonify(err.__cause__),500
+
+    if not clases_ep:
+        return jsonify([]),200
+
+    return jsonify(clases_ep),200
 
 @asistencia_bp.route("/", methods=['POST'])
 def create_clase_presencial():
     data = request.get_json()
-    fecha = data.get("fecha")
-    id_curso = data.get("id_curso")
+    curso_id = data.get("curso_id")
 
-    if fecha is None or id_curso is None:
-        return "fecha y id_curso son requeridos",404
+    if curso_id is None:
+        return "curso_id es requerido",404
 
     try:
-        curso = buscar_curso(id_curso)
+        curso = buscar_curso(curso_id)
     except Exception as e:
         return f'Error interno al buscar el curso: {e}',500
 
     if not curso:
         return "El curso con el que quiere hacer la clase no existe", 404
     try:
-        crear_clase_p(fecha, curso)
+        crear_clase_p(curso)
     except Exception:
         return"Error interno al crear la clase presencial",500
 
@@ -97,10 +82,10 @@ def create_clase_presencial():
 def modificar_clase_presencial(id):
     data = request.get_json()
     fecha = data.get("fecha")
-    id_curso = data.get("id_curso")
+    curso_id = data.get("curso_id")
 
-    if fecha is None or id_curso is None:
-        return "fecha y id_curso son requeridos",404
+    if fecha is None or curso_id is None:
+        return "fecha y curso_id son requeridos",404
 
     try:
         clase_p = buscar_clase_p(id)
@@ -112,7 +97,7 @@ def modificar_clase_presencial(id):
 
     try:
         #TODO: hacer funcion en db para crear la clase presncial
-        actualizar_clase_p(id, fecha, id_curso)
+        actualizar_clase_p(id, fecha, curso_id)
     except Exception:
         return"Error interno al actualizar la clase presencial",500
 
@@ -173,6 +158,10 @@ def create_asistencia():
             crear_enviar_qr_alumnos(token)
     except Exception:
         return "Error interno crear o enviar el qr",500
+    try:
+        asistencia_enviada(id_clase)
+    except Exception as e:
+        return f"Error interno al cambiar el valor de pedir_asistencia: {e}",500
 
 
     # return jsonify(
@@ -185,12 +174,16 @@ def create_asistencia():
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     token = data.get("token")
+    clase_id = data.get("clase_id")
+
+    if not token:
+        return "Token no enviado", 400
 
     try:
-        respuesta = comprobar_token(token)
+        respuesta = comprobar_token(token, clase_id)
     except Exception as e:
-        return f'Error al revisar el token. {e}',500
+        return f'Error al revisar el token. {e}', 500
 
     return respuesta, 200

@@ -1,7 +1,7 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
-from services.asistencia import obtener_clases_presenciales , calcular_clases_mes
+from services.asistencia import obtener_clases_presenciales, obtener_clases_en_proceso
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos
 from services.login import usuario_logueado
@@ -20,7 +20,6 @@ CLASES = [
     {"id": 1, "fecha": "2025-03-10"},
     {"id": 2, "fecha": "2025-03-17"},
 ]
-
 
 @views_bp.route("/")
 def index():
@@ -64,19 +63,39 @@ def inicio():
 
 @views_bp.route("/dashboard")
 def dashboard():
-    stats = {
-        "total_alumnos": 240,
-        "total_equipos": 17,
-        "prom_asistencia": "88%",
-        "notas_subidas": 184,
-        "alumnos_promocionados": 46,
+    stats = {}
+    try:
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        total_alumnos = len(alumnos)
+
+        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
+        total_equipos = len(equipos)
+
+        notas = requests.get(f"{BACKEND_URL}/notas").json()
+        notas_subidas = len(notas)
+
+        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
+
+        alumnos_promocionados = 0
+        for nota in notas:
+            if nota.get("estado") == "PROMOCIONADO":
+                alumnos_promocionados += 1
+
+        stats = {
+        "total_alumnos": total_alumnos,
+        "total_equipos": total_equipos,
+        "prom_asistencia": round(promedio_asistencia, 2),
+        "notas_subidas": notas_subidas,
+        "alumnos_promocionados": alumnos_promocionados
     }
-    historial = [
-        {"usuario": "Jose", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "15/05/26 15:35"},
-        {"usuario": "Marcos", "accion": "Doy de baja a un martin padron 123...", "area": "Alumnos", "hora": "14/05/26 21:35"},
-        {"usuario": "Martin1", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "14/05/26 13:02"},
-    ]
-    return render_template("dashboard.html", stats=stats, historial=historial)
+    
+    except requests.RequestException:
+        flash("Error al obtener datos del backend.", "danger")
+   
+        return render_template(("dashboard.html"),stats= stats, historial=[])
+   
+    print("Promocionados:", alumnos_promocionados)
+    return render_template("dashboard.html", stats=stats, historial=[])
 
 
 @views_bp.route("/equipos")
@@ -161,7 +180,7 @@ def cursos():
     page = int(request.args.get("page", 1))
     per_page = 10
     response = requests.get(
-        f"http://localhost:5000/cursos",   
+        f"http://localhost:5000/cursos",
         params={"page": page, "per_page": per_page}
     )
     data = response.json()
@@ -235,66 +254,94 @@ def curso_eliminar(id):
     requests.delete(f"http://localhost:5000/cursos/{id}")
     return redirect(url_for("views.cursos"))
 
-@views_bp.route("/profesores")
-def profesores():
-    return render_template("profesores/profesores.html", profesores=PROFESORES)
-
-
-@views_bp.route("/profesores/nuevo", methods=["GET", "POST"])
-def profesor_nuevo():
-    if request.method == "POST":
-        nuevo = {
-            "id": len(PROFESORES) + 1,
-            "nombre": request.form.get("nombre"),
-            "apellido": request.form.get("apellido"),
-            "email": request.form.get("email"),
-            "telefono": request.form.get("telefono"),
-            "asignatura": request.form.get("asignatura"),
-            "estado": request.form.get("estado", "Inactivo"),
-        }
-        PROFESORES.append(nuevo)
-        return redirect(url_for("views.profesores"))
-    return render_template("profesores/profesor_form.html", profesor=None)
-
-
-@views_bp.route("/profesores/<int:id>")
-def profesor_detalle(id):
-    profesor = next((p for p in PROFESORES if p["id"] == id), None)
-    if not profesor:
-        return redirect(url_for("views.profesores"))
-    return render_template("profesores/profesor_detalle.html", profesor=profesor)
-
-
-@views_bp.route("/profesores/<int:id>/editar", methods=["GET", "POST"])
-def profesor_editar(id):
-    profesor = next((p for p in PROFESORES if p["id"] == id), None)
-    if not profesor:
-        return redirect(url_for("views.profesores"))
-    if request.method == "POST":
-        profesor["nombre"] = request.form.get("nombre")
-        profesor["apellido"] = request.form.get("apellido")
-        profesor["email"] = request.form.get("email")
-        profesor["telefono"] = request.form.get("telefono")
-        profesor["asignatura"] = request.form.get("asignatura")
-        profesor["estado"] = request.form.get("estado", "Inactivo")
-        return redirect(url_for("views.profesor_detalle", id=id))
-    return render_template("profesores/profesor_form.html", profesor=profesor)
-
-
-@views_bp.route("/profesores/<int:id>/eliminar", methods=["POST"])
-def profesor_eliminar(id):
-    global PROFESORES
-    PROFESORES = [p for p in PROFESORES if p["id"] != id]
-    return redirect(url_for("views.profesores"))
-
-
-@views_bp.route("/asistencia")
+@views_bp.route("/asistencia", methods=["GET", "POST"])
 def asistencia():
+    page = int(request.args.get("page", 1))
+    per_page = 10
+    curso_id = request.args.get("curso", type=int)
+    if request.method == "POST":
+        curso_id_form = request.form.get("curso")
+        data = {
+            "curso_id": curso_id_form
+        }
+        try:
+            response = requests.post(f"{BACKEND_URL}/asistencia", json=data)
+            if response.ok:
+                flash("Asistencia creada correctamente.", "success")
+            else:
+                flash(f"Error al crear la asistencia: {response.text}", "error")
+        except Exception as e:
+            flash(f"Error de conexión al crear la asistencia: {e}", "error")
+        return redirect(url_for("views.asistencia"))
     cursos = obtener_cursos()
-    clases = obtener_clases_presenciales()
-    clasesMes = calcular_clases_mes(clases)
-    return render_template("alumnos/asistencia.html", clases=clases,cursos=cursos, clasesMes=clasesMes)
+    clases_p = obtener_clases_presenciales(page, per_page, curso_id)
+    clases_ep = obtener_clases_en_proceso()
+    if not clases_p:
+        clases_p = { "page":0, "total_pages": 0}
+        clases = []
+    else:
+        clases = clases_p['clases_presenciales']
 
+    return render_template(
+        "alumnos/asistencia.html",
+        clases=clases,
+        cursos=cursos,
+        curso_id=curso_id,
+        page=clases_p["page"],
+        total_pages=clases_p["total_pages"],
+        clases_en_proceso=clases_ep
+    )
+
+@views_bp.route("/asistencia/<int:id>")
+def asistencia_detalle(id):
+    clases = obtener_clases_presenciales()['clases_presenciales']
+    clase = next((c for c in clases if c["id"] == id), None)
+    if not clase:
+        return redirect(url_for("views.asistencia"))
+
+    alumnos = [
+    {"id": 1, "padron": 12345, "nombre": "Juan", "apellido": "Perez", "email": "juan@mail.com", "abandono": True, "estado": False},
+    {"id": 2, "padron": 67890, "nombre": "Maria", "apellido": "Garcia", "email": "maria@mail.com", "abandono": False, "estado": True},
+    ]
+    return render_template("alumnos/asistencia_detalle.html", alumnos=alumnos, registro=clase)
+
+@views_bp.route("/asistencia/pedir-asistencia", methods=["POST"])
+def asistencia_pedir():
+        clase_id = request.form.get("asistencia")
+        data = {
+            "id_clase_p": clase_id
+        }
+        try:
+            response = requests.post(f"{BACKEND_URL}/asistencia/pedir-asistencia", json=data)
+            if response.ok:
+                flash("QR de asistencia enviado correctamente.", "success")
+            else:
+                flash(f"Error al enviar el QR de asistencia: {response.text}", "error")
+        except Exception as e:
+            flash(f"Error de conexión al enviar el QR de asistencia: {e}", "error")
+        return redirect(url_for("views.asistencia"))
+
+@views_bp.route("/asistencia/verificar-asistencia", methods=["POST"])
+def asistencia_verificar():
+        token = request.form.get("token")
+        clase_id = request.form.get("asistenciaEscanear")
+        if not token:
+            return "Token no enviado", 400
+        
+        if not clase_id:
+            return "clase no seleccionada", 400
+
+        try:
+            response = requests.post(
+                f"{BACKEND_URL}/asistencia/verificar-asistencia",
+                json={
+                    "token": token,
+                    "clase_id": clase_id}
+            )
+        except Exception as e:
+            return f"Error interno al conectar con backend: {e}", 500
+
+        return response.text, response.status_code, {"Content-Type": "text/plain; charset=utf-8"}
 '''
 @views_bp.route("/alumnos")
 def vista_alumnos():
@@ -347,3 +394,29 @@ def importar_csv():
              flash(f"Alumnos importados: {len(resultado['alumnos'])}", "success")
 
     return render_template("alumnos/csv.html")
+
+
+# @views_bp.route("/login", methods=["GET", "POST"])
+# def login():
+#     if request.method == "POST":
+#         email = request.form.get("email")
+#         password = request.form.get("password")
+
+#         if email == "a@test.com" and password == "1234":
+#             session["user"] = {
+#                 "email": email,
+#                 "name": "Martin"
+#             }
+#             session["token"] = "prueba"
+
+#             guardar_sesion(session["token"], session["user"])
+#             flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
+#             return redirect(url_for("views.dashboard"))
+
+#     return render_template("login.html")
+
+# @views_bp.route("/logout", methods=['POST'])
+# def logout():
+#     limpiar_sesion()
+#     flash('Cerraste sesión.', 'success')
+#     return redirect(url_for("views.login"))
