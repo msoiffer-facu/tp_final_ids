@@ -11,8 +11,8 @@ asistencia_bp = Blueprint("asistencia", __name__)
 def promedio_asistencia():
     try:
         promedio_asistencia = obtener_promedio_asistencia()
-    except Exception as e:
-        return f'Error al calcular el promedio de asistencia: {e}',500
+    except Exception:
+        return 'Error al calcular el promedio de asistencia',500
 
     return jsonify({"promedio_asistencia": promedio_asistencia}, ), 200
 
