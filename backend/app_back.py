@@ -24,7 +24,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 
 app.register_blueprint(profesores_bp, url_prefix="/profesores")
 app.register_blueprint(evaluaciones_bp, url_prefix="/evaluaciones")
-app.register_blueprint(reportes_bp, url_prefix="/reportes")
+app.register_blueprint(reportes_bp)
 app.register_blueprint(cursos_bp, url_prefix="/cursos")
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")
