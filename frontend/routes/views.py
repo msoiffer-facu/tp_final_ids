@@ -148,7 +148,7 @@ def cursos():
     page = int(request.args.get("page", 1))
     per_page = 10
     response = requests.get(
-        f"http://localhost:5000/cursos",
+        f"{BACKEND_URL}/cursos",
         params={"page": page, "per_page": per_page}
     )
     data = response.json()
@@ -167,12 +167,12 @@ def curso_detalle(id):
         equipo_page = int(request.args.get("equipo_page", 1))
         equipo_per_page = 10
 
-        curso = requests.get(f"http://localhost:5000/cursos/{id}").json()
-        alumnos_data = requests.get(f"http://localhost:5000/cursos/{id}/alumnos",
+        curso = requests.get(f"{BACKEND_URL}/cursos/{id}").json()
+        alumnos_data = requests.get(f"{BACKEND_URL}/cursos/{id}/alumnos",
             params={"page": alumno_page, "per_page": alumno_per_page}).json()
-        equipos_data = requests.get(f"http://localhost:5000/cursos/{id}/equipos",
+        equipos_data = requests.get(f"{BACKEND_URL}/cursos/{id}/equipos",
             params={"page": equipo_page, "per_page": equipo_per_page}).json()
-        clases = requests.get(f"http://localhost:5000/cursos/{id}/clases").json()
+        clases = requests.get(f"{BACKEND_URL}/cursos/{id}/clases").json()
     except:
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_detalle.html",
@@ -194,7 +194,7 @@ def curso_nuevo():
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.post("http://localhost:5000/cursos", json=data)
+        requests.post(f"{BACKEND_URL}/cursos", json=data)
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_form.html", curso=None)
 
@@ -202,7 +202,7 @@ def curso_nuevo():
 @views_bp.route("/cursos/<int:id>/editar", methods=["GET", "POST"])
 def curso_editar(id):
     try:
-        curso = requests.get(f"http://localhost:5000/cursos/{id}").json()
+        curso = requests.get(f"{BACKEND_URL}/cursos/{id}").json()
     except:
         return redirect(url_for("views.cursos"))
     if request.method == "POST":
@@ -212,14 +212,14 @@ def curso_editar(id):
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.put(f"http://localhost:5000/cursos/{id}", json=data)
+        requests.put(f"{BACKEND_URL}/cursos/{id}", json=data)
         return redirect(url_for("views.curso_detalle", id=id))
     return render_template("cursos/curso_form.html", curso=curso)
 
 
 @views_bp.route("/cursos/<int:id>/eliminar", methods=["POST"])
 def curso_eliminar(id):
-    requests.delete(f"http://localhost:5000/cursos/{id}")
+    requests.delete(f"{BACKEND_URL}/cursos/{id}")
     return redirect(url_for("views.cursos"))
 
 @views_bp.route("/asistencia", methods=["GET", "POST"])
