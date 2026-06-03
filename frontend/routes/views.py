@@ -21,7 +21,6 @@ CLASES = [
     {"id": 2, "fecha": "2025-03-17"},
 ]
 
-
 @views_bp.route("/")
 def index():
     if usuario_logueado():
@@ -29,21 +28,42 @@ def index():
     return redirect(url_for("auth.login"))
 
 
+
 @views_bp.route("/dashboard")
 def dashboard():
-    stats = {
-        "total_alumnos": 240,
-        "total_equipos": 17,
-        "prom_asistencia": "88%",
-        "notas_subidas": 184,
-        "alumnos_promocionados": 46,
+    stats = {}
+    try:
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        total_alumnos = len(alumnos)
+
+        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
+        total_equipos = len(equipos)
+
+        notas = requests.get(f"{BACKEND_URL}/notas").json()
+        notas_subidas = len(notas)
+
+        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
+
+        alumnos_promocionados = 0
+        for nota in notas:
+            if nota.get("estado") == "PROMOCIONADO":
+                alumnos_promocionados += 1
+
+        stats = {
+        "total_alumnos": total_alumnos,
+        "total_equipos": total_equipos,
+        "prom_asistencia": round(promedio_asistencia, 2),
+        "notas_subidas": notas_subidas,
+        "alumnos_promocionados": alumnos_promocionados
     }
-    historial = [
-        {"usuario": "Jose", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "15/05/26 15:35"},
-        {"usuario": "Marcos", "accion": "Doy de baja a un martin padron 123...", "area": "Alumnos", "hora": "14/05/26 21:35"},
-        {"usuario": "Martin1", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "14/05/26 13:02"},
-    ]
-    return render_template("dashboard.html", stats=stats, historial=historial)
+    
+    except requests.RequestException:
+        flash("Error al obtener datos del backend.", "danger")
+   
+        return render_template(("dashboard.html"),stats= stats, historial=[])
+   
+    print("Promocionados:", alumnos_promocionados)
+    return render_template("dashboard.html", stats=stats, historial=[])
 
 
 @views_bp.route("/equipos")
@@ -201,60 +221,6 @@ def curso_editar(id):
 def curso_eliminar(id):
     requests.delete(f"http://localhost:5000/cursos/{id}")
     return redirect(url_for("views.cursos"))
-
-@views_bp.route("/profesores")
-def profesores():
-    profesores = []
-    return render_template("profesores/profesores.html", profesores=profesores)
-
-
-@views_bp.route("/profesores/nuevo", methods=["GET", "POST"])
-def profesor_nuevo():
-    if request.method == "POST":
-        nuevo = {
-            "id": len(PROFESORES) + 1,
-            "nombre": request.form.get("nombre"),
-            "apellido": request.form.get("apellido"),
-            "email": request.form.get("email"),
-            "telefono": request.form.get("telefono"),
-            "asignatura": request.form.get("asignatura"),
-            "estado": request.form.get("estado", "Inactivo"),
-        }
-        PROFESORES.append(nuevo)
-        return redirect(url_for("views.profesores"))
-    return render_template("profesores/profesor_form.html", profesor=None)
-
-
-@views_bp.route("/profesores/<int:id>")
-def profesor_detalle(id):
-    profesor = next((p for p in PROFESORES if p["id"] == id), None)
-    if not profesor:
-        return redirect(url_for("views.profesores"))
-    return render_template("profesores/profesor_detalle.html", profesor=profesor)
-
-
-@views_bp.route("/profesores/<int:id>/editar", methods=["GET", "POST"])
-def profesor_editar(id):
-    profesor = next((p for p in PROFESORES if p["id"] == id), None)
-    if not profesor:
-        return redirect(url_for("views.profesores"))
-    if request.method == "POST":
-        profesor["nombre"] = request.form.get("nombre")
-        profesor["apellido"] = request.form.get("apellido")
-        profesor["email"] = request.form.get("email")
-        profesor["telefono"] = request.form.get("telefono")
-        profesor["asignatura"] = request.form.get("asignatura")
-        profesor["estado"] = request.form.get("estado", "Inactivo")
-        return redirect(url_for("views.profesor_detalle", id=id))
-    return render_template("profesores/profesor_form.html", profesor=profesor)
-
-
-@views_bp.route("/profesores/<int:id>/eliminar", methods=["POST"])
-def profesor_eliminar(id):
-    global PROFESORES
-    PROFESORES = [p for p in PROFESORES if p["id"] != id]
-    return redirect(url_for("views.profesores"))
-
 
 @views_bp.route("/asistencia", methods=["GET", "POST"])
 def asistencia():

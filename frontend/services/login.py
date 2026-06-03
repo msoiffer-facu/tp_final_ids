@@ -1,6 +1,5 @@
 import requests
 from flask import session
-
 from services.config import BACKEND_URL
 
 

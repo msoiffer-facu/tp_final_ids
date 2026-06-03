@@ -75,7 +75,7 @@ create table notas (
     alumno_id int not null ,
     evaluacion_id int not null ,
     nota_alumno decimal(4,2) not null,
-
+    estado varchar(20) not null,
 
     foreign key (alumno_id)
         references alumnos(id),

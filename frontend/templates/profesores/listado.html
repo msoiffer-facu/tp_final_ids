@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Profesores - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Profesores</p>
+        <h1>Listado de profesores</h1>
+        <p class="subtitle">Administrar el personal docente y acceder a su perfil.</p>
+    </div>
+    <a href="{{ url_for('profesores_front.profesor_nuevo') }}" class="btn primary">+ Nuevo profesor</a>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for profesor in profesores %}
+            <tr>
+                <td>{{ profesor.id }}</td>
+                <td>{{ profesor.nombre }}</td>
+                <td>{{ profesor.apellido }}</td>
+                <td>{{ profesor.email }}</td>
+                <td class="acciones">
+                    <a href="{{ url_for('profesores_front.profesor_detalle', profesor_id=profesor.id) }}" class="btn-accion ver">Ver</a>
+                    <a href="{{ url_for('profesores_front.profesor_editar', profesor_id=profesor.id) }}" class="btn-accion editar">Editar</a>
+                    <form method="POST" action="{{ url_for('profesores_front.profesor_eliminar', profesor_id=profesor.id) }}" style="display:inline;" onsubmit="return confirm('¿Deseas eliminar a {{ profesor.nombre }} {{ profesor.apellido }}?');">
+                        <button type="submit" class="btn-accion eliminar">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="vacio">No hay profesores registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{% if profesor %}Editar profesor{% else %}Nuevo profesor{% endif %} - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('profesores_front.profesores') }}" class="btn-volver">← Volver</a>
+        <h1 class="page-title">{% if profesor %}Editar profesor{% else %}Nuevo profesor{% endif %}</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <form method="POST" action="{% if profesor %}{{ url_for('profesores_front.profesor_editar', profesor_id=profesor.id) }}{% else %}{{ url_for('profesores_front.profesor_nuevo') }}{% endif %}">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombre">Nombre</label>
+                <input type="text" id="nombre" name="nombre" value="{{ profesor.nombre if profesor else '' }}" placeholder="Ej: Lucia" required>
+            </div>
+            <div class="form-group">
+                <label for="apellido">Apellido</label>
+                <input type="text" id="apellido" name="apellido" value="{{ profesor.apellido if profesor else '' }}" placeholder="Ej: Martinez" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ profesor.email if profesor else '' }}" placeholder="Ej: lucia@mail.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password <span class="opcional">({% if profesor %}opcional{% else %}requerido{% endif %})</span></label>
+                <input type="password" id="password" name="password" placeholder="Ingresa una contraseña" {% if not profesor %}required{% endif %}>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('profesores_front.profesores') }}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
