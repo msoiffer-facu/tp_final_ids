@@ -1,40 +1,99 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="modal__content">
-    <h1 class="modal__title">
-        Importar CSV
-    </h1>
-    <form
-        action="/alumnos/importar" 
-        method="POST" 
-        enctype="multipart/form-data"
-    >
-        <input
-            type="file"
-            name="file"
-            accept=".csv"
-            class="form__input"
-            required
-        >
-        <div class="form__actions">
-            <button
-                type="submit"
-                class="form__btn form__btn--submit"
-            >
-                Importar
-            </button>
-        </div>
-    </form>
+{% block extra_head %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/alumnos.css') }}"
+>
+{% endblock %}
 
-    {% if errores %}
-    <div class="alert alert-danger">
-        <ul>
-            {% for error in errores %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
+{% block content %}
+
+<div class="table-card">
+
+    <div class="table-card-header">
+        <h2>Importar alumnos</h2>
+
+        <a href="/alumnos" class="btn-agregar">
+            ← Volver
+        </a>
     </div>
-    {% endif %}
+
+    <div class="table-card-body">
+
+  
+        <p class="import-info">
+            CSV · columnas: nombre, apellido, email, padron, abandono
+        </p>
+
+       
+        <div class="modal__content">
+
+            <h2 class="modal__title">
+                Seleccionar archivo CSV
+            </h2>
+
+            <form
+                action="/alumnos/importar"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                <div class="form__group">
+                    <label class="form__label">Archivo</label>
+
+                    <input
+                        type="file"
+                        name="file"
+                        accept=".csv"
+                        class="form__input form__file"
+                        required
+                    >
+                </div>
+
+                <div class="form__actions">
+                    <button
+                        type="submit"
+                        class="form__btn form__btn--submit"
+                    >
+                        Importar CSV
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+
+        {% if errores %}
+        <div class="modal__content error-box">
+
+            <h2 class="modal__title">Errores</h2>
+
+            <ul class="error-list">
+                {% for error in errores %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+
+        </div>
+        {% endif %}
+
+      
+        {% if alumnos %}
+        <div class="modal__content success-box">
+
+            <h2 class="modal__title">Importación exitosa</h2>
+
+            <p class="success-text">
+                {{ alumnos|length }} alumnos cargados correctamente
+            </p>
+
+        </div>
+        {% endif %}
+
+    </div>
+
 </div>
+
 {% endblock %}
