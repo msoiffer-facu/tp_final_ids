@@ -35,7 +35,12 @@
         </label>
         <label>
             Curso
-            <input type="text" name="curso" value="{{ equipo.curso if equipo else 'IDS 2026' }}" required>
+            <select name="curso_id" required>
+                <option value="" disabled selected>Selecciona un curso</option>
+                {% for curso in cursos %}
+                <option value="{{ curso.id }}" {% if equipo and equipo.curso_id == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
+                {% endfor %}
+            </select>
         </label>
         <label>
             Estado
