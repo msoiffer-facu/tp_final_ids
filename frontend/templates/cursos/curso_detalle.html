@@ -78,8 +78,26 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {% if alumno_total_pages > 1 %}
+    <div class="paginacion">
+        {% if alumno_page > 1 %}
+            <a href="?alumno_page={{ alumno_page - 1 }}" class="btn-pagina">&#60;</a>
+        {% endif %}
+
+        {% for p in range(1, alumno_total_pages + 1) %}
+            <a href="?alumno_page={{ p }}" class="btn-pagina {% if p == alumno_page %}activa{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if alumno_page < alumno_total_pages %}
+            <a href="?alumno_page={{ alumno_page + 1 }}" class="btn-pagina">&#62;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div>
 
+<!-- Equipos -->
 <!-- Equipos -->
 <div class="table-card" style="margin-top: 1rem;">
     <div class="table-card-header">
@@ -107,6 +125,23 @@
             {% endfor %}
         </tbody>
     </table>
+
+    {% if equipo_total_pages > 1 %}
+    <div class="paginacion">
+        {% if equipo_page > 1 %}
+            <a href="?equipo_page={{ equipo_page - 1 }}" class="btn-pagina">&#60;</a>
+        {% endif %}
+
+        {% for p in range(1, equipo_total_pages + 1) %}
+            <a href="?equipo_page={{ p }}" class="btn-pagina {% if p == equipo_page %}activa{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if equipo_page < equipo_total_pages %}
+            <a href="?equipo_page={{ equipo_page + 1 }}" class="btn-pagina">&#62;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div>
 
 <!-- Clases presenciales -->
