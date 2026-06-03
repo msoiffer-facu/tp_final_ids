@@ -29,6 +29,39 @@ def index():
     return redirect(url_for("auth.login"))
 
 
+@views_bp.route("/inicio")
+def inicio():
+    materia = {
+        "titulo": "Introducción al Desarrollo de Software",
+        "subtitulo": "Facultad de Ingeniería · UBA",
+        "descripcion": (
+            "Materia de segundo año que introduce a los alumnos en los "
+            "fundamentos del desarrollo de software moderno: desde la terminal "
+            "hasta el despliegue de aplicaciones web completas."
+        ),
+    }
+    info_cursada = [
+        {"label": "Cuatrimestre", "valor": "2do - 2025"},
+        {"label": "Carga horaria", "valor": "6 hs semanales"},
+        {"label": "Modalidad", "valor": "Presencial"},
+        {"label": "Correlativa", "valor": "Algoritmos y Programación II"},
+    ]
+    contenidos = [
+        {"titulo": "Bases de datos MySQL", "descripcion": "Diseño de tablas, consultas SQL, INSERT, UPDATE y JOINs."},
+        {"titulo": "Linux y Bash", "descripcion": "Terminal, comandos, scripting y manejo del sistema de archivos."},
+        {"titulo": "Backend con Python y Flask", "descripcion": "APIs RESTful, endpoints, manejo de requests y responses."},
+        {"titulo": "Git y GitHub", "descripcion": "Control de versiones, ramas, commits y trabajo colaborativo."},
+        {"titulo": "Docker y despliegue", "descripcion": "Contenedores, imágenes, Docker Compose y entornos reproducibles."},
+        {"titulo": "Frontend: HTML, CSS y JS", "descripcion": "Interfaces web conectadas al backend usando Flask como servidor."},
+    ]
+    return render_template(
+        "inicio.html",
+        materia=materia,
+        info_cursada=info_cursada,
+        contenidos=contenidos,
+    )
+
+
 @views_bp.route("/dashboard")
 def dashboard():
     stats = {
