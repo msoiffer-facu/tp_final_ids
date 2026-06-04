@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, url_for
 import math
+import threading
 
 from dbs.db_asistencia import *
 from services.asistencia import *
@@ -122,6 +123,17 @@ def eliminar_clase_presencial(id):
         return "Error interno al eliminar la clase",500
     return "", 204
 
+def enviar_qr_async(tokens, id_clase):
+    """Envía los QR de forma asincrónica"""
+    try:
+        for token in tokens:
+            crear_enviar_qr_alumnos(token)
+        # Marcar asistencia como enviada
+        asistencia_enviada(id_clase)
+        print(f"QR enviados exitosamente para la clase {id_clase}")
+    except Exception as e:
+        print(f"Error al enviar QR de forma asincrónica: {e}")
+
 @asistencia_bp.route("/pedir-asistencia", methods=['POST'])
 def create_asistencia():
     data = request.get_json()
@@ -143,34 +155,19 @@ def create_asistencia():
     if not alumnos:
         return "No hay alumnos en esta clase",404
 
+    tokens = crear_token_alumno(alumnos)
+
     try:
-        crear_asistencia_alumnos(alumnos, id_clase)
+        crear_asistencia_alumnos(alumnos, id_clase, tokens)
     except Exception:
         return "Error interno al crear las asistencias",500
 
-    #TODO: ver como limpiar la tabla tokens_asistencia cada x cantidad de tiempo
-    tokens = crear_token_alumno(alumnos)
+    # Enviar QR de forma asincrónica en un thread separado
+    thread = threading.Thread(target=enviar_qr_async, args=(tokens, id_clase))
+    thread.daemon = True
+    thread.start()
 
-    # with ThreadPoolExecutor(max_workers=1) as executor:
-    #     executor.map(crear_enviar_qr_alumnos, tokens)
-    try:
-        for token in tokens:
-            crear_enviar_qr_alumnos(token)
-    except Exception:
-        return "Error interno crear o enviar el qr",500
-    try:
-        asistencia_enviada(id_clase)
-    except Exception as e:
-        return f"Error interno al cambiar el valor de pedir_asistencia: {e}",500
-
-
-    # return jsonify(
-    #     {
-    #         "tokens":tokens
-    #     }
-    # ),200
-
-    return "Se envio el qr a los alumnos",200
+    return "Se creo la asistencia correctamente",200
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
@@ -187,3 +184,18 @@ def verificar_asistencia():
         return f'Error al revisar el token. {e}', 500
 
     return respuesta, 200
+
+@asistencia_bp.route("/finalizar-clase", methods=['POST'])
+def finalizar_clase():
+    data = request.get_json()
+    clase_id = data.get("clase_id")
+
+    if not clase_id:
+        return "ID de clase no proporcionado", 400
+
+    try:
+        terminar_clase(clase_id)
+    except Exception as e:
+        return f'Error al finalizar la clase. {e}', 500
+
+    return "Clase finalizada correctamente", 200

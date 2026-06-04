@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from db import get_db
+import threading
 
 
 SMTP_SERVER = "smtp.gmail.com"
@@ -94,16 +95,7 @@ def eliminar_clase_p(id):
     db.commit()
     cursor.close()
 
-def crear_asistencia_alumnos(alumnos, clase_id):
-    db = get_db()
-    cursor = db.cursor()
 
-    datos = [(alumno['id'], clase_id) for alumno in alumnos]
-
-    query = "INSERT INTO asistencias (alumno_id, clase_presencial_id) VALUES (%s, %s)"
-    cursor.executemany(query, datos)
-    db.commit()
-    cursor.close()
 
 def crear_token_alumno(alumnos):
     db = get_db()
@@ -112,24 +104,35 @@ def crear_token_alumno(alumnos):
     ahora = datetime.now()
     fecha_expiracion = ahora + timedelta(hours=2)
 
-    datos = []
     tokens_creados = []
 
     for alumno in alumnos:
         token = secrets.token_hex(16)
-        datos.append((token, alumno['id'], fecha_expiracion, 0))
+        query = "INSERT INTO tokens_asistencia (token, alumno_id, fecha_expiracion, utilizado) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (token, alumno['id'], fecha_expiracion, 0))
+        token_id = cursor.lastrowid
+        db.commit()
         tokens_creados.append({
             "alumno_id": alumno['id'],
             "nombre":alumno['nombre'],
             "email":alumno['email'],
             "token": token,
+            "token_id": token_id,
         })
 
-    query = "INSERT INTO tokens_asistencia (token, alumno_id, fecha_expiracion, utilizado) VALUES (%s, %s, %s, %s)"
+    cursor.close()
+    return tokens_creados
+
+def crear_asistencia_alumnos(alumnos, clase_id, tokens):
+    db = get_db()
+    cursor = db.cursor()
+
+    datos = [(alumno['id'], clase_id, token['token_id']) for alumno in alumnos for token in tokens if token['alumno_id'] == alumno['id']]
+
+    query = "INSERT INTO asistencias (alumno_id, clase_presencial_id, token_id) VALUES (%s, %s, %s)"
     cursor.executemany(query, datos)
     db.commit()
     cursor.close()
-    return tokens_creados
 
 
 def crear_enviar_qr_alumnos(datos):
@@ -189,34 +192,46 @@ def asistencia_enviada(id):
 
 
 def comprobar_token(token_ingresado, clase_id):
-    respuesta = ""
+    ahora = datetime.now()
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
-        "SELECT * FROM tokens_asistencia WHERE token = %s AND utilizado = 0 AND fecha_expiracion > CURRENT_TIMESTAMP;",
+        "SELECT * FROM tokens_asistencia WHERE token = %s",
         (token_ingresado,),
     )
     token = cursor.fetchone()
 
-    if token:
-        cursor.execute(
-            "UPDATE tokens_asistencia SET utilizado = 1 WHERE id = %s",
-            (token["id"],),
-        )
-        cursor.execute(
-            "UPDATE asistencias SET presente = 1 WHERE alumno_id = %s AND clase_presencial_id = %s;",
-            (token["alumno_id"], clase_id,),
-        )
-        db.commit()
-        respuesta = "Se a verificado el token correctamente"
-    else:
-        respuesta = "token no encontrado"
+    if not token:
+        return "El token no se encuentra en la tabla"
+
+    if token["fecha_expiracion"] < ahora:
+        return "El token ha expirado"
+
+    if token["utilizado"] == 1:
+        return "El token ya fue utilizado"
+
+    cursor.execute(
+    "UPDATE tokens_asistencia SET utilizado = 1 WHERE id = %s",
+    (token["id"],),
+    )
+    cursor.execute(
+        "UPDATE asistencias SET presente = 1, asistencia_registrada = %s WHERE alumno_id = %s AND clase_presencial_id = %s;",
+        (ahora, token["alumno_id"], clase_id,),
+    )
+    db.commit()
     cursor.close()
 
-    if not respuesta:
-        respuesta = "El token no se encuentra en la tabla o ya no es valido"
+    return "Se a verificado el token correctamente"
 
-    return respuesta
+def terminar_clase(clase_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE clase_presencial SET finalizada = 1 WHERE id = %s",
+        (clase_id,),
+    )
+    db.commit()
+    cursor.close()
 
 
 #TODO: cambiar la siguiente funcion a un archivo de curso y no dejarlo en el repository de asistencia

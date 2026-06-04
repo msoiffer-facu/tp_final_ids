@@ -45,9 +45,9 @@ def dashboard():
         promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
 
         alumnos_promocionados = 0
-        for nota in notas:
-            if nota.get("estado") == "PROMOCIONADO":
-                alumnos_promocionados += 1
+        # for nota in notas:
+        #     if nota.get("estado") == "PROMOCIONADO":
+        #         alumnos_promocionados += 1
 
         stats = {
         "total_alumnos": total_alumnos,
@@ -68,7 +68,7 @@ def dashboard():
 
 @views_bp.route("/equipos")
 def equipos():
-    return render_template("equipos/listado.html", equipos=EQUIPOS)
+    return render_template("equipos/listado.html", equipos=[])
 
 
 @views_bp.route("/equipos/nuevo", methods=["GET", "POST"])
@@ -293,11 +293,27 @@ def asistencia_pedir():
 def asistencia_verificar():
         token = request.form.get("token")
         clase_id = request.form.get("asistenciaEscanear")
-        if not token:
+        finalizar_clase = request.form.get("finalizarClase")
+        if not token and finalizar_clase != "true":
             return "Token no enviado", 400
         
         if not clase_id:
             return "clase no seleccionada", 400
+        
+        if finalizar_clase == "true":
+            print("Finalizando clase con id:", clase_id)
+            try:
+                response = requests.post(
+                    f"{BACKEND_URL}/asistencia/finalizar-clase",
+                    json={"clase_id": clase_id}
+                )
+                if response.ok:
+                    flash(f"Clase finalizada correctamente.", "success")
+                else:
+                    flash(f"Error al finalizar la clase: {response.text}", "error")
+            except Exception as e:
+                flash(f"Error de conexión al finalizar la clase: {e}", "error")
+            return redirect(url_for("views.asistencia"))
 
         try:
             response = requests.post(

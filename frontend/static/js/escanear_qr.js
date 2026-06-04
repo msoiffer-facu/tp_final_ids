@@ -14,6 +14,7 @@ function cerrarModal(id) {
 const qrForm = document.getElementById('formClasePresencial');
 const qrTokenInput = document.getElementById('qrTokenInput');
 const qrFormTargetIframe = document.getElementById('qr-form-target');
+const finalizarInput = document.getElementById('finalizarInput');
 
 if (qrFormTargetIframe) {
     qrFormTargetIframe.dataset.waiting = "false";
@@ -168,6 +169,30 @@ function cerrarEscannerQR() {
         }
     }
 }
+function finalizarEscannerQR() {
+    const claseSeleccionada = document.getElementById('selectEscanear')?.value;
+
+    if (!qrForm || !qrTokenInput || !finalizarInput) {
+        console.error('Formulario QR no encontrado en la página');
+        alert("Error interno: formulario no disponible");
+        return;
+    }
+
+    qrTokenInput.value = "";
+    finalizarInput.value = "true";
+
+    if (qrFormTargetIframe) {
+        qrFormTargetIframe.dataset.waiting = "true";
+    }
+
+     if (document.querySelector('#qr-modal h3')) {
+        document.querySelector('#qr-modal h3').innerText = "⏳ Finalizando clase...";
+        document.querySelector('#qr-modal h3').style.color = "#3b82f6";
+    }
+
+    qrForm.submit();
+    cerrarEscannerQR();
+}
 
 function enviarAsistenciaAlBackend(textoQR) {
     const tituloModal = document.querySelector('#qr-modal h3');
@@ -200,6 +225,7 @@ function enviarAsistenciaAlBackend(textoQR) {
     }
 
     qrTokenInput.value = textoQR;
+    finalizarInput.value = "false";
     if (qrFormTargetIframe) {
         qrFormTargetIframe.dataset.waiting = "true";
     }
