@@ -123,11 +123,27 @@ def eliminar_clase_presencial(id):
         return "Error interno al eliminar la clase",500
     return "", 204
 
+@asistencia_bp.route("/<id>/alumnos", methods=['GET'])
+def details_clase_presencial(id):
+    if id is None:
+        return "El id es necesario",404
+
+    try:
+        alumnos = listar_alumnos_asistencia_clase(id)
+    except Exception:
+        return "Error interno al obtener la clase",500
+
+    if not alumnos:
+        return "clase presencial no encontrada",404
+
+    return jsonify(alumnos), 200
+
 def enviar_qr_async(tokens, id_clase):
     """Envía los QR de forma asincrónica"""
     try:
         for token in tokens:
-            crear_enviar_qr_alumnos(token)
+            if validar_mail(token['email']):
+                crear_enviar_qr_alumnos(token)
         # Marcar asistencia como enviada
         asistencia_enviada(id_clase)
         print(f"QR enviados exitosamente para la clase {id_clase}")

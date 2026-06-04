@@ -95,6 +95,20 @@ def eliminar_clase_p(id):
     db.commit()
     cursor.close()
 
+def obtener_alumnos_asistencia_clase(clase_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    query = """
+        SELECT a.padron, a.nombre, a.apellido, a.email, a.estado, ast.presente, ast.asistencia_registrada
+        FROM alumnos a
+        JOIN asistencias ast ON a.id = ast.alumno_id
+        WHERE ast.clase_presencial_id = %s
+    """
+    cursor.execute(query, (clase_id,))
+    asistencia = cursor.fetchall()
+    cursor.close()
+    return asistencia
+
 
 
 def crear_token_alumno(alumnos):

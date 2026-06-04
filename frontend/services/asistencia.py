@@ -21,3 +21,11 @@ def obtener_clases_en_proceso():
     except:
         clases_ep = []
     return clases_ep
+
+def obtener_alumnos_asistencia_clase(clase_id):
+    try:
+        response = requests.get(f"{BACKEND_URL}/asistencia/{clase_id}/alumnos")
+        alumnos = response.json()
+    except:
+        alumnos = []
+    return alumnos

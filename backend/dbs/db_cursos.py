@@ -19,6 +19,15 @@ def db_get_cursos(page=1, per_page=10):
     conn.close()
     return cursos, total
 
+def get_total_alumnos_curso(curso_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM alumnos_curso WHERE curso_id = %s", (curso_id,))
+    total = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return total
+
 def db_get_curso_by_id(id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)

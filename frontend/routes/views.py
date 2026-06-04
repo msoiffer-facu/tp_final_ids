@@ -1,7 +1,7 @@
 import requests
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
-from services.asistencia import obtener_clases_presenciales, obtener_clases_en_proceso
+from services.asistencia import *
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos
 from services.login import usuario_logueado
@@ -267,10 +267,11 @@ def asistencia_detalle(id):
     if not clase:
         return redirect(url_for("views.asistencia"))
 
-    alumnos = [
-    {"id": 1, "padron": 12345, "nombre": "Juan", "apellido": "Perez", "email": "juan@mail.com", "abandono": True, "estado": False},
-    {"id": 2, "padron": 67890, "nombre": "Maria", "apellido": "Garcia", "email": "maria@mail.com", "abandono": False, "estado": True},
-    ]
+    alumnos = obtener_alumnos_asistencia_clase(id)
+    # alumnos = [
+    # {"id": 1, "padron": 12345, "nombre": "Juan", "apellido": "Perez", "email": "juan@mail.com", "abandono": True, "estado": False},
+    # {"id": 2, "padron": 67890, "nombre": "Maria", "apellido": "Garcia", "email": "maria@mail.com", "abandono": False, "estado": True},
+    # ]
     return render_template("alumnos/asistencia_detalle.html", alumnos=alumnos, registro=clase)
 
 @views_bp.route("/asistencia/pedir-asistencia", methods=["POST"])
