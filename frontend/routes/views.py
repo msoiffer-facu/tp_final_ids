@@ -12,6 +12,7 @@ from services.equipo import (
     obtener_miembros_equipo,
 )
 from services.login import usuario_logueado
+from services.reporte import obtener_reporte_alumnos, obtener_reporte_equipos, obtener_estadisticas
 
 views_bp = Blueprint("views", __name__)
 
@@ -285,6 +286,43 @@ def profesor_eliminar(id):
     global PROFESORES
     PROFESORES = [p for p in PROFESORES if p["id"] != id]
     return redirect(url_for("views.profesores"))
+
+
+@views_bp.route("/reportes")
+def reportes():
+    tipo = request.args.get("tipo", "alumnos")
+    filtros = {k: v for k, v in request.args.items() if k != "tipo" and v}
+
+    datos = []
+    columnas = []
+    estadisticas = None
+    error = None
+
+    try:
+        if tipo == "alumnos":
+            resultado = obtener_reporte_alumnos(filtros)
+            datos = resultado.get("data", [])
+            if datos:
+                columnas = list(datos[0].keys())
+        elif tipo == "equipos":
+            resultado = obtener_reporte_equipos(filtros)
+            datos = resultado.get("data", [])
+            if datos:
+                columnas = list(datos[0].keys())
+        elif tipo == "estadisticas":
+            estadisticas = obtener_estadisticas()
+    except RuntimeError as exc:
+        error = str(exc)
+
+    return render_template(
+        "reportes/reportes.html",
+        tipo=tipo,
+        datos=datos,
+        columnas=columnas,
+        estadisticas=estadisticas,
+        filtros=filtros,
+        error=error,
+    )
 
 
 @views_bp.route("/asistencia")
