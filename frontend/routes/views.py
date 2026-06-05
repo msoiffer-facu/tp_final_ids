@@ -29,33 +29,17 @@ def index():
 @views_bp.route("/dashboard")
 def dashboard():
     stats = {
-        "total_alumnos": 0,
-        "total_equipos": 0,
-        "prom_asistencia": "0%",
-        "notas_subidas": 0,
-        "alumnos_promocionados": 0,
+        "total_alumnos": 240,
+        "total_equipos": 17,
+        "prom_asistencia": "88%",
+        "notas_subidas": 184,
+        "alumnos_promocionados": 46,
     }
     historial = [
         {"usuario": "Jose", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "15/05/26 15:35"},
         {"usuario": "Marcos", "accion": "Doy de baja a un martin padron 123...", "area": "Alumnos", "hora": "14/05/26 21:35"},
         {"usuario": "Martin1", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "14/05/26 13:02"},
     ]
-    try:
-        alumnos = requests.get(f"{BACKEND_URL}/alumnos/", timeout=5).json()
-        equipos = requests.get(f"{BACKEND_URL}/equipos/", timeout=5).json()
-        notas = requests.get(f"{BACKEND_URL}/notas", timeout=5).json()
-        promedio = requests.get(f"{BACKEND_URL}/asistencia/promedio", timeout=5).json().get("promedio_asistencia", 0)
-        alumnos_promocionados = sum(1 for n in notas if n.get("estado") == "PROMOCIONADO")
-        stats = {
-            "total_alumnos": len(alumnos),
-            "total_equipos": len(equipos),
-            "prom_asistencia": f"{round(promedio, 1)}%",
-            "notas_subidas": len(notas),
-            "alumnos_promocionados": alumnos_promocionados,
-        }
-    except Exception:
-        pass
-
     return render_template("dashboard.html", stats=stats, historial=historial, backend_url=BACKEND_URL)
 
 
