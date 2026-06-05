@@ -10,6 +10,8 @@ from services.equipo import (
     editar_equipo,
     eliminar_equipo,
     obtener_miembros_equipo,
+    agregar_alumno_equipo,
+    quitar_alumno_equipo,
 )
 from services.login import usuario_logueado
 from services.reporte import obtener_reporte_alumnos, obtener_reporte_equipos, obtener_estadisticas
@@ -43,7 +45,7 @@ def dashboard():
         {"usuario": "Marcos", "accion": "Doy de baja a un martin padron 123...", "area": "Alumnos", "hora": "14/05/26 21:35"},
         {"usuario": "Martin1", "accion": "Subio las notas pendientes del pr...", "area": "Evaluaciones", "hora": "14/05/26 13:02"},
     ]
-    return render_template("dashboard.html", stats=stats, historial=historial)
+    return render_template("dashboard.html", stats=stats, historial=historial, backend_url=BACKEND_URL)
 
 
 @views_bp.route("/equipos")
@@ -143,7 +145,42 @@ def equipo_detalle(equipo_id):
     except RuntimeError:
         miembros = []
 
-    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros)
+    # Obtener todos los alumnos para el selector de agregar
+    try:
+        resp_alumnos = requests.get(f"{BACKEND_URL}/alumnos/", timeout=5)
+        todos_alumnos = resp_alumnos.json() if resp_alumnos.ok else []
+    except Exception:
+        todos_alumnos = []
+
+    # IDs de los que ya están en el equipo
+    ids_miembros = {str(m.get("id", m.get("alumno_id", ""))) for m in miembros}
+    alumnos_disponibles = [a for a in todos_alumnos if str(a.get("id")) not in ids_miembros]
+
+    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros, alumnos_disponibles=alumnos_disponibles)
+
+
+@views_bp.route("/equipos/<int:equipo_id>/alumnos/agregar", methods=["POST"])
+def equipo_agregar_alumno(equipo_id):
+    alumno_id = request.form.get("alumno_id")
+    if not alumno_id:
+        flash("Seleccioná un alumno.", "danger")
+    else:
+        try:
+            agregar_alumno_equipo(equipo_id, int(alumno_id))
+            flash("Alumno agregado al equipo.", "success")
+        except RuntimeError as exc:
+            flash(str(exc), "error")
+    return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
+
+
+@views_bp.route("/equipos/<int:equipo_id>/alumnos/<int:alumno_id>/quitar", methods=["POST"])
+def equipo_quitar_alumno(equipo_id, alumno_id):
+    try:
+        quitar_alumno_equipo(equipo_id, alumno_id)
+        flash("Alumno quitado del equipo.", "success")
+    except RuntimeError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
 
 
 @views_bp.route("/equipos/<int:equipo_id>/delete", methods=["POST"])
@@ -314,6 +351,13 @@ def reportes():
     except RuntimeError as exc:
         error = str(exc)
 
+    # Construir URL de PDF sin el parámetro "tipo"
+    from urllib.parse import urlencode
+    pdf_params = urlencode(filtros)
+    pdf_url_alumnos = f"{BACKEND_URL}/api/reportes/alumnos/pdf?{pdf_params}"
+    pdf_url_equipos = f"{BACKEND_URL}/api/reportes/equipos/pdf?{pdf_params}"
+    pdf_url_estadisticas = f"{BACKEND_URL}/api/reportes/estadisticas/pdf"
+
     return render_template(
         "reportes/reportes.html",
         tipo=tipo,
@@ -322,6 +366,9 @@ def reportes():
         estadisticas=estadisticas,
         filtros=filtros,
         error=error,
+        pdf_url_alumnos=pdf_url_alumnos,
+        pdf_url_equipos=pdf_url_equipos,
+        pdf_url_estadisticas=pdf_url_estadisticas,
     )
 
 
@@ -352,16 +399,36 @@ def detalle_alumno(id):
 
 @views_bp.route("/alumnos")
 def vista_alumnos():
-    alumnos = [{"id": 1, "nombre": "Juan", "apellido": "Perez", "email": "juan@gmail.com", "padron": 12345, "abandono": False},
-        {"id": 2, "nombre": "Ana", "apellido": "Gomez", "email": "ana@gmail.com", "padron": 54321, "abandono": True}]
-
+    try:
+        resp = requests.get(f"{BACKEND_URL}/alumnos/", timeout=5)
+        alumnos = resp.json() if resp.ok else []
+    except Exception:
+        alumnos = []
+        flash("No se pudo conectar con el servidor.", "error")
     return render_template("alumnos/listado.html", alumnos=alumnos)
+
 
 @views_bp.route("/alumnos/<int:id>")
 def detalle_alumno(id):
-    alumno = {"id": id, "nombre": "Juan", "apellido": "Perez", "email": "juan@gmail.com", "padron": 12345, "abandono": False}
-
+    try:
+        resp = requests.get(f"{BACKEND_URL}/alumnos/{id}", timeout=5)
+        alumno = resp.json() if resp.ok else None
+    except Exception:
+        alumno = None
+    if not alumno:
+        flash("Alumno no encontrado.", "error")
+        return redirect(url_for("views.vista_alumnos"))
     return render_template("alumnos/abm.html", alumno=alumno)
+
+
+@views_bp.route("/alumnos/<int:id>/eliminar", methods=["POST"])
+def eliminar_alumno(id):
+    try:
+        requests.delete(f"{BACKEND_URL}/alumnos/{id}", timeout=5)
+        flash("Alumno eliminado correctamente.", "success")
+    except Exception:
+        flash("Error al eliminar el alumno.", "error")
+    return redirect(url_for("views.vista_alumnos"))
 
 
 @views_bp.route("/alumnos/importar", methods=["GET", "POST"])
