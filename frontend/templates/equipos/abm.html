@@ -90,10 +90,24 @@
     <div class="members-header">
         <div>
             <h2>Miembros del equipo</h2>
-            <p>Lista de los alumnos asignados al equipo.</p>
+            <p>Lista de los alumnos asignados al equipo. Un alumno puede pertenecer a más de un equipo.</p>
         </div>
         <span class="badge">{{ miembros|length }} alumnos</span>
     </div>
+
+    {% if alumnos_disponibles %}
+    <form method="POST" action="{{ url_for('views.equipo_agregar_alumno', equipo_id=equipo.id) }}" style="display:flex; gap:10px; align-items:center; margin-bottom:16px;">
+        <select name="alumno_id" style="padding:7px 12px; border:1px solid #CBD5E0; border-radius:6px; font-size:14px; flex:1;">
+            <option value="">-- Seleccioná un alumno --</option>
+            {% for a in alumnos_disponibles %}
+            <option value="{{ a.id }}">{{ a.apellido }}, {{ a.nombre }} (Padrón: {{ a.padron }})</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn primary">+ Agregar alumno</button>
+    </form>
+    {% else %}
+    <p style="color:#718096; font-size:13px; margin-bottom:16px;">Todos los alumnos ya están en este equipo.</p>
+    {% endif %}
 
     <div class="team-table-wrap">
         <table class="team-table">
@@ -102,6 +116,7 @@
                     <th>Padrón</th>
                     <th>Nombre</th>
                     <th>Apellido</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,8 +125,17 @@
                     <td>{{ alumno.padron }}</td>
                     <td>{{ alumno.nombre }}</td>
                     <td>{{ alumno.apellido }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('views.equipo_quitar_alumno', equipo_id=equipo.id, alumno_id=alumno.id) }}"
+                              onsubmit="return confirm('¿Quitás a {{ alumno.nombre }} del equipo?')">
+                            <button type="submit" class="btn small danger">Quitar</button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
+                {% if not miembros %}
+                <tr><td colspan="4" style="text-align:center; color:#718096;">Sin miembros aún.</td></tr>
+                {% endif %}
             </tbody>
         </table>
     </div>

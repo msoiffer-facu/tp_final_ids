@@ -69,8 +69,7 @@
 <div class="panel-card">
   <div class="panel-card-header">
     <div><h2>Reporte de Alumnos</h2><p>Filtrá y descargá el listado.</p></div>
-    <a href="/api/reportes/alumnos/pdf?{{ request.query_string.decode() }}"
-       target="_blank" class="btn pdf-btn">Descargar PDF</a>
+    <a href="{{ pdf_url_alumnos }}" target="_blank" class="btn pdf-btn">Descargar PDF</a>
   </div>
 
   <form method="GET" action="{{ url_for('views.reportes') }}" class="filtros-form">
@@ -120,8 +119,7 @@
 <div class="panel-card">
   <div class="panel-card-header">
     <div><h2>Reporte de Equipos</h2><p>Filtrá y descargá el listado.</p></div>
-    <a href="/api/reportes/equipos/pdf?{{ request.query_string.decode() }}"
-       target="_blank" class="btn pdf-btn">Descargar PDF</a>
+    <a href="{{ pdf_url_equipos }}" target="_blank" class="btn pdf-btn">Descargar PDF</a>
   </div>
 
   <form method="GET" action="{{ url_for('views.reportes') }}" class="filtros-form">
@@ -165,7 +163,7 @@
 <div class="panel-card">
   <div class="panel-card-header">
     <div><h2>Estadísticas de Aprobación</h2><p>Resumen general y por equipo.</p></div>
-    <a href="/api/reportes/estadisticas/pdf" target="_blank" class="btn pdf-btn">Descargar PDF</a>
+    <a href="{{ pdf_url_estadisticas }}" target="_blank" class="btn pdf-btn">Descargar PDF</a>
   </div>
 
   {% if estadisticas %}

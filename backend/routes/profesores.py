@@ -1,7 +1,7 @@
 import mysql.connector
 from auth import login_required, hashear_password, verificar_password
 from flask import Blueprint, jsonify, request, session
-from routes.db_profesores import (
+from dbs.db_profesores import (
     db_get_profesores,
     db_get_profesor_by_id,
     db_get_profesor_by_email,

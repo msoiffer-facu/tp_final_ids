@@ -54,6 +54,25 @@ def eliminar_equipo(equipo_id):
     return _parse_response(resp)
 
 
+def agregar_alumno_equipo(equipo_id, alumno_id):
+    resp = backend_request(
+        "POST",
+        f"/equipos/{equipo_id}/alumnos",
+        json={"alumnos": [alumno_id]},
+        timeout=5,
+    )
+    return _parse_response(resp)
+
+
+def quitar_alumno_equipo(equipo_id, alumno_id):
+    resp = backend_request(
+        "DELETE",
+        f"/equipos/{equipo_id}/alumnos/{alumno_id}",
+        timeout=5,
+    )
+    return _parse_response(resp)
+
+
 def obtener_miembros_equipo(curso_id, equipo_id):
     resp = backend_request(
         "GET",
