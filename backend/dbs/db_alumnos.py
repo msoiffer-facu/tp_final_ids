@@ -21,16 +21,14 @@ def db_get_alumnos(offset, limit=10, busqueda="", abandono=""):
         where_clause = " WHERE " + " AND ".join(where_clauses)
 
     query = (
-        "SELECT a.id, a.padron, a.nombre, a.apellido, a.email, a.abandono, a.estado, "
-        "IF((SELECT COUNT(*) FROM equipo_alumnos ea WHERE ea.alumno_id = a.id) > 0, 1, 0) AS equipo "
-        "FROM alumnos a "
+        "SELECT * FROM alumnos"
         f"{where_clause} "
         "LIMIT %s OFFSET %s"
     )
     cursor.execute(query, tuple(params + [limit, offset]))
     alumnos = cursor.fetchall()
 
-    count_query = f"SELECT COUNT(*) as total FROM alumnos a{where_clause}"
+    count_query = f"SELECT COUNT(*) as total FROM alumnos {where_clause}"
     cursor.execute(count_query, tuple(params))
     total = cursor.fetchone()["total"]
 
@@ -143,3 +141,4 @@ def cargar_alumnos_db(alumnos):
         "existentes": existentes,
         "errores": errores
     }
+

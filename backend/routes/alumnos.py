@@ -106,11 +106,11 @@ def modificar_alumno(id):
 
         alumno_validado = validar_data_alumno(data, id)
         if alumno_validado["errores"]:
-            return jsonify({"errores": alumno_validado["errores"]}), 400
+            return jsonify({"error": ", ".join(alumno_validado["errores"])}), 400
 
         errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"], id)
         if errores_db:
-            return jsonify({"errores": errores_db}), 400
+            return jsonify({"error": ", ".join(errores_db)}), 400
 
         db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
 
@@ -129,11 +129,11 @@ def crear_alumno():
     try:
         alumno_validado = validar_data_alumno(data)
         if alumno_validado["errores"]:
-            return jsonify({"errores": alumno_validado["errores"]}), 400
+            return jsonify({"error": ", ".join(alumno_validado["errores"])}), 400
         
         errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"])
         if errores_db:
-            return jsonify({"errores": errores_db}), 400
+            return jsonify({"error": ", ".join(errores_db)}), 400
 
         db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
 

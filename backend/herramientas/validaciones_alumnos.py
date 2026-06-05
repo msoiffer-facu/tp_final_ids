@@ -70,7 +70,8 @@ def validar_data_alumno(data, id=None):
         errores.append("abandono invalido")
 
     estado_validado = validar_convertir_booleano(data.get("estado"))
-    # Permitir que 'estado' sea opcional en formularios que no lo envían (ej. edición desde frontend)
+
+# Permitir que 'estado' sea opcional en formularios que no lo envían (ej. editar alumno desde frontend)
     if estado_validado is None:
         if data.get("estado") is None:
             estado_validado = True
@@ -79,11 +80,11 @@ def validar_data_alumno(data, id=None):
 
     alumno_padron = db_buscar_dato_alumno("padron", padron_validado, id)
     if alumno_padron:
-        errores.append("Padron ya registrado")
+        errores.append("padron ya registrado")
 
     alumno_email = db_buscar_dato_alumno("email", data.get("email"), id)
     if alumno_email:
-        errores.append("Email ya registrado")
+        errores.append("email ya registrado")
 
     return {
         "nombre": nombre_validado,
@@ -101,10 +102,10 @@ def validar_importacion_db(alumnos):
     alumno_repeticion_padron = db_buscar_dato_alumno("padron", alumnos["padron"], None)
 
     if alumno_repeticion_email:
-        errores_alumnos.append(f"Email {alumnos['email']} ya registrado")
+        errores_alumnos.append(f"email {alumnos['email']} ya registrado")
 
     if alumno_repeticion_padron:
-        errores_alumnos.append(f"Padron {alumnos['padron']} ya registrado")
+        errores_alumnos.append(f"padron {alumnos['padron']} ya registrado")
 
     return {
         "errores": errores_alumnos

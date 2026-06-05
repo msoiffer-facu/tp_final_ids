@@ -50,6 +50,13 @@
         </form>
 
         <a
+            href="/alumnos/nuevo"
+            class="btn-agregar"
+        >
+            + Agregar Alumno
+        </a>
+
+        <a
             href="/alumnos/importar"
             class="btn-agregar"
         >
@@ -65,7 +72,6 @@
                 <th class="text-center">Nombre</th>
                 <th class="text-center">Apellido</th>
                 <th class="text-center">Email</th>
-                <th class="text-center">Equipo</th>
                 <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
             </tr>
@@ -85,9 +91,6 @@
                 </td>
                 <td class="text-center">
                     {{ alumno.email }}
-                </td>
-                <td class="text-center">
-                    {{ "con equipo" if alumno.equipo else "sin equipo" }}
                 </td>
                 <td
                     class="estado text-center"
@@ -117,11 +120,9 @@
             {% endfor %}
         </tbody>
     </table>
-</div>
-
-<!-- Paginación -->
+    <!-- Paginación -->
 {% if total_pages > 1 %}
-<div class="paginacion">
+    <div class="pagination">
     {% if pagina > 1 %}
         <a href="?pagina={{ pagina - 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">&lt;</a>
     {% endif %}
@@ -151,8 +152,9 @@
         <a href="?pagina={{ pagina + 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">&gt;</a>
     {% endif %}
 
-</div>
+    </div>
 {% endif %}
+</div>
 
 <!-- Función para filtrar alumnos en el frontend al escribir en el buscador o cambiar el filtro de estado -->
 <script>

@@ -4,7 +4,7 @@ from services.asistencia import obtener_clases_presenciales , calcular_clases_me
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
-from services.alumnos_service import obtener_alumnos, obtener_alumno, actualizar_alumno, eliminar_alumno, importar_csv_service
+from services.alumnos_service import obtener_alumnos, obtener_alumno, actualizar_alumno, eliminar_alumno, importar_csv_service, crear_alumno
 
 views_bp = Blueprint("views", __name__)
 
@@ -128,7 +128,7 @@ def cursos():
     page = int(request.args.get("page", 1))
     per_page = 10
     response = requests.get(
-        f"http://localhost:5000/cursos",
+        f"http://localhost:5000/cursos",   
         params={"page": page, "per_page": per_page}
     )
     data = response.json()
@@ -287,13 +287,14 @@ def vista_alumnos():
         total_pages=resultado["data"]["total_pages"]
     )
 
-
 @views_bp.route("/alumnos/<int:id>")
 def detalle_alumno(id):
-    response = requests.get(f"http://localhost:5000/alumnos/{id}")
-    alumno = response.json()
+    resultado = obtener_alumno(id)
 
-    return render_template("alumnos/abm.html", alumno=alumno)
+    if resultado["status_code"] != 200:
+        flash(resultado["data"].get("error", "Error al cargar el alumno"), "error")
+        return redirect(url_for("views.vista_alumnos"))
+    return render_template("alumnos/abm.html", alumno=resultado["data"])
 
 
 @views_bp.route("/alumnos/<int:id>/editar", methods=["GET", "POST"])
@@ -311,19 +312,19 @@ def editar_alumno(id):
         
         if resultado["status_code"] == 200:
             flash("Alumno actualizado correctamente.", "success")
-        else:
-            flash(resultado["data"]["error"], "error")
+        else: 
+            flash(resultado["data"].get("error", "Error al actualizar el alumno"), "error")
         return redirect(url_for("views.vista_alumnos"))
 
     return redirect(url_for("views.detalle_alumno", id=id))
 
 @views_bp.route("/alumnos/<int:id>/eliminar", methods=["POST"])
-def eliminar_alumno(id):
+def eliminar_alumnos(id):
     resultado = eliminar_alumno(id)
     if resultado["status_code"] == 200:
         flash("Alumno eliminado correctamente.", "success")
     else:
-        flash(resultado["data"]["error"], "error")
+        flash(resultado["data"].get("error", "Error al eliminar el alumno"), "error")
     return redirect(url_for("views.vista_alumnos"))
 
 @views_bp.route("/alumnos/importar", methods=["GET", "POST"])
@@ -349,3 +350,21 @@ def importar_csv():
         return redirect(url_for("views.vista_alumnos"))
 
     return render_template("alumnos/csv.html")
+
+@views_bp.route("/alumnos/nuevo", methods=["GET", "POST"])
+def nuevo_alumno():
+    if request.method == "POST":
+        nuevo = {
+            "padron": request.form.get("padron"),
+            "nombre": request.form.get("nombre"),
+            "apellido": request.form.get("apellido"),
+            "email": request.form.get("email"),
+            "abandono": request.form.get("abandono")
+        }
+        resultado = crear_alumno(nuevo)
+        if resultado["status_code"] == 201:
+            flash("Alumno creado correctamente.", "success")
+        else:
+            flash(resultado["data"].get("error", "Error al crear el alumno"), "error")
+        return redirect(url_for("views.vista_alumnos"))
+    return render_template("alumnos/abm.html", alumno=None)
