@@ -48,6 +48,7 @@ def obtener_clases_p(page, per_page, curso_id=None):
         cursor.execute("SELECT * FROM clase_presencial LIMIT %s OFFSET %s", (per_page, offset))
     clases_p = cursor.fetchall()
     cursor.close()
+
     return clases_p, total
 
 def obtener_clases_en_proceso():

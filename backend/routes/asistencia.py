@@ -3,7 +3,7 @@ import math
 import threading
 
 from dbs.db_asistencia import *
-from services.asistencia import *
+import services.asistencia as serv_asistencia
 from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
@@ -28,7 +28,7 @@ def get_clase_presencial():
     if per_page <= 0:
         return "El per_page debe ser mayor a 0",404
     try:
-        clases_p,total_registros = listar_clases(page, per_page, curso_id)
+        clases_p,total_registros = serv_asistencia.listar_clases(page, per_page, curso_id)
     except Exception as err:
         return jsonify(err.__cause__),500
 
@@ -48,7 +48,7 @@ def get_clase_presencial():
 @asistencia_bp.route("/en-proceso", methods=['GET'])
 def get_clases_en_proceso():
     try:
-        clases_ep = listar_clases_en_proceso()
+        clases_ep = serv_asistencia.listar_clases_en_proceso()
     except Exception as err:
         return jsonify(err.__cause__),500
 
@@ -129,7 +129,7 @@ def details_clase_presencial(id):
         return "El id es necesario",404
 
     try:
-        alumnos = listar_alumnos_asistencia_clase(id)
+        alumnos = serv_asistencia.listar_alumnos_asistencia_clase(id)
     except Exception:
         return "Error interno al obtener la clase",500
 
@@ -144,8 +144,6 @@ def enviar_qr_async(tokens, id_clase):
         for token in tokens:
             if validar_mail(token['email']):
                 crear_enviar_qr_alumnos(token)
-        # Marcar asistencia como enviada
-        asistencia_enviada(id_clase)
         print(f"QR enviados exitosamente para la clase {id_clase}")
     except Exception as e:
         print(f"Error al enviar QR de forma asincrónica: {e}")
@@ -170,6 +168,11 @@ def create_asistencia():
 
     if not alumnos:
         return "No hay alumnos en esta clase",404
+
+    try:
+        asistencia_enviada(id_clase)
+    except Exception:
+        return "Error interno al cambiar el estado de la asistencia",500
 
     tokens = crear_token_alumno(alumnos)
 

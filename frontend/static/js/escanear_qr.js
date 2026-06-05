@@ -18,12 +18,21 @@ const finalizarInput = document.getElementById('finalizarInput');
 
 if (qrFormTargetIframe) {
     qrFormTargetIframe.dataset.waiting = "false";
+    qrFormTargetIframe.dataset.finalizando = "false";
     qrFormTargetIframe.onload = () => {
         if (qrFormTargetIframe.dataset.waiting !== "true") {
             return;
         }
 
+        const esFinalizacion = qrFormTargetIframe.dataset.finalizando === "true";
         qrFormTargetIframe.dataset.waiting = "false";
+        qrFormTargetIframe.dataset.finalizando = "false";
+
+        if (esFinalizacion) {
+            window.location.reload();
+            return;
+        }
+
         const tituloModal = document.querySelector('#qr-modal h3');
         const tituloOriginal = tituloModal ? tituloModal.innerText : "Escanear Asistencia QR";
         let mensaje = "Error al procesar la asistencia";
@@ -183,6 +192,7 @@ function finalizarEscannerQR() {
 
     if (qrFormTargetIframe) {
         qrFormTargetIframe.dataset.waiting = "true";
+        qrFormTargetIframe.dataset.finalizando = "true";
     }
 
      if (document.querySelector('#qr-modal h3')) {
