@@ -56,6 +56,7 @@ def dashboard():
         "notas_subidas": notas_subidas,
         "alumnos_promocionados": alumnos_promocionados
     }
+        historial
     
     except requests.RequestException:
         flash("Error al obtener datos del backend.", "danger")

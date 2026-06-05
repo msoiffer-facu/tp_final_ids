@@ -110,7 +110,7 @@ create table asistencias (
     id int not null auto_increment primary key,
     alumno_id int not null,
     clase_presencial_id int not null,
-    presente boolean,
+    presente boolean not ,
     codigo_qr varchar(1024),
 
     foreign key (alumno_id)
