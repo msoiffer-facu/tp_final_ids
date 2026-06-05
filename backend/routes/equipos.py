@@ -6,6 +6,7 @@ from dbs.db_equipos import (
     db_editar_equipo,
     db_eliminar_equipo,
     db_asociar_alumnos,
+    db_quitar_alumno_equipo,
     db_listar_alumnos_equipo,
     db_asociar_equipo_a_tp,
 )
@@ -97,6 +98,18 @@ def asociar_alumnos(id):
     except Exception as e:
         return jsonify({"error": f"Error al asociar alumnos: {str(e)}"}), 500
     return jsonify({"message": "Alumnos asociados al equipo correctamente"}), 200
+
+
+@equipos_bp.route("/<int:id>/alumnos/<int:alumno_id>", methods=["DELETE"])
+def quitar_alumno(id, alumno_id):
+    try:
+        equipo = db_buscar_equipo_por_id(id)
+        if not equipo:
+            return jsonify({"error": "Equipo no encontrado"}), 404
+        db_quitar_alumno_equipo(id, alumno_id)
+    except Exception as e:
+        return jsonify({"error": f"Error al quitar alumno: {str(e)}"}), 500
+    return jsonify({"message": "Alumno quitado del equipo"}), 200
 
 
 @equipos_bp.route("/<int:id>/tps", methods=["POST"])

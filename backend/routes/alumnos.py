@@ -83,7 +83,14 @@ def obtener_alumnos():
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM alumnos")
+        cursor.execute("""
+            SELECT a.*,
+                   IFNULL(GROUP_CONCAT(e.nombre ORDER BY e.nombre SEPARATOR ', '), 'Sin equipo') AS equipo
+            FROM alumnos a
+            LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id
+            LEFT JOIN equipos e ON e.id = ea.equipo_id
+            GROUP BY a.id
+        """)
         alumnos = cursor.fetchall()
 
     except mysql.connector.Error as err:
