@@ -17,18 +17,51 @@ SMTP_USER = "correoprobar6@gmail.com"
 SMTP_PASSWORD = "voph xnfy xtmy bovm"
 
 
-def obtener_clases_p():
+def obtener_promedio_asistencia():
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""SELECT COUNT(*) FROM asistencias""")
+    total_alumno = cursor.fetchone()[0]
+
+    cursor.execute("""SELECT COUNT(*) FROM asistencias WHERE presente = TRUE""")
+    presentes = cursor.fetchone()[0]
+    
+    cursor.close()
+    return (presentes / total_alumno) * 100 if total_alumno > 0 else 0
+
+def obtener_clases_p(page, per_page, curso_id=None):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM clase_presencial")
+
+    if curso_id is not None:
+        cursor.execute("SELECT COUNT(*) as total FROM clase_presencial WHERE curso_id = %s", (curso_id,))
+    else:
+        cursor.execute("SELECT COUNT(*) as total FROM clase_presencial")
+    total = cursor.fetchone()["total"]
+
+    offset = (page - 1) * per_page
+    if curso_id is not None:
+        cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s LIMIT %s OFFSET %s", (curso_id, per_page, offset))
+    else:
+        cursor.execute("SELECT * FROM clase_presencial LIMIT %s OFFSET %s", (per_page, offset))
+    clases_p = cursor.fetchall()
+    cursor.close()
+    return clases_p, total
+
+def obtener_clases_en_proceso():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM clase_presencial WHERE finalizada = 0")
     clases_p = cursor.fetchall()
     cursor.close()
     return clases_p
 
-def crear_clase_p(fecha, curso):
+def crear_clase_p(curso):
     db = get_db()
     print(curso['id'])
     cursor = db.cursor()
+    fecha = datetime.now()
     cursor.execute(
         "INSERT INTO clase_presencial (curso_id, fecha) VALUES (%s, %s)",
         (curso['id'], fecha)
@@ -136,7 +169,7 @@ def crear_enviar_qr_alumnos(datos):
         mensaje.attach(adjunto_qr)
 
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls() 
+        server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
 
         server.sendmail(SMTP_USER, email_destino, mensaje.as_string())
@@ -144,21 +177,45 @@ def crear_enviar_qr_alumnos(datos):
     except Exception as e:
         print(f"Falló el procesamiento para un alumno: {e}")
 
+def asistencia_enviada(id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE clase_presencial SET pedir_asistencia = 1 WHERE id = %s",
+        (id,),
+    )
+    db.commit()
+    cursor.close()
 
-def comprobar_token(token_ingresado):
+
+def comprobar_token(token_ingresado, clase_id):
     respuesta = ""
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM tokens_asistencia WHERE token = %s AND utilizado = 0 AND fecha_expiracion < NOW();",(token_ingresado,))
+    cursor.execute(
+        "SELECT * FROM tokens_asistencia WHERE token = %s AND utilizado = 0 AND fecha_expiracion > CURRENT_TIMESTAMP;",
+        (token_ingresado,),
+    )
     token = cursor.fetchone()
 
     if token:
-        cursor.execute("UPDATE tokens_asistencia SET utilizado = 1")
-        cursor.execute("UPDATE asistencias SET presente = 1 WHERE alumno_id = %s AND clase_presencial_id = ( SELECT id FROM clase_presencial WHERE DATE(fecha) = DATE(%s));",(token["alumno_id"], token["fecha_expiracion"],))
+        cursor.execute(
+            "UPDATE tokens_asistencia SET utilizado = 1 WHERE id = %s",
+            (token["id"],),
+        )
+        cursor.execute(
+            "UPDATE asistencias SET presente = 1 WHERE alumno_id = %s AND clase_presencial_id = %s;",
+            (token["alumno_id"], clase_id,),
+        )
         db.commit()
         respuesta = "Se a verificado el token correctamente"
+    else:
+        respuesta = "token no encontrado"
     cursor.close()
-    repuesta = "El token no se encuentra en la tabla o ya no es valido"
+
+    if not respuesta:
+        respuesta = "El token no se encuentra en la tabla o ya no es valido"
+
     return respuesta
 
 
@@ -187,7 +244,8 @@ def listar_alumnos_por_curso(curso_id):
         INNER JOIN alumnos_curso ac ON a.id = ac.alumnos_id
         WHERE ac.curso_id = %s
     """
+
     cursor.execute(query, (curso_id,))
-    curso = cursor.fetchall()
+    resultado = cursor.fetchall()
     cursor.close()
-    return curso
+    return resultado

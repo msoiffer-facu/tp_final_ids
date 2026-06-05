@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response
 from herramientas.generar_pdf import generar_pdf_reporte
-from routes.db_reportes import _fetch_alumnos, _fetch_equipos, _statistics_data
+from dbs.db_reportes import _fetch_alumnos, _fetch_equipos, _statistics_data
 
 reportes_bp = Blueprint("reportes", __name__, url_prefix="/api/reportes")
 

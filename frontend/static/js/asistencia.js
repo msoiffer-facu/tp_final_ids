@@ -34,97 +34,115 @@ window.addEventListener('keydown', function (event) {
 });
 
 function abrirModalCrear() {
-    // 1. Limpiar datos previos
+
     document.getElementById('formClasePresencial').reset();
     document.getElementById('claseId').value = "";
 
-    // 2. Textos comerciales de creación
-    document.getElementById('modalTitle').innerText = "Agregar clase presencial";
-    document.getElementById('modalSubtitle').innerText = "Registra una nueva clase presencial y su horario";
-
-    // 3. Habilitar inputs para poder escribir
-    document.getElementById('curso').disabled = false;
-    document.getElementById('fecha').disabled = false;
-
-    // 4. Mostrar solo botones de creación
-    document.getElementById('btnHabilitarEdicion').style.display = 'none';
-    document.getElementById('btnCancelar').style.display = 'inline-block';
-    document.getElementById('btnGuardarCambios').style.display = 'none';
     document.getElementById('btnCrearClase').style.display = 'inline-block';
+    document.getElementById('btnEnviarQR').style.display = 'none';
+    document.getElementById('btnEscanearQR').style.display = 'none';
+
+    document.getElementById('text-select').innerText = "Curso";
+    document.getElementById('selectCurso').style.display = 'inline-block';
+    document.getElementById('selectEscanear').style.display = 'none';
+    document.getElementById('selectAsistencia').style.display = 'none';
+
+    document.getElementById('formClasePresencial').action = '/asistencia';
+    document.getElementById('formClasePresencial').target = '';
+
+    document.getElementById('selectCurso').required = true;
+    document.getElementById('selectAsistencia').required = false;
+    document.getElementById('selectEscanear').required = false;
+
+
+
+
 
     // 5. Abrir Modal
     abrirModal('modalClase');
 }
 
 // ==========================================
-// ESTADO 2: ABRIR PARA VER DETALLES (Campos llenos y bloqueados)
+// ESTADO 2: Enviar qr
 // ==========================================
-function verRegistro(id, cursoNombre, fechaHoraCruda) {
-    // 1. Cargar los datos de la fila seleccionada
-    document.getElementById('claseId').value = id;
-    document.getElementById('curso').value = cursoNombre;
-    try {
-        // 1. Separamos la fecha de la hora por el espacio
-        // ['15/05/26', '15:35']
-        const partes = fechaHoraCruda.split(' '); 
-        const fechaParte = partes[0]; // '15/05/26'
-        const horaParte = partes[1];  // '15:35'
+function abrirModalEnviarQR() {
 
-        // 2. Separamos día, mes y año por las barras
-        // ['15', '05', '26']
-        const componentesFecha = fechaParte.split('/');
-        const dia = componentesFecha[0];
-        const mes = componentesFecha[1];
-        const anioCorto = componentesFecha[2];
+    document.getElementById('modalTitle').innerText = "Enviar QR";
+    document.getElementById('modalSubtitle').innerText = "Enviar qr de asistencia a la clase seleccionada";
 
-        // 3. Convertimos el año de 2 dígitos a 4 (ej: '26' -> '2026')
-        const anioCompleto = "20" + anioCorto; 
+    document.getElementById('btnEnviarQR').style.display = 'inline-block';
+    document.getElementById('btnCrearClase').style.display = 'none';
+    document.getElementById('btnEscanearQR').style.display = 'none';
 
-        // 4. Armamos el rompecabezas en formato ISO: YYYY-MM-DDTHH:mm
-        const fechaFormateada = `${anioCompleto}-${mes}-${dia}T${horaParte}`;
+    document.getElementById('text-select').innerText = "Clases";
+    document.getElementById('selectAsistencia').style.display = 'inline-block';
+    document.getElementById('selectEscanear').style.display = 'none';
+    document.getElementById('selectCurso').style.display = 'none';
 
-        // 5. Lo inyectamos en el input
-        document.getElementById('fecha').value = fechaFormateada;
+    document.getElementById('formClasePresencial').action = '/asistencia/pedir-asistencia';
+    document.getElementById('formClasePresencial').target = '';
 
-    } catch (error) {
-        console.error("Error al procesar el formato de fecha:", error);
-        // Si algo falla, dejamos el input vacío para que no rompa el código
-        document.getElementById('fecha').value = "";
+    document.getElementById('selectAsistencia').required = true;
+    document.getElementById('selectCurso').required = false;
+    document.getElementById('selectEscanear').required = false;
+
+
+
+    // 5. Abrir Modal
+    abrirModal('modalClase');
+}
+
+// ==========================================
+// ESTADO 2: Enviar qr
+// ==========================================
+function abrirModalEscanearQR() {
+
+    document.getElementById('modalTitle').innerText = "Escanear QR";
+    document.getElementById('modalSubtitle').innerText = "Escanear qr de asistencia de la clase seleccionada";
+
+    document.getElementById('btnEscanearQR').style.display = 'inline-block';
+    document.getElementById('btnCrearClase').style.display = 'none';
+    document.getElementById('btnEnviarQR').style.display = 'none';
+
+    document.getElementById('text-select').innerText = "Clases";
+    document.getElementById('selectAsistencia').style.display = 'none';
+    document.getElementById('selectEscanear').style.display = 'inline-block';
+    document.getElementById('selectCurso').style.display = 'none';
+
+
+    document.getElementById('formClasePresencial').action = '/asistencia/verificar-asistencia';
+    document.getElementById('formClasePresencial').target = 'qr-form-target';
+
+    document.getElementById('selectEscanear').required = true;
+    document.getElementById('selectCurso').required = false;
+    document.getElementById('selectAsistencia').required = false;
+
+
+
+    abrirModal('modalClase');
+}
+
+// Filtrar por curso en la URL
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSelect = document.querySelector('.filter-select');
+    
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function() {
+            const value = this.value;
+            const baseUrl = window.location.pathname;
+            const params = new URLSearchParams(window.location.search);
+
+            if (value !== "") {
+                params.set('curso', value);
+                params.set('page', 1);
+            } else {
+                params.delete('curso');
+            }
+
+            const queryString = params.toString();
+            const newUrl = queryString ? baseUrl + '?' + queryString : baseUrl;
+
+            window.location.href = newUrl;
+        });
     }
-
-    // 2. Textos de visualización
-    document.getElementById('modalTitle').innerText = "Detalles de la clase";
-    document.getElementById('modalSubtitle').innerText = "Información de la clase presencial seleccionada";
-
-    // 3. Bloquear inputs (Solo lectura)
-    document.getElementById('curso').disabled = true;
-    document.getElementById('fecha').disabled = true;
-
-    // 4. Mostrar botones correspondientes (Editar y Cancelar/Cerrar)
-    document.getElementById('btnHabilitarEdicion').style.display = 'inline-block';
-    document.getElementById('btnCancelar').style.display = 'none';
-    document.getElementById('btnGuardarCambios').style.display = 'none';
-    document.getElementById('btnCrearClase').style.display = 'none';
-
-    // 5. Abrir Modal
-    abrirModal('modalClase');
-}
-
-// ==========================================
-// ESTADO 3: CAMBIAR A MODO EDICIÓN (Dentro del modal)
-// ==========================================
-function activarModoEdicion() {
-    // 1. Cambiar textos a edición
-    document.getElementById('modalTitle').innerText = "Editar clase presencial";
-    document.getElementById('modalSubtitle').innerText = "Modifica los campos necesarios y guarda los cambios";
-
-    // 2. Desbloquear campos para permitir edición
-    document.getElementById('curso').disabled = false;
-    document.getElementById('fecha').disabled = false;
-
-    // 3. Swapear botones a "Guardar Cambios"
-    document.getElementById('btnHabilitarEdicion').style.display = 'none';
-    document.getElementById('btnCancelar').style.display = 'inline-block';
-    document.getElementById('btnGuardarCambios').style.display = 'inline-block';
-    document.getElementById('btnCrearClase').style.display = 'none';
-}
+});

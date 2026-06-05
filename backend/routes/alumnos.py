@@ -7,6 +7,33 @@ import mysql.connector
 
 alumnos_bp = Blueprint("alumnos", __name__)
 
+@alumnos_bp.route("/", methods=["GET"])
+def obtener_alumnos():
+    pagina = request.args.get("pagina", 1, type=int)
+    busqueda = request.args.get("busqueda", "", type=str).strip()
+    abandono = request.args.get("abandono", "", type=str).strip()
+
+    if pagina < 1:
+        return jsonify({"error": "Pagina invalida"}), 400
+
+    limit = 10
+    offset = (pagina - 1) * limit
+    
+    try:
+        alumnos_pagina, total_registros = db_get_alumnos(offset, limit, busqueda, abandono)
+
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
+
+    return jsonify({
+        "alumnos": alumnos_pagina,
+        "total": total_registros,
+        "pagina": pagina,
+        "limit": limit,
+        "total_pages": (total_registros + limit - 1) // limit
+    }), 200
+
+  
 @alumnos_bp.route("/importar", methods=["POST"])
 def importar_lista():
     file = request.files.get("file")
@@ -38,34 +65,7 @@ def importar_lista():
         "errores": resultado["errores"]
     }), 200
 
-
-@alumnos_bp.route("/", methods=["GET"])
-def obtener_alumnos():
-    pagina = request.args.get("pagina", 1, type=int)
-    busqueda = request.args.get("busqueda", "", type=str).strip()
-    abandono = request.args.get("abandono", "", type=str).strip()
-
-    if pagina < 1:
-        return jsonify({"error": "Pagina invalida"}), 400
-
-    limit = 10
-    offset = (pagina - 1) * limit
-    
-    try:
-        alumnos_pagina, total_registros = db_get_alumnos(offset, limit, busqueda, abandono)
-
-    except mysql.connector.Error:
-        return jsonify({"error": "Error de base de datos"}), 500
-
-    return jsonify({
-        "alumnos": alumnos_pagina,
-        "total": total_registros,
-        "pagina": pagina,
-        "limit": limit,
-        "total_pages": (total_registros + limit - 1) // limit
-    }), 200
-
-
+  
 @alumnos_bp.route("/<int:id>", methods=["GET"])
 def obtener_alumno(id):
     try:
