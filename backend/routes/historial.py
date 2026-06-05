@@ -7,6 +7,8 @@
 - en alumnos.html deberia ser ver editar eliminar
 - en alumno.html en ver tendria que mostrar las notas en tp, parciales, etc... y sus asistencias.
 - normalizar tabla alumnos
+
+-si paso al script debe ser del views al html al js
 - el alumno no deberia tener solo un equipo asi que ejor sacar del listado la columna equipos
 para pasarle el promedio a la tabla del script de java , la misma funcion de java esc un boton onclick que se ejecuta dentro del java 
 que pide la info al backend y luego se muestra el resultado en la tabla, entonces lo que se puede hacer es que el boton onclick ejecute una funcion de java que haga la peticion
