@@ -46,7 +46,7 @@ def dashboard():
 
         alumnos_promocionados = 0
         for nota in notas:
-            if nota.get("estado") == "PROMOCIONADO":
+            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO":
                 alumnos_promocionados += 1
 
         stats = {
