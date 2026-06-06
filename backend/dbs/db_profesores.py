@@ -1,14 +1,19 @@
 from db import get_db
 
 
-def db_get_profesores():
+def db_get_profesores(page=1, per_page=10):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM profesores")
+    # obtener total
+    cursor.execute("SELECT COUNT(*) as total FROM profesores")
+    total = cursor.fetchone().get("total", 0)
+
+    offset = (page - 1) * per_page
+    cursor.execute("SELECT * FROM profesores LIMIT %s OFFSET %s", (per_page, offset))
     profesores = cursor.fetchall()
     cursor.close()
     db.close()
-    return profesores
+    return profesores, total
 
 
 def db_get_profesor_by_id(profesor_id):

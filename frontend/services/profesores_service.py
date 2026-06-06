@@ -23,8 +23,8 @@ def backend_request(method: str, path: str, **kwargs):
         return True, resp.text
 
 
-def get_profesores():
-    return backend_request("GET", "/profesores")
+def get_profesores(page=1, per_page=10):
+    return backend_request("GET", "/profesores", params={"page": page, "per_page": per_page})
 
 
 def get_profesor(profesor_id):
