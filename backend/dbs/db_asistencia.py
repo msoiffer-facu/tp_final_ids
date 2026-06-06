@@ -4,12 +4,14 @@ import secrets
 from datetime import datetime, timedelta
 import io
 import qrcode
-import smtplib
+import asyncio
+import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from db import get_db
 import threading
+import socket
 
 
 SMTP_SERVER = "smtp.gmail.com"
@@ -149,52 +151,87 @@ def crear_asistencia_alumnos(alumnos, clase_id, tokens):
     db.commit()
     cursor.close()
 
+def _construir_mensaje(datos):
+    """Construye el objeto MIMEMultipart con el QR para un alumno."""
+    token = datos['token']
+    email_destino = datos['email']
+    nombre_alumno = datos['nombre']
+ 
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(token)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+ 
+    buffer_memoria = io.BytesIO()
+    img.save(buffer_memoria, format="PNG")
+    buffer_memoria.seek(0)
+ 
+    mensaje = MIMEMultipart()
+    mensaje['From'] = SMTP_USER
+    mensaje['To'] = email_destino
+    mensaje['Subject'] = f"Tu Token de Asistencia - {nombre_alumno}"
+ 
+    cuerpo_html = f"""
+    <html>
+        <body>
+            <h2>¡Hola, {nombre_alumno}!</h2>
+            <p>Presentá el siguiente código QR al profesor en el aula para registrar tu asistencia del día de hoy.</p>
+            <p><i>Este qr expira en 2 horas.</i></p>
+            <br>
+            <p>Saludos,<br>clase de Introduccion al desarrollo de software</p>
+        </body>
+    </html>
+    """
+    mensaje.attach(MIMEText(cuerpo_html, 'html'))
+    adjunto_qr = MIMEImage(buffer_memoria.read(), name="asistencia_qr.png")
+    mensaje.attach(adjunto_qr)
+ 
+    return mensaje
+ 
+ 
+async def enviar_multiples_correos_async(tokens):
+    """
+    Envía múltiples correos reutilizando una única conexión SMTP.
+    Esto evita el overhead de hacer handshake TLS por cada mail.
+    """
+    # Construir todos los mensajes antes de conectar (es CPU, no I/O)
+    mensajes = []
+    for datos in tokens:
+        try:
+            mensajes.append((datos['email'], _construir_mensaje(datos)))
+        except Exception as e:
+            print(f"Error preparando correo para {datos.get('email')}: {e}")
+ 
+    if not mensajes:
+        return
+ 
+    smtp = aiosmtplib.SMTP(hostname=SMTP_SERVER, port=SMTP_PORT, start_tls=False)
 
-def crear_enviar_qr_alumnos(datos):
     try:
-        token = datos['token']
-        email_destino = datos['email']
-        nombre_alumno = datos['nombre']
-
-        qr = qrcode.QRCode(version=1, box_size=10, border=4)
-        qr.add_data(token)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-
-        buffer_memoria = io.BytesIO()
-        img.save(buffer_memoria, format="PNG")
-        buffer_memoria.seek(0)
-
-        mensaje = MIMEMultipart()
-        mensaje['From'] = SMTP_USER
-        mensaje['To'] = email_destino
-        mensaje['Subject'] = f"Tu Token de Asistencia - {nombre_alumno}"
-
-        cuerpo_html = f"""
-        <html>
-            <body>
-                <h2>¡Hola, {nombre_alumno}!</h2>
-                <p>Presentá el siguiente código QR al profesor en el aula para registrar tu asistencia del día de hoy.</p>
-                <p><i>Este qr expira en 2 horas.</i></p>
-                <br>
-                <p>Saludos,<br>clase de Introduccion al desarrollo de software</p>
-            </body>
-        </html>
-        """
-        mensaje.attach(MIMEText(cuerpo_html, 'html'))
-
-        adjunto_qr = MIMEImage(buffer_memoria.read(), name="asistencia_qr.png")
-        mensaje.attach(adjunto_qr)
-
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-
-        server.sendmail(SMTP_USER, email_destino, mensaje.as_string())
-        server.quit()
+        await smtp.connect()
+        await smtp.starttls()
+        await smtp.login(SMTP_USER, SMTP_PASSWORD)
+ 
+        # Enviar todos en paralelo sobre la misma conexión
+        tareas = [smtp.send_message(msg) for _, msg in mensajes]
+        resultados = await asyncio.gather(*tareas, return_exceptions=True)
+ 
+        errores = [r for r in resultados if isinstance(r, Exception)]
+        if errores:
+            print(f"Errores al enviar correos: {len(errores)} de {len(tareas)} fallaron")
+            for err in errores:
+                print(f"  - {err}")
     except Exception as e:
-        print(f"Falló el procesamiento para un alumno: {e}")
-
+        print(f"Error de conexión SMTP: {e}")
+        raise
+    finally:
+        # Siempre cerrar la conexión aunque falle
+        try:
+            await smtp.quit()
+        except Exception:
+            pass
+ 
+ 
 def asistencia_enviada(id):
     db = get_db()
     cursor = db.cursor()
@@ -204,6 +241,7 @@ def asistencia_enviada(id):
     )
     db.commit()
     cursor.close()
+
 
 
 def comprobar_token(token_ingresado, clase_id):

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, url_for
 import math
 import threading
+import asyncio
 
 from dbs.db_asistencia import *
 import services.asistencia as serv_asistencia
@@ -138,15 +139,27 @@ def details_clase_presencial(id):
 
     return jsonify(alumnos), 200
 
-def enviar_qr_async(tokens, id_clase):
-    """Envía los QR de forma asincrónica"""
+def _enviar_qr_en_thread(tokens, id_clase):
+    """
+    Función que corre en un thread separado.
+    Crea su propio event loop para no interferir con el de Flask.
+    """
     try:
-        for token in tokens:
-            if validar_mail(token['email']):
-                crear_enviar_qr_alumnos(token)
-        print(f"QR enviados exitosamente para la clase {id_clase}")
+        tokens_validos = [t for t in tokens if serv_asistencia.validar_mail(t['email'])]
+        if not tokens_validos:
+            print(f"No hay tokens válidos para la clase {id_clase}")
+            return
+ 
+        # Crear un event loop nuevo para este thread (no reutilizar el de Flask)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(enviar_multiples_correos_async(tokens_validos))
+            print(f"QR enviados exitosamente para la clase {id_clase}")
+        finally:
+            loop.close()
     except Exception as e:
-        print(f"Error al enviar QR de forma asincrónica: {e}")
+        print(f"Error al enviar QR para la clase {id_clase}: {e}")
 
 @asistencia_bp.route("/pedir-asistencia", methods=['POST'])
 def create_asistencia():
@@ -179,14 +192,15 @@ def create_asistencia():
     try:
         crear_asistencia_alumnos(alumnos, id_clase, tokens)
     except Exception:
-        return "Error interno al crear las asistencias",500
-
-    # Enviar QR de forma asincrónica en un thread separado
-    thread = threading.Thread(target=enviar_qr_async, args=(tokens, id_clase))
+        return "Error interno al crear las asistencias", 500
+ 
+    # Lanzar el envío en background sin bloquear la respuesta HTTP
+    thread = threading.Thread(target=_enviar_qr_en_thread, args=(tokens, id_clase))
     thread.daemon = True
     thread.start()
+ 
+    return "Se creo la asistencia correctamente", 200
 
-    return "Se creo la asistencia correctamente",200
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
