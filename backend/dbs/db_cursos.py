@@ -11,13 +11,25 @@ def db_get_cursos(page=1, per_page=10):
     
     cursor.execute("SELECT COUNT(*) as total FROM cursos")
     total = cursor.fetchone()["total"]
-    
-    cursor.execute("SELECT * FROM cursos LIMIT %s OFFSET %s", (per_page, offset))
+
+    if per_page == -1:
+        cursor.execute("SELECT * FROM cursos")
+    else:
+        cursor.execute("SELECT * FROM cursos LIMIT %s OFFSET %s", (per_page, offset))
     cursos = cursor.fetchall()
     
     cursor.close()
     conn.close()
     return cursos, total
+
+def get_total_alumnos_curso(curso_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM alumnos_curso WHERE curso_id = %s", (curso_id,))
+    total = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return total
 
 def db_get_curso_by_id(id):
     conn = get_db()
