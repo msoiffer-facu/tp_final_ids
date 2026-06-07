@@ -35,6 +35,7 @@ def login():
     return jsonify({"mensaje": "Login exitoso", "profesor_id": profesor["id"]}), 200
 
 
+
 @profesores_bp.route("/logout", methods=["POST"])
 def logout():
     session.clear()

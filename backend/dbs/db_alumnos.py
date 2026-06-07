@@ -36,6 +36,25 @@ def db_get_alumnos(offset, limit=10, busqueda="", abandono=""):
     db.close()
     return alumnos, total
 
+def db_get_todos_alumnos():
+    """Devuelve todos los alumnos con sus equipos. Sin paginación, para selectores."""
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT a.id, a.nombre, a.apellido, a.padron, a.email, a.abandono,
+               IFNULL(GROUP_CONCAT(e.nombre ORDER BY e.nombre SEPARATOR ', '), '') AS equipo
+        FROM alumnos a
+        LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id
+        LEFT JOIN equipos e ON e.id = ea.equipo_id
+        GROUP BY a.id
+        ORDER BY a.apellido, a.nombre
+    """)
+    alumnos = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return alumnos
+
+
 def db_get_alumno_id(id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
