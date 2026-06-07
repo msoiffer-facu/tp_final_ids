@@ -3,45 +3,12 @@ import requests
 
 def obtener_cursos():
     try:
-        # response = requests.get(f"{BACKEND_URL}/cursos/cursos")
-        # cursos = response.json()
-        cursos = [
-        {
-            "anio": 2026,
-            "cuatrimestre": "1",
-            "id": 1,
-            "modificacion": "nose",
-            "nombre": "clase 12"
-        },
-        {
-            "anio": 2026,
-            "cuatrimestre": "2",
-            "id": 2,
-            "modificacion": "nose",
-            "nombre": "clase 12b"
-        },
-        {
-            "anio": 2025,
-            "cuatrimestre": "1",
-            "id": 3,
-            "modificacion": "nose",
-            "nombre": "clase 1"
-        },
-        {
-            "anio": 2025,
-            "cuatrimestre": "2",
-            "id": 4,
-            "modificacion": "nose",
-            "nombre": "clase 4"
-        },
-        {
-            "anio": 2024,
-            "cuatrimestre": "1",
-            "id": 5,
-            "modificacion": "ninguna",
-            "nombre": "curso 15"
-        }
-        ]
+        response = requests.get(
+        f"{BACKEND_URL}/cursos",
+        params={"page": 1, "per_page": -1}
+        )
+        data = response.json()
+        cursos = data["cursos"]
     except:
         cursos = []
     return cursos
