@@ -14,7 +14,6 @@ from services.equipo import (
     quitar_alumno_equipo,
 )
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
-from services.reporte import obtener_reporte_alumnos, obtener_reporte_equipos, obtener_estadisticas
 from services.alumnos_service import obtener_alumnos, obtener_alumno, actualizar_alumno, eliminar_alumno, importar_csv_service, crear_alumno
 
 views_bp = Blueprint("views", __name__)
@@ -295,54 +294,6 @@ def curso_eliminar(id):
     requests.delete(f"{BACKEND_URL}/cursos/{id}")
     return redirect(url_for("views.cursos"))
 
-<<<<<<< HEAD
-
-@views_bp.route("/reportes")
-def reportes():
-    tipo = request.args.get("tipo", "alumnos")
-    filtros = {k: v for k, v in request.args.items() if k != "tipo" and v}
-
-    datos = []
-    columnas = []
-    estadisticas = None
-    error = None
-
-    try:
-        if tipo == "alumnos":
-            resultado = obtener_reporte_alumnos(filtros)
-            datos = resultado.get("data", [])
-            if datos:
-                columnas = list(datos[0].keys())
-        elif tipo == "equipos":
-            resultado = obtener_reporte_equipos(filtros)
-            datos = resultado.get("data", [])
-            if datos:
-                columnas = list(datos[0].keys())
-        elif tipo == "estadisticas":
-            estadisticas = obtener_estadisticas()
-    except RuntimeError as exc:
-        error = str(exc)
-
-    from urllib.parse import urlencode
-    pdf_params = urlencode(filtros)
-    pdf_url_alumnos = f"{BACKEND_URL}/api/reportes/alumnos/pdf?{pdf_params}"
-    pdf_url_equipos = f"{BACKEND_URL}/api/reportes/equipos/pdf?{pdf_params}"
-    pdf_url_estadisticas = f"{BACKEND_URL}/api/reportes/estadisticas/pdf"
-
-    return render_template(
-        "reportes/reportes.html",
-        tipo=tipo,
-        datos=datos,
-        columnas=columnas,
-        estadisticas=estadisticas,
-        filtros=filtros,
-        error=error,
-        pdf_url_alumnos=pdf_url_alumnos,
-        pdf_url_equipos=pdf_url_equipos,
-        pdf_url_estadisticas=pdf_url_estadisticas,
-    )
-
-
 @views_bp.route("/asistencia", methods=["GET", "POST"])
 def asistencia():
     page = int(request.args.get("page", 1))
@@ -427,10 +378,7 @@ def asistencia_verificar():
         return f"Error interno al conectar con backend: {e}", 500
     return response.text, response.status_code, {"Content-Type": "text/plain; charset=utf-8"}
 
-=======
 
-      
->>>>>>> 0406dfcc4617826b0153699730a0d4bd827c4ca1
 @views_bp.route("/alumnos")
 def vista_alumnos():
     pagina = request.args.get("pagina", default=1, type=int)
