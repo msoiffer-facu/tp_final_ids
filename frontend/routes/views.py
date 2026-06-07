@@ -1,3 +1,4 @@
+from flask import Blueprint, Response, render_template, redirect, url_for, request, session, flash
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
 from services.asistencia import *
@@ -47,18 +48,184 @@ def dashboard():
                 alumnos_promocionados += 1
 
         stats = {
-            "total_alumnos": total_alumnos,
-            "total_equipos": total_equipos,
-            "prom_asistencia": round(promedio_asistencia, 2),
-            "notas_subidas": notas_subidas,
-            "alumnos_promocionados": alumnos_promocionados
-        }
+        "total_alumnos": total_alumnos,
+        "total_equipos": total_equipos,
+        "prom_asistencia": round(promedio_asistencia, 2),
+        "notas_subidas": notas_subidas,
+        "alumnos_promocionados": alumnos_promocionados
+    }
+        #historial = requests.get(f"{BACKEND_URL}/historial").json()
 
     except requests.RequestException:
         flash("Error al obtener datos del backend.", "danger")
-        return render_template("dashboard.html", stats=stats, historial=[])
+        return render_template(("dashboard.html"),stats=stats)
+   
+    print("Promocionados:", alumnos_promocionados)
+    return render_template("dashboard.html", stats=stats)
 
-    return render_template("dashboard.html", stats=stats, historial=[])
+
+
+@views_bp.route("/alumnos/pdf")
+def alumnos_pdf():
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/api/reportes/alumnos/pdf"
+        )
+
+        return Response(
+            response.content,
+            content_type="application/pdf",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=reporte_alumnos.pdf"
+            }
+        )
+
+    except requests.RequestException:
+        flash("Error al generar PDF.", "danger")
+        return render_template("dashboard.html")
+
+
+@views_bp.route("/equipos/pdf")
+def equipos_pdf():
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/api/reportes/equipos/pdf"
+        )
+
+        return Response(
+            response.content,
+            content_type="application/pdf",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=reporte_equipos.pdf"
+            }
+        )
+
+    except requests.RequestException:
+        flash("Error al generar PDF.", "danger")
+        return render_template("dashboard.html")
+
+
+
+@views_bp.route("/estadisticas/pdf")
+def estadisticas_pdf():
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/api/reportes/estadisticas/pdf"
+        )
+
+        return Response(
+            response.content,
+            content_type="application/pdf",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=reporte_estadisticas.pdf"
+            }
+        )
+
+    except requests.RequestException:
+        flash("Error al generar PDF.", "danger")
+        return render_template("dashboard.html")
+ 
+@views_bp.route("/alumnos/<int:id>")
+def alumno_detalle(id):
+    try:
+     alumno = requests.get(f"{BACKEND_URL}/alumnos/{id}").json()
+     equipos = requests.get(f"{BACKEND_URL}/equipos/{id}").json()
+     if isinstance(equipos, dict):
+          equipos = [equipos]  
+     notas = requests.get(f"{BACKEND_URL}/notas/alumno/{id}").json()
+     asistencias = requests.get(f"{BACKEND_URL}/asistencia/alumno/{id}").json()
+
+     print("ALUMNO")
+     print(alumno)
+     print("EQUIPOS")
+     print(equipos)
+     print("NOTAS")
+     print(notas)
+     print("ASISTENCIAS")
+     print(asistencias)
+
+
+     return render_template("alumnos/alumno_detalle.html", alumno=alumno, equipos=equipos, notas=notas, asistencias=asistencias)
+
+    except Exception as e:
+        flash(f"Error al obtener datos del alumno: {e}", "danger")
+        return redirect(url_for("views.dashboard"))
+
+@views_bp.route("/alumnos/<int:id>/editar", methods=["GET"])
+def alumno_form(id):
+    try:
+        response = requests.get(f"{BACKEND_URL}/alumnos/{id}")
+        if not response:
+            flash("Error al obtener el alumno", "danger")
+            return redirect(url_for("views.vista_alumnos"))
+       
+
+        alumno = response.json()
+
+        return render_template(
+            "alumnos/alumno_form.html",
+            alumno=alumno
+        )
+
+    except requests.RequestException:
+    
+        flash("Error al obtener el alumno.", "danger")
+        return redirect(url_for("views.vista_alumnos"))
+
+@views_bp.route("/alumnos/<int:id>/editar", methods=["POST"])
+def alumno_editar(id):
+    print("entro a editar")
+    nombre = request.form.get("nombre")
+    apellido = request.form.get("apellido")
+    email = request.form.get("email")
+    padron = request.form.get("padron")
+    abandono = request.form.get("abandono") == "true"
+    estado = request.form.get("estado") == "true"
+
+    data = {"nombre": nombre, "apellido": apellido, "email": email, "padron": padron, "abandono": abandono, "estado": estado}
+
+    try:
+        response = requests.put(f"{BACKEND_URL}/alumnos/{id}", json=data)
+        if response.ok:
+            flash("Alumno actualizado correctamente.", "success")
+        else:
+            flash(f"Error al actualizar el alumno: {response.text}", "danger")
+    except Exception as e:
+        flash(f"Error de conexión al actualizar el alumno: {e}", "danger")
+
+    return redirect(url_for("views.alumno_detalle", id=id))
+
+
+@views_bp.route("/alumnos/<int:id>/eliminar", methods=["POST"])
+def eliminar_alumno(id):
+    try:
+        response = requests.delete(f"{BACKEND_URL}/alumnos/{id}")
+        response.raise_for_status()
+
+        flash("Alumno eliminado correctamente.", "success")
+
+    except requests.RequestException as e:
+        error_msg = ""
+
+        if response is not None:
+            try:
+                error_msg = response.json().get("error", response.text)
+            except Exception:
+                error_msg = response.text
+        else:
+            error_msg = str(e)
+
+        print("ERROR:", e)
+        flash(f"Error al eliminar alumno: {error_msg}", "danger")
+
+    return redirect(url_for("views.vista_alumnos"))
+
+@views_bp.route("/alumnos/exportar", methods=["GET"])
+def exportar_alumnos():
+    return redirect(f"{BACKEND_URL}/alumnos/exportar")
 
 
 # ── Equipos ──────────────────────────────────────────────────────────────────

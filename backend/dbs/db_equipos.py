@@ -1,5 +1,17 @@
 from db import get_db
 
+def db_listar_equipos_alumno(alumno_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""SELECT equipos.id, equipos.nombre, equipos.descripcion, equipos.curso_id, equipos.fecha_creacion FROM equipos
+            JOIN equipo_alumnos ON equipos.id = equipo_alumnos.equipo_id
+            WHERE equipo_alumnos.alumno_id = %s""", (alumno_id,))
+       
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
 def db_listar_equipos():
     conn = get_db()

@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from dbs.db_equipos import (
+    db_listar_equipos_alumno,
     db_listar_equipos,
     db_crear_equipo,
     db_buscar_equipo_por_id,
@@ -12,6 +13,14 @@ from dbs.db_equipos import (
 )
 
 equipos_bp = Blueprint("equipos", __name__)
+
+@equipos_bp.route("/alumno/<int:alumno_id>", methods=["GET"])
+def equipos_por_alumno(alumno_id):
+    try:
+        equipos = db_listar_equipos_alumno(alumno_id)
+        return jsonify(equipos), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @equipos_bp.route("/", methods=["GET"])

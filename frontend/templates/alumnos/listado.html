@@ -1,15 +1,41 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/alumnos.css') }}"
->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos.css') }}">
 {% endblock %}
 
 {% block content %}
 
+<div class="page-header">
+
+    <h1 class="page-title">
+        Alumnos
+    </h1>
+
+    <div class="page-header-right">
+
+        <a
+            href="/alumnos/importar"
+            class="btn-primary"
+        >
+            Importar CSV
+        </a>
+
+        <a
+            href="/alumnos/exportar"
+            class="btn-primary"
+        >
+            Exportar CSV
+        </a>
+
+    </div>
+
+</div>
+    
+</div>
+
 <div class="table-card">
+
     <div class="table-card-header">
         <h2>Listado de alumnos</h2>
         <form method="GET" action="{{ url_for('views.vista_alumnos') }}" class="table-filters" onsubmit="filtrarAlumnos()">
@@ -21,6 +47,7 @@
                 placeholder="Buscar por padrón, nombre o apellido..."
                 value="{{ request.args.get('busqueda', '') }}"
             >
+
             <button
                 type="submit"
                 class="btn-buscar"
@@ -56,16 +83,10 @@
             + Agregar Alumno
         </a>
 
-        <a
-            href="/alumnos/importar"
-            class="btn-agregar"
-        >
-            Importar CSV
-        </a>
-
     </div>
 
     <table id="tablaAlumnos">
+
         <thead>
             <tr>
                 <th class="text-center">Padrón</th>
@@ -78,47 +99,69 @@
         </thead>
 
         <tbody>
+
             {% for alumno in alumnos %}
             <tr class="fila-alumno">
-                <td class="padron text-center">
+
+                <td class="padron">
                     {{ alumno.padron }}
                 </td>
-                <td class="nombre text-center">
+
+                <td class="nombre">
                     {{ alumno.nombre }}
                 </td>
-                <td class="apellido text-center">
+
+                <td class="apellido">
                     {{ alumno.apellido }}
                 </td>
-                <td class="text-center">
+
+                <td>
                     {{ alumno.email }}
                 </td>
                 <td
-                    class="estado text-center"
+                    class="estado"
                     data-estado="{% if alumno.abandono %}abandono{% else %}activo{% endif %}"
                 >
                     {% if alumno.abandono %}
-                        <span class="badge badge-warning">
+                        <span class="badge rojo">
                             Abandonó
                         </span>
                     {% else %}
-                        <span class="badge badge-success">
+                        <span class="badge verde">
                             Activo
                         </span>
                     {% endif %}
                 </td>
 
-                <td class="acciones-cell text-center">
+                <td class="acciones">
+
                     <a
                         href="/alumnos/{{ alumno.id }}"
-                        class="btn-accion btn-ver"
-                        title="Ver alumno"
+                        class="btn-accion ver"
                     >
-                        👤
+                        Ver
                     </a>
+
+                    <a
+                        href="/alumnos/{{ alumno.id }}/editar"
+                        class="btn-accion editar"
+                    >
+                        Editar
+                    </a>
+
+                    <button
+                        class="btn-accion eliminar"
+                        onclick="confirmarEliminar({{ alumno.id }},'{{ alumno.nombre }} {{ alumno.apellido }}')"
+                    >
+                        Eliminar
+                    </button>
                 </td>
+
             </tr>
             {% endfor %}
+
         </tbody>
+
     </table>
     <!-- Paginación -->
 {% if total_pages > 1 %}
@@ -158,6 +201,7 @@
 
 <!-- Función para filtrar alumnos en el frontend al escribir en el buscador o cambiar el filtro de estado -->
 <script>
+
 function filtrarAlumnos() {
 
     const buscador = document.getElementById("buscador").value.toLowerCase();
@@ -171,9 +215,12 @@ function filtrarAlumnos() {
         let apellido = fila.querySelector(".apellido").textContent.toLowerCase();
         let estado = fila.querySelector(".estado").dataset.estado;
 
-        let coincideBusqueda = padron.includes(buscador) || nombre.includes(buscador) || apellido.includes(buscador);
+        let coincideBusqueda =
+            padron.includes(buscador) ||
+            nombre.includes(buscador) ||
+            apellido.includes(buscador);
 
-        let coincide_Estado =
+        let coincideEstado =
             estadoFiltro === "" ||
             (estadoFiltro === "0" && estado === "activo") ||
             (estadoFiltro === "1" && estado === "abandono");

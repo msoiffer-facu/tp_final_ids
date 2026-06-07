@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}
+Editar alumno - Sistema Académico
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div class="page-header-left">
+
+        <a
+            href="/alumnos/{{ alumno.id }}"
+            class="btn-volver"
+        >
+            ← Volver
+        </a>
+
+        <h1 class="page-title">
+            Editar alumno
+        </h1>
+
+    </div>
+
+</div>
+
+<div class="form-card">
+
+    <form
+        method="POST"
+        action="/alumnos/{{ alumno.id }}/editar"
+    >
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label for="nombre">
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    value="{{ alumno.nombre }}"
+                    required
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="apellido">
+                    Apellido
+                </label>
+
+                <input
+                    type="text"
+                    id="apellido"
+                    name="apellido"
+                    value="{{ alumno.apellido }}"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ alumno.email }}"
+                required
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="padron">
+                Padrón
+            </label>
+
+            <input
+                type="text"
+                id="padron"
+                name="padron"
+                value="{{ alumno.padron }}"
+                required
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="abandono">
+                Estado
+            </label>
+
+            <select
+                id="abandono"
+                name="abandono"
+            >
+                <option
+                    value="true"
+                    {% if  alumno.estado %}selected{% endif %}
+                >
+                    Activo
+                </option>
+                <option
+                    value="false"
+                    {% if not alumno.estado %}selected{% endif %}
+                >
+                    Inactivo
+                </option>
+                <option
+                    value="false"
+                    {% if not alumno.abandono %}selected{% endif %}
+                >
+                    Activo
+                </option>
+
+                <option
+                    value="true"
+                    {% if alumno.abandono %}selected{% endif %}
+                >
+                    Abandonó
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-actions">
+
+            <a
+                href="/alumnos/{{ alumno.id }}"
+                class="btn-cancelar"
+            >
+                Cancelar
+            </a>
+
+            <button
+                type="submit"
+                class="btn-primary"
+            >
+                Guardar cambios
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
