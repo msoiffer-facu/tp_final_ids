@@ -55,7 +55,6 @@
         <tbody>
             {% for registro in clases %}
             <tr>
-                <!-- TODO: Crear el endpoint /asistencia/detalles/id para ver los alumnos presentes y los que faltaron-->
                 <td class="usuario"><a href="/asistencia/{{ registro.id }}">{{ registro.id }}</a></td>
                 <td><a href="/cursos/{{ registro.curso.id }}">{{ registro.curso.nombre }}</a></td>
                 <td class="hora">{{ registro.fecha }}</td>
@@ -87,7 +86,7 @@
     {% endif %}
 </div>
 
-<!-- Modal: Agregar/ver/modfiicar clase presencial -->
+<!-- Modal: Agregar/mandar mail/verificar asistencia -->
 <div id="modalClase" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal__content">
         <button class="modal__close" onclick="cerrarModalClase()" aria-label="Cerrar">&times;</button>
@@ -124,6 +123,7 @@
                 </select>
             </div>
             <input type="hidden" name="token" id="qrTokenInput" value="">
+            <input type="hidden" name="finalizarClase" id="finalizarInput" value="false">
 
             <div class="form__actions">
                 <button type="button" id="btnCancelar" class="form__btn form__btn--cancel" onclick="cerrarModalClase()">Cancelar</button>
@@ -137,9 +137,10 @@
 
 
 <div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:500px; text-align:center;">
+    <div class="modal__content" style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:500px; text-align:center;">
+        <button class="modal__close" onclick="cerrarEscannerQR()" aria-label="Cerrar">&times;</button>
         <h3>Escanear Asistencia QR</h3>
-
+        
         <div style="margin-bottom: 15px;">
             <label for="camera-select" style="font-size: 0.85rem; color: #4b5563; display: block; margin-bottom: 5px;">Seleccionar Cámara:</label>
             <select id="camera-select" style="padding: 6px; width: 100%; border-radius: 4px; border: 1px solid #d1d5db;"></select>
@@ -147,13 +148,10 @@
 
         <div id="reader" style="width:100%; background: #000; border-radius: 6px; overflow: hidden;"></div> 
         
-        <button onclick="cerrarEscannerQR()" style="margin-top:15px; padding:8px 16px; background:#ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Cerrar</button>
+        <button onclick="finalizarEscannerQR()" style="margin-top:15px; padding:8px 16px; background:#ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Finalizar lectura QR de esta clase</button>
     </div>
 </div>
 
-<!-- <form id="qr-verificar-form" action="/asistencia/verificar-asistencia" method="POST" target="qr-form-target" style="display:none;">
-    <input type="hidden" name="token" id="qrTokenInput" value="">
-</form> -->
 <iframe name="qr-form-target" id="qr-form-target" style="display:none;"></iframe>
 
 {% endblock %}

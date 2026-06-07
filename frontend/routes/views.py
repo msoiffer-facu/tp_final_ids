@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
-from services.asistencia import obtener_clases_presenciales, obtener_clases_en_proceso
+from services.asistencia import *
 from services.config import BACKEND_URL
 from services.curso import obtener_cursos, obtener_curso
 from services.equipo import (
@@ -295,6 +295,7 @@ def curso_eliminar(id):
     requests.delete(f"{BACKEND_URL}/cursos/{id}")
     return redirect(url_for("views.cursos"))
 
+<<<<<<< HEAD
 
 @views_bp.route("/reportes")
 def reportes():
@@ -426,6 +427,10 @@ def asistencia_verificar():
         return f"Error interno al conectar con backend: {e}", 500
     return response.text, response.status_code, {"Content-Type": "text/plain; charset=utf-8"}
 
+=======
+
+      
+>>>>>>> 0406dfcc4617826b0153699730a0d4bd827c4ca1
 @views_bp.route("/alumnos")
 def vista_alumnos():
     pagina = request.args.get("pagina", default=1, type=int)

@@ -102,3 +102,4 @@ def estadisticas_pdf():
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={PDF_FILENAME['estadisticas']}"
     return response
+

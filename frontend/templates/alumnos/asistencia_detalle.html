@@ -46,40 +46,47 @@
                 <th>Padrón</th>
                 <th>Nombre</th>
                 <th>Apellido</th>
-                <th>Email</th>
+                <th>Asistencia</th>
+                <th>Cuando dio la asistencia</th>
                 <th>Estado</th>
             </tr>
         </thead>
         <tbody>
             {% for alumno in alumnos %}
+            {% if alumno.presente %}
             <tr>
                 <td>{{ alumno.padron }}</td>
                 <td>{{ alumno.nombre }}</td>
                 <td>{{ alumno.apellido }}</td>
-                <td>{{ alumno.email }}</td>
                 <td>
-                    {% if alumno.abandono %}
-                        <span class="badge rojo">Abandonó</span>
-                    {% elif alumno.estado %}
+                    {% if alumno.presente %}
+                        <span class="badge verde">Presente</span>
+                    {% else %}
+                        <span class="badge gris">Ausente</span>
+                    {% endif %}
+                </td>
+                <td>{{ alumno.asistencia_registrada or "N/A" }}</td>
+                <td>
+                    {% if alumno.estado %}
                         <span class="badge verde">Activo</span>
                     {% else %}
                         <span class="badge gris">Inactivo</span>
                     {% endif %}
                 </td>
             </tr>
+            {% endif %}
             {% else %}
             <tr>
-                <td colspan="5" class="vacio">No hay alumnos inscriptos.</td>
+                <td colspan="5" class="vacio">Todavia no se ha pedido asistencia</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-
-<!-- Alumnos presentes-->
+<!-- Alumnos austentes-->
 <div class="table-card" style="margin-top: 1.5rem;">
     <div class="table-card-header">
-        <h2>Alumnos que faltaron</h2>
+        <h2>Alumnos austentes</h2>
     </div>
     <table>
         <thead>
@@ -87,34 +94,41 @@
                 <th>Padrón</th>
                 <th>Nombre</th>
                 <th>Apellido</th>
-                <th>Email</th>
+                <th>Asistencia</th>
                 <th>Estado</th>
             </tr>
         </thead>
         <tbody>
             {% for alumno in alumnos %}
+            {% if not alumno.presente %}
             <tr>
                 <td>{{ alumno.padron }}</td>
                 <td>{{ alumno.nombre }}</td>
                 <td>{{ alumno.apellido }}</td>
-                <td>{{ alumno.email }}</td>
                 <td>
-                    {% if alumno.abandono %}
-                        <span class="badge rojo">Abandonó</span>
-                    {% elif alumno.estado %}
+                    {% if alumno.presente %}
+                        <span class="badge verde">Presente</span>
+                    {% else %}
+                        <span class="badge gris">Ausente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if alumno.estado %}
                         <span class="badge verde">Activo</span>
                     {% else %}
                         <span class="badge gris">Inactivo</span>
                     {% endif %}
                 </td>
             </tr>
+            {% endif %}
             {% else %}
             <tr>
-                <td colspan="5" class="vacio">No hay alumnos inscriptos.</td>
+                <td colspan="5" class="vacio">Todavia no se ha pedido asistencia</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
 
 {% endblock %}

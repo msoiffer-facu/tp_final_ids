@@ -4,11 +4,14 @@ import secrets
 from datetime import datetime, timedelta
 import io
 import qrcode
-import smtplib
+import asyncio
+import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from db import get_db
+import threading
+import socket
 
 
 SMTP_SERVER = "smtp.gmail.com"
@@ -42,11 +45,12 @@ def obtener_clases_p(page, per_page, curso_id=None):
 
     offset = (page - 1) * per_page
     if curso_id is not None:
-        cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s LIMIT %s OFFSET %s", (curso_id, per_page, offset))
+        cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s ORDER BY id DESC LIMIT %s OFFSET %s", (curso_id, per_page, offset))
     else:
-        cursor.execute("SELECT * FROM clase_presencial LIMIT %s OFFSET %s", (per_page, offset))
+        cursor.execute("SELECT * FROM clase_presencial ORDER BY id DESC LIMIT %s OFFSET %s", (per_page, offset))
     clases_p = cursor.fetchall()
     cursor.close()
+
     return clases_p, total
 
 def obtener_clases_en_proceso():
@@ -94,16 +98,21 @@ def eliminar_clase_p(id):
     db.commit()
     cursor.close()
 
-def crear_asistencia_alumnos(alumnos, clase_id):
+def obtener_alumnos_asistencia_clase(clase_id):
     db = get_db()
-    cursor = db.cursor()
-
-    datos = [(alumno['id'], clase_id) for alumno in alumnos]
-
-    query = "INSERT INTO asistencias (alumno_id, clase_presencial_id) VALUES (%s, %s)"
-    cursor.executemany(query, datos)
-    db.commit()
+    cursor = db.cursor(dictionary=True)
+    query = """
+        SELECT a.padron, a.nombre, a.apellido, a.email, a.estado, ast.presente, ast.asistencia_registrada
+        FROM alumnos a
+        JOIN asistencias ast ON a.id = ast.alumno_id
+        WHERE ast.clase_presencial_id = %s
+    """
+    cursor.execute(query, (clase_id,))
+    asistencia = cursor.fetchall()
     cursor.close()
+    return asistencia
+
+
 
 def crear_token_alumno(alumnos):
     db = get_db()
@@ -112,71 +121,117 @@ def crear_token_alumno(alumnos):
     ahora = datetime.now()
     fecha_expiracion = ahora + timedelta(hours=2)
 
-    datos = []
     tokens_creados = []
 
     for alumno in alumnos:
         token = secrets.token_hex(16)
-        datos.append((token, alumno['id'], fecha_expiracion, 0))
+        query = "INSERT INTO tokens_asistencia (token, alumno_id, fecha_expiracion, utilizado) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (token, alumno['id'], fecha_expiracion, 0))
+        token_id = cursor.lastrowid
+        db.commit()
         tokens_creados.append({
             "alumno_id": alumno['id'],
             "nombre":alumno['nombre'],
             "email":alumno['email'],
             "token": token,
+            "token_id": token_id,
         })
 
-    query = "INSERT INTO tokens_asistencia (token, alumno_id, fecha_expiracion, utilizado) VALUES (%s, %s, %s, %s)"
-    cursor.executemany(query, datos)
-    db.commit()
     cursor.close()
     return tokens_creados
 
+def crear_asistencia_alumnos(alumnos, clase_id, tokens):
+    db = get_db()
+    cursor = db.cursor()
 
-def crear_enviar_qr_alumnos(datos):
+    datos = [(alumno['id'], clase_id, token['token_id']) for alumno in alumnos for token in tokens if token['alumno_id'] == alumno['id']]
+
+    query = "INSERT INTO asistencias (alumno_id, clase_presencial_id, token_id) VALUES (%s, %s, %s)"
+    cursor.executemany(query, datos)
+    db.commit()
+    cursor.close()
+
+def _construir_mensaje(datos):
+    """Construye el objeto MIMEMultipart con el QR para un alumno."""
+    token = datos['token']
+    email_destino = datos['email']
+    nombre_alumno = datos['nombre']
+ 
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(token)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+ 
+    buffer_memoria = io.BytesIO()
+    img.save(buffer_memoria, format="PNG")
+    buffer_memoria.seek(0)
+ 
+    mensaje = MIMEMultipart()
+    mensaje['From'] = SMTP_USER
+    mensaje['To'] = email_destino
+    mensaje['Subject'] = f"Tu Token de Asistencia - {nombre_alumno}"
+ 
+    cuerpo_html = f"""
+    <html>
+        <body>
+            <h2>¡Hola, {nombre_alumno}!</h2>
+            <p>Presentá el siguiente código QR al profesor en el aula para registrar tu asistencia del día de hoy.</p>
+            <p><i>Este qr expira en 2 horas.</i></p>
+            <br>
+            <p>Saludos,<br>clase de Introduccion al desarrollo de software</p>
+        </body>
+    </html>
+    """
+    mensaje.attach(MIMEText(cuerpo_html, 'html'))
+    adjunto_qr = MIMEImage(buffer_memoria.read(), name="asistencia_qr.png")
+    mensaje.attach(adjunto_qr)
+ 
+    return mensaje
+ 
+ 
+async def enviar_multiples_correos_async(tokens):
+    """
+    Envía múltiples correos reutilizando una única conexión SMTP.
+    Esto evita el overhead de hacer handshake TLS por cada mail.
+    """
+    # Construir todos los mensajes antes de conectar (es CPU, no I/O)
+    mensajes = []
+    for datos in tokens:
+        try:
+            mensajes.append((datos['email'], _construir_mensaje(datos)))
+        except Exception as e:
+            print(f"Error preparando correo para {datos.get('email')}: {e}")
+ 
+    if not mensajes:
+        return
+ 
+    smtp = aiosmtplib.SMTP(hostname=SMTP_SERVER, port=SMTP_PORT, start_tls=False)
+
     try:
-        token = datos['token']
-        email_destino = datos['email']
-        nombre_alumno = datos['nombre']
-
-        qr = qrcode.QRCode(version=1, box_size=10, border=4)
-        qr.add_data(token)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-
-        buffer_memoria = io.BytesIO()
-        img.save(buffer_memoria, format="PNG")
-        buffer_memoria.seek(0)
-
-        mensaje = MIMEMultipart()
-        mensaje['From'] = SMTP_USER
-        mensaje['To'] = email_destino
-        mensaje['Subject'] = f"Tu Token de Asistencia - {nombre_alumno}"
-
-        cuerpo_html = f"""
-        <html>
-            <body>
-                <h2>¡Hola, {nombre_alumno}!</h2>
-                <p>Presentá el siguiente código QR al profesor en el aula para registrar tu asistencia del día de hoy.</p>
-                <p><i>Este qr expira en 2 horas.</i></p>
-                <br>
-                <p>Saludos,<br>clase de Introduccion al desarrollo de software</p>
-            </body>
-        </html>
-        """
-        mensaje.attach(MIMEText(cuerpo_html, 'html'))
-
-        adjunto_qr = MIMEImage(buffer_memoria.read(), name="asistencia_qr.png")
-        mensaje.attach(adjunto_qr)
-
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-
-        server.sendmail(SMTP_USER, email_destino, mensaje.as_string())
-        server.quit()
+        await smtp.connect()
+        await smtp.starttls()
+        await smtp.login(SMTP_USER, SMTP_PASSWORD)
+ 
+        # Enviar todos en paralelo sobre la misma conexión
+        tareas = [smtp.send_message(msg) for _, msg in mensajes]
+        resultados = await asyncio.gather(*tareas, return_exceptions=True)
+ 
+        errores = [r for r in resultados if isinstance(r, Exception)]
+        if errores:
+            print(f"Errores al enviar correos: {len(errores)} de {len(tareas)} fallaron")
+            for err in errores:
+                print(f"  - {err}")
     except Exception as e:
-        print(f"Falló el procesamiento para un alumno: {e}")
-
+        print(f"Error de conexión SMTP: {e}")
+        raise
+    finally:
+        # Siempre cerrar la conexión aunque falle
+        try:
+            await smtp.quit()
+        except Exception:
+            pass
+ 
+ 
 def asistencia_enviada(id):
     db = get_db()
     cursor = db.cursor()
@@ -188,35 +243,48 @@ def asistencia_enviada(id):
     cursor.close()
 
 
+
 def comprobar_token(token_ingresado, clase_id):
-    respuesta = ""
+    ahora = datetime.now()
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
-        "SELECT * FROM tokens_asistencia WHERE token = %s AND utilizado = 0 AND fecha_expiracion > CURRENT_TIMESTAMP;",
+        "SELECT * FROM tokens_asistencia WHERE token = %s",
         (token_ingresado,),
     )
     token = cursor.fetchone()
 
-    if token:
-        cursor.execute(
-            "UPDATE tokens_asistencia SET utilizado = 1 WHERE id = %s",
-            (token["id"],),
-        )
-        cursor.execute(
-            "UPDATE asistencias SET presente = 1 WHERE alumno_id = %s AND clase_presencial_id = %s;",
-            (token["alumno_id"], clase_id,),
-        )
-        db.commit()
-        respuesta = "Se a verificado el token correctamente"
-    else:
-        respuesta = "token no encontrado"
+    if not token:
+        return "El token no se encuentra en la tabla"
+
+    if token["fecha_expiracion"] < ahora:
+        return "El token ha expirado"
+
+    if token["utilizado"] == 1:
+        return "El token ya fue utilizado"
+
+    cursor.execute(
+    "UPDATE tokens_asistencia SET utilizado = 1 WHERE id = %s",
+    (token["id"],),
+    )
+    cursor.execute(
+        "UPDATE asistencias SET presente = 1, asistencia_registrada = %s WHERE alumno_id = %s AND clase_presencial_id = %s;",
+        (ahora, token["alumno_id"], clase_id,),
+    )
+    db.commit()
     cursor.close()
 
-    if not respuesta:
-        respuesta = "El token no se encuentra en la tabla o ya no es valido"
+    return "Se a verificado el token correctamente"
 
-    return respuesta
+def terminar_clase(clase_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        "UPDATE clase_presencial SET finalizada = 1 WHERE id = %s",
+        (clase_id,),
+    )
+    db.commit()
+    cursor.close()
 
 
 #TODO: cambiar la siguiente funcion a un archivo de curso y no dejarlo en el repository de asistencia
