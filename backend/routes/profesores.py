@@ -35,17 +35,6 @@ def login():
     return jsonify({"mensaje": "Login exitoso", "profesor_id": profesor["id"]}), 200
 
 
-@profesores_bp.route("/crear-test", methods=["GET"])
-def crear_profesor_test():
-    """RUTA TEMPORAL PARA PRUEBAS - borrar antes de entregar"""
-    try:
-        profesor_id = db_create_profesor("Admin", "Test", "admin@test.com", hashear_password("1234"))
-        return jsonify({"mensaje": "Profesor de prueba creado", "email": "admin@test.com", "password": "1234", "id": profesor_id}), 201
-    except mysql.connector.IntegrityError:
-        return jsonify({"mensaje": "Ya existe, usá email: admin@test.com  password: 1234"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 
 @profesores_bp.route("/logout", methods=["POST"])
 def logout():
