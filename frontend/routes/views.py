@@ -3,31 +3,28 @@ from flask import Blueprint, render_template, redirect, url_for, request, sessio
 import requests
 from services.asistencia import *
 from services.config import BACKEND_URL
-from services.curso import obtener_cursos
+from services.curso import obtener_cursos, obtener_curso
+from services.equipo import (
+    obtener_equipos,
+    crear_equipo,
+    obtener_equipo,
+    editar_equipo,
+    eliminar_equipo,
+    obtener_miembros_equipo,
+    agregar_alumno_equipo,
+    quitar_alumno_equipo,
+)
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
 from services.alumnos_service import obtener_alumnos, obtener_alumno, actualizar_alumno, eliminar_alumno, importar_csv_service, crear_alumno
 
 views_bp = Blueprint("views", __name__)
 
 
-def get_equipo(equipo_id):
-    return next((item for item in EQUIPOS if item["id"] == equipo_id), None)
-
-
-def next_equipo_id():
-    return max((item["id"] for item in EQUIPOS), default=0) + 1
-
-CLASES = [
-    {"id": 1, "fecha": "2025-03-10"},
-    {"id": 2, "fecha": "2025-03-17"},
-]
-
 @views_bp.route("/")
 def index():
     if usuario_logueado():
         return redirect(url_for("views.dashboard"))
     return redirect(url_for("auth.login"))
-
 
 
 @views_bp.route("/dashboard")
@@ -231,82 +228,153 @@ def exportar_alumnos():
     return redirect(f"{BACKEND_URL}/alumnos/exportar")
 
 
+# ── Equipos ──────────────────────────────────────────────────────────────────
+
 @views_bp.route("/equipos")
 def equipos():
-    return render_template("equipos/listado.html", equipos=[])
+    try:
+        equipos = obtener_equipos()
+    except RuntimeError as exc:
+        flash(str(exc), "error")
+        equipos = []
+
+    cursos = obtener_cursos()
+    cursos_map = {curso["id"]: curso["nombre"] for curso in cursos}
+
+    for equipo in equipos:
+        equipo["curso"] = cursos_map.get(equipo.get("curso_id"), f"Curso {equipo.get('curso_id')}")
+        equipo["estado"] = equipo.get("estado", "Activo")
+        equipo["miembros"] = equipo.get("miembros", 0)
+
+    return render_template("equipos/listado.html", equipos=equipos)
 
 
 @views_bp.route("/equipos/nuevo", methods=["GET", "POST"])
 def equipo_nuevo():
+    cursos = obtener_cursos()
+
     if request.method == "POST":
         nombre = request.form.get("nombre", "").strip()
         descripcion = request.form.get("descripcion", "").strip()
-        curso = request.form.get("curso", "").strip()
-        estado = request.form.get("estado", "").strip() or "Activo"
+        curso_id = request.form.get("curso_id", "").strip()
 
-        if not nombre or not descripcion or not curso:
+        if not nombre or not descripcion or not curso_id:
             flash("Completa los campos obligatorios para crear el equipo.", "danger")
-            return render_template("equipos/nuevo.html", equipo={"nombre": nombre, "descripcion": descripcion, "curso": curso, "estado": estado})
+            return render_template(
+                "equipos/nuevo.html",
+                equipo={"nombre": nombre, "descripcion": descripcion, "curso_id": int(curso_id) if curso_id.isdigit() else curso_id},
+                cursos=cursos,
+            )
 
-        EQUIPOS.append({
-            "id": next_equipo_id(),
-            "nombre": nombre,
-            "descripcion": descripcion,
-            "estado": estado,
-            "miembros": 0,
-            "curso": curso,
-            "fecha_creacion": "Hoy",
-        })
-        flash("Equipo creado correctamente.", "success")
-        return redirect(url_for("views.equipos"))
+        try:
+            crear_equipo(nombre, descripcion, int(curso_id))
+            flash("Equipo creado correctamente.", "success")
+            return redirect(url_for("views.equipos"))
+        except RuntimeError as exc:
+            flash(str(exc), "error")
+            return render_template(
+                "equipos/nuevo.html",
+                equipo={"nombre": nombre, "descripcion": descripcion, "curso_id": int(curso_id) if curso_id.isdigit() else curso_id},
+                cursos=cursos,
+            )
 
-    return render_template("equipos/nuevo.html", equipo=None)
+    return render_template("equipos/nuevo.html", equipo=None, cursos=cursos)
 
 
 @views_bp.route("/equipos/<int:equipo_id>", methods=["GET", "POST"])
 def equipo_detalle(equipo_id):
-    equipo = get_equipo(equipo_id)
+    try:
+        equipo = obtener_equipo(equipo_id)
+    except RuntimeError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("views.equipos"))
+
     if not equipo:
-        return "no encontrado", 404
+        flash("Equipo no encontrado.", "error")
+        return redirect(url_for("views.equipos"))
+
+    curso = obtener_curso(equipo.get("curso_id"))
+    equipo["curso"] = curso["nombre"] if curso else f"Curso {equipo.get('curso_id')}"
+    equipo["estado"] = equipo.get("estado", "Activo")
+    equipo["miembros"] = equipo.get("miembros", 0)
 
     if request.method == "POST":
         action = request.form.get("action")
         if action == "delete":
-            EQUIPOS.remove(equipo)
-            flash("Equipo eliminado correctamente.", "success")
+            try:
+                eliminar_equipo(equipo_id)
+                flash("Equipo eliminado correctamente.", "success")
+            except RuntimeError as exc:
+                flash(str(exc), "error")
             return redirect(url_for("views.equipos"))
 
         nombre = request.form.get("nombre", "").strip()
         descripcion = request.form.get("descripcion", "").strip()
-        estado = request.form.get("estado", "").strip()
 
         if not nombre:
             flash("El nombre del equipo es obligatorio.", "danger")
         else:
-            equipo["nombre"] = nombre
-            equipo["descripcion"] = descripcion
-            equipo["estado"] = estado or equipo["estado"]
-            flash("Datos del equipo actualizados.", "success")
-            return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
+            try:
+                editar_equipo(equipo_id, nombre, descripcion)
+                flash("Datos del equipo actualizados.", "success")
+                return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
+            except RuntimeError as exc:
+                flash(str(exc), "error")
 
-    miembros = [
-        {"padron": "12345", "nombre": "Luca", "apellido": "Perez"},
-        {"padron": "12346", "nombre": "Ana", "apellido": "Gomez"},
-        {"padron": "12347", "nombre": "Mica", "apellido": "Lopez"},
-    ]
+    try:
+        miembros = obtener_miembros_equipo(equipo.get("curso_id"), equipo_id)
+    except RuntimeError:
+        miembros = []
 
-    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros)
+    try:
+        resp_alumnos = requests.get(f"{BACKEND_URL}/alumnos/todos", timeout=5)
+        todos_alumnos = resp_alumnos.json() if resp_alumnos.ok else []
+        if not isinstance(todos_alumnos, list):
+            todos_alumnos = []
+    except Exception:
+        todos_alumnos = []
+
+    ids_miembros = {str(m.get("id", m.get("alumno_id", ""))) for m in miembros}
+    alumnos_disponibles = [a for a in todos_alumnos if str(a.get("id")) not in ids_miembros]
+
+    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros, alumnos_disponibles=alumnos_disponibles)
+
+
+@views_bp.route("/equipos/<int:equipo_id>/alumnos/agregar", methods=["POST"])
+def equipo_agregar_alumno(equipo_id):
+    alumno_id = request.form.get("alumno_id")
+    if not alumno_id:
+        flash("Seleccioná un alumno.", "danger")
+    else:
+        try:
+            agregar_alumno_equipo(equipo_id, int(alumno_id))
+            flash("Alumno agregado al equipo.", "success")
+        except RuntimeError as exc:
+            flash(str(exc), "error")
+    return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
+
+
+@views_bp.route("/equipos/<int:equipo_id>/alumnos/<int:alumno_id>/quitar", methods=["POST"])
+def equipo_quitar_alumno(equipo_id, alumno_id):
+    try:
+        quitar_alumno_equipo(equipo_id, alumno_id)
+        flash("Alumno quitado del equipo.", "success")
+    except RuntimeError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
 
 
 @views_bp.route("/equipos/<int:equipo_id>/delete", methods=["POST"])
 def equipo_delete(equipo_id):
-    equipo = get_equipo(equipo_id)
-    if not equipo:
-        return "no encontrado", 404
-    EQUIPOS.remove(equipo)
-    flash("Equipo eliminado correctamente.", "success")
+    try:
+        eliminar_equipo(equipo_id)
+        flash("Equipo eliminado correctamente.", "success")
+    except RuntimeError as exc:
+        flash(str(exc), "error")
     return redirect(url_for("views.equipos"))
 
+
+# ── Cursos ────────────────────────────────────────────────────────────────────
 
 @views_bp.route("/cursos")
 def cursos():
@@ -324,6 +392,7 @@ def cursos():
         total_pages=data["total_pages"]
     )
 
+
 @views_bp.route("/cursos/<int:id>")
 def curso_detalle(id):
     try:
@@ -338,7 +407,7 @@ def curso_detalle(id):
         equipos_data = requests.get(f"{BACKEND_URL}/cursos/{id}/equipos",
             params={"page": equipo_page, "per_page": equipo_per_page}).json()
         clases = requests.get(f"{BACKEND_URL}/cursos/{id}/clases").json()
-    except:
+    except Exception:
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_detalle.html",
         curso=curso,
@@ -349,6 +418,7 @@ def curso_detalle(id):
         equipo_page=equipos_data["page"],
         equipo_total_pages=equipos_data["total_pages"],
         clases=clases)
+
 
 @views_bp.route("/cursos/nuevo", methods=["GET", "POST"])
 def curso_nuevo():
@@ -368,7 +438,7 @@ def curso_nuevo():
 def curso_editar(id):
     try:
         curso = requests.get(f"{BACKEND_URL}/cursos/{id}").json()
-    except:
+    except Exception:
         return redirect(url_for("views.cursos"))
     if request.method == "POST":
         data = {
@@ -388,7 +458,8 @@ def curso_eliminar(id):
     return redirect(url_for("views.cursos"))
 
 
-      
+# ── Alumnos (del compañero, sin modificar) ────────────────────────────────────
+
 @views_bp.route("/alumnos")
 def vista_alumnos():
     pagina = request.args.get("pagina", default=1, type=int)
@@ -414,10 +485,10 @@ def vista_alumnos():
         total_pages=resultado["data"]["total_pages"]
     )
 
+
 @views_bp.route("/alumnos/<int:id>")
 def detalle_alumno(id):
     resultado = obtener_alumno(id)
-
     if resultado["status_code"] != 200:
         flash(resultado["data"].get("error", "Error al cargar el alumno"), "error")
         return redirect(url_for("views.vista_alumnos"))
@@ -434,16 +505,14 @@ def editar_alumno(id):
             "email": request.form.get("email"),
             "abandono": request.form.get("abandono")
         }
-
         resultado = actualizar_alumno(id, actualizado)
-        
         if resultado["status_code"] == 200:
             flash("Alumno actualizado correctamente.", "success")
-        else: 
+        else:
             flash(resultado["data"].get("error", "Error al actualizar el alumno"), "error")
         return redirect(url_for("views.vista_alumnos"))
-
     return redirect(url_for("views.detalle_alumno", id=id))
+
 
 @views_bp.route("/alumnos/<int:id>/eliminar", methods=["POST"])
 def eliminar_alumnos(id):
@@ -454,6 +523,7 @@ def eliminar_alumnos(id):
         flash(resultado["data"].get("error", "Error al eliminar el alumno"), "error")
     return redirect(url_for("views.vista_alumnos"))
 
+
 @views_bp.route("/alumnos/importar", methods=["GET", "POST"])
 def importar_csv():
     if request.method == "POST":
@@ -461,9 +531,8 @@ def importar_csv():
         if file is None:
             flash("Por favor, subí un archivo CSV", "error")
             return redirect(url_for("views.importar_csv"))
-        
-        resultado = importar_csv_service(file)
 
+        resultado = importar_csv_service(file)
         if resultado["status_code"] != 200:
             flash(resultado["data"].get("error", "Error al importar el archivo"), "error")
             return redirect(url_for("views.importar_csv"))
@@ -473,10 +542,11 @@ def importar_csv():
         flash(f"Importación completada: {insertados} insertados, {existentes} existentes.", "success")
 
         if resultado["data"].get("errores"):
-             flash("Errores en el CSV: " + ", ".join(resultado["data"]["errores"]), "error")
+            flash("Errores en el CSV: " + ", ".join(resultado["data"]["errores"]), "error")
         return redirect(url_for("views.vista_alumnos"))
 
     return render_template("alumnos/csv.html")
+
 
 @views_bp.route("/alumnos/nuevo", methods=["GET", "POST"])
 def nuevo_alumno():
@@ -495,28 +565,3 @@ def nuevo_alumno():
             flash(resultado["data"].get("error", "Error al crear el alumno"), "error")
         return redirect(url_for("views.vista_alumnos"))
     return render_template("alumnos/abm.html", alumno=None)
-
-# @views_bp.route("/login", methods=["GET", "POST"])
-# def login():
-#     if request.method == "POST":
-#         email = request.form.get("email")
-#         password = request.form.get("password")
-
-#         if email == "a@test.com" and password == "1234":
-#             session["user"] = {
-#                 "email": email,
-#                 "name": "Martin"
-#             }
-#             session["token"] = "prueba"
-
-#             guardar_sesion(session["token"], session["user"])
-#             flash(f"¡Bienvenido, {session["user"]["name"]}!", "success")
-#             return redirect(url_for("views.dashboard"))
-
-#     return render_template("login.html")
-
-# @views_bp.route("/logout", methods=['POST'])
-# def logout():
-#     limpiar_sesion()
-#     flash('Cerraste sesión.', 'success')
-#     return redirect(url_for("views.login"))

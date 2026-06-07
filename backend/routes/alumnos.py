@@ -6,7 +6,7 @@ from herramientas.importar_csv import importar_alumnos_csv
 from herramientas.validaciones_alumnos import validar_email, validar_convertir_padron, validar_convertir_booleano, validar_convertir_string
 from herramientas.exportar_csv import generar_csv_alumnos
 from herramientas.validaciones_alumnos import  validar_data_alumno
-from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db
+from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db, db_get_todos_alumnos
 import os
 import mysql.connector
 
@@ -45,10 +45,9 @@ def obtener_alumnos():
 
     limit = 10
     offset = (pagina - 1) * limit
-    
+
     try:
         alumnos_pagina, total_registros = db_get_alumnos(offset, limit, busqueda, abandono)
-
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
 
@@ -61,6 +60,16 @@ def obtener_alumnos():
     }), 200
 
   
+@alumnos_bp.route("/todos", methods=["GET"])
+def listar_todos_alumnos():
+    """Devuelve todos los alumnos sin paginación, con su equipo. Usado para selectores."""
+    try:
+        alumnos = db_get_todos_alumnos()
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
+    return jsonify(alumnos), 200
+
+
 @alumnos_bp.route("/importar", methods=["POST"])
 def importar_lista():
     file = request.files.get("file")
@@ -69,7 +78,7 @@ def importar_lista():
         return jsonify({"error": "Archivo faltante"}), 400
 
     name = file.filename
-    extension=os.path.splitext(name)[1].lower()
+    extension = os.path.splitext(name)[1].lower()
 
     if extension != '.csv':
         return jsonify({"error": "Formato invalido"}), 400
@@ -89,7 +98,7 @@ def importar_lista():
     return jsonify({
         "insertados": resultado_db["insertados"],
         "existentes": resultado_db["existentes"],
-        "errores": resultado["errores"]
+        "errores": resultado_db.get("errores", [])
     }), 200
 
   
@@ -99,10 +108,9 @@ def obtener_alumno(id):
         alumno = db_get_alumno_id(id)
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
-
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
-    
+
     return jsonify(alumno), 200
 
 
@@ -123,7 +131,6 @@ def eliminar_alumno(id):
         cursor.execute("DELETE FROM notas WHERE alumno_id=%s", (id,))
 
         db_delete_alumno(id)
-
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
 

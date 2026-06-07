@@ -1,5 +1,7 @@
-from services.config import BACKEND_URL
 import requests
+
+from services.config import BACKEND_URL
+
 
 def obtener_cursos():
     try:
@@ -13,10 +15,12 @@ def obtener_cursos():
         cursos = []
     return cursos
 
-def obtener_curso_con_nombre(nombre):
+
+def obtener_curso(curso_id):
     try:
-        response = requests.get(f"{BACKEND_URL}/asistencia")
-        clases_p = response.json()
-    except:
-        clases_p = []
-    return clases_p
+        response = requests.get(f"{BACKEND_URL}/cursos/{curso_id}", timeout=5)
+        if response.ok:
+            return response.json()
+    except requests.RequestException:
+        pass
+    return None

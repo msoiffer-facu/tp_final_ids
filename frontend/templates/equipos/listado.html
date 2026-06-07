@@ -3,7 +3,7 @@
 {% block title %}Equipos - Sistema Académico{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/equipos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -11,51 +11,82 @@
     <div>
         <p class="eyebrow">Equipos</p>
         <h1>Listado de equipos</h1>
-        <p class="subtitle">Selecciona un equipo para ver sus datos, editarlo o eliminarlo.</p>
+        <p class="subtitle">Seleccioná un equipo para ver sus datos, editarlo o eliminarlo.</p>
     </div>
-    <a href="{{ url_for('views.equipo_nuevo') }}" class="btn primary">+ Nuevo equipo</a>
+    <a href="{{ url_for('views.equipo_nuevo') }}" class="btn-primary">+ Nuevo equipo</a>
 </div>
 
-<div class="panel-card">
-    <div class="panel-card-header">
-        <div>
-            <h2>Equipos del curso</h2>
-            <p>En esta vista puedes eliminar, ver o modificar un equipo.</p>
-        </div>
-        <span class="badge">{{ equipos|length }} equipos</span>
+<div class="table-card">
+    <div class="table-card-header" style="display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem; border-bottom:1px solid #e5e7eb;">
+        <h2>EQUIPOS REGISTRADOS</h2>
+        <span style="font-size:0.85rem; color:#6b7280;">{{ equipos|length }} equipo(s)</span>
     </div>
 
-    <div class="team-table-wrap">
-        <table class="team-table">
-            <thead>
-                <tr>
-                    <th>Equipo</th>
-                    <th>Descripción</th>
-                    <th>Miembros</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for equipo in equipos %}
-                <tr>
-                    <td>
-                        <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="link-title">{{ equipo.nombre }}</a>
-                        <p class="row-meta">{{ equipo.curso }}</p>
-                    </td>
-                    <td>{{ equipo.descripcion }}</td>
-                    <td>{{ equipo.miembros }}</td>
-                    <td><span class="status {{ equipo.estado|lower }}">{{ equipo.estado }}</span></td>
-                    <td class="actions-cell">
-                        <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="btn small">Ver</a>
-                        <form method="POST" action="{{ url_for('views.equipo_delete', equipo_id=equipo.id) }}" style="display:inline;">
-                            <button type="submit" class="btn small danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Buscador -->
+    <div style="padding:0.75rem 1.5rem; border-bottom:1px solid #f3f4f6;">
+        <input type="text" id="buscador" placeholder="Buscar por nombre o curso..."
+               onkeyup="filtrar()"
+               style="width:100%; padding:8px 14px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
     </div>
+
+    <table id="tablaEquipos">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Curso</th>
+                <th>Miembros</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for equipo in equipos %}
+            <tr class="fila-equipo">
+                <td class="col-nombre">{{ equipo.nombre }}</td>
+                <td>{{ equipo.descripcion or '—' }}</td>
+                <td class="col-curso">{{ equipo.curso }}</td>
+                <td>{{ equipo.miembros }}</td>
+                <td>
+                    <span class="badge-estado {{ equipo.estado | lower }}">{{ equipo.estado }}</span>
+                </td>
+                <td class="acciones">
+                    <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="btn-accion ver">Ver</a>
+                    <form method="POST" action="{{ url_for('views.equipo_delete', equipo_id=equipo.id) }}" style="display:inline;"
+                          onsubmit="return confirm('¿Seguro que querés eliminar el equipo {{ equipo.nombre }}?')">
+                        <button type="submit" class="btn-accion eliminar">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="vacio">No hay equipos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+
+<style>
+.badge-estado {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-estado.activo { background:#d1fae5; color:#166534; }
+.badge-estado.inactivo { background:#fee2e2; color:#991b1b; }
+</style>
+
+<script>
+function filtrar() {
+    const q = document.getElementById("buscador").value.toLowerCase();
+    document.querySelectorAll(".fila-equipo").forEach(fila => {
+        const nombre = fila.querySelector(".col-nombre").textContent.toLowerCase();
+        const curso = fila.querySelector(".col-curso").textContent.toLowerCase();
+        fila.style.display = (nombre.includes(q) || curso.includes(q)) ? "" : "none";
+    });
+}
+</script>
 {% endblock %}
