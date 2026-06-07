@@ -6,22 +6,14 @@ from services.config import BACKEND_URL
 def obtener_cursos():
     try:
         response = requests.get(
-            f"{BACKEND_URL}/cursos",
-            params={"page": 1, "per_page": 100},
-            timeout=5,
+        f"{BACKEND_URL}/cursos",
+        params={"page": 1, "per_page": -1}
         )
-        if response.ok:
-            return response.json().get("cursos", [])
-    except requests.RequestException:
-        pass
-
-    return [
-        {"id": 1, "nombre": "curso 3b"},
-        {"id": 2, "nombre": "curso 4a"},
-        {"id": 3, "nombre": "curso 12c"},
-        {"id": 4, "nombre": "curso 14l"},
-        {"id": 5, "nombre": "curso 1g"},
-    ]
+        data = response.json()
+        cursos = data["cursos"]
+    except:
+        cursos = []
+    return cursos
 
 
 def obtener_curso(curso_id):
