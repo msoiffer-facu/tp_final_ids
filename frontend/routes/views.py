@@ -2,7 +2,11 @@ from flask import Blueprint, render_template, redirect, url_for, request, sessio
 import requests
 from services.asistencia import obtener_clases_presenciales, obtener_clases_en_proceso
 from services.config import BACKEND_URL
-from services.curso import obtener_cursos
+from services.curso import (
+    obtener_cursos, obtener_cursos_paginados, obtener_curso, crear_curso,
+    actualizar_curso, eliminar_curso, obtener_alumnos_curso,
+    obtener_equipos_curso, obtener_clases_curso
+)
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
 from services.alumnos_service import obtener_alumnos, obtener_alumno, actualizar_alumno, eliminar_alumno, importar_csv_service, crear_alumno
 
@@ -147,11 +151,7 @@ def equipo_delete(equipo_id):
 def cursos():
     page = int(request.args.get("page", 1))
     per_page = 10
-    response = requests.get(
-        f"{BACKEND_URL}/cursos",
-        params={"page": page, "per_page": per_page}
-    )
-    data = response.json()
+    data = obtener_cursos_paginados(page, per_page)
     return render_template(
         "cursos/cursos.html",
         cursos=data["cursos"],
@@ -167,12 +167,10 @@ def curso_detalle(id):
         equipo_page = int(request.args.get("equipo_page", 1))
         equipo_per_page = 10
 
-        curso = requests.get(f"{BACKEND_URL}/cursos/{id}").json()
-        alumnos_data = requests.get(f"{BACKEND_URL}/cursos/{id}/alumnos",
-            params={"page": alumno_page, "per_page": alumno_per_page}).json()
-        equipos_data = requests.get(f"{BACKEND_URL}/cursos/{id}/equipos",
-            params={"page": equipo_page, "per_page": equipo_per_page}).json()
-        clases = requests.get(f"{BACKEND_URL}/cursos/{id}/clases").json()
+        curso = obtener_curso(id)
+        alumnos_data = obtener_alumnos_curso(id, alumno_page, alumno_per_page)
+        equipos_data = obtener_equipos_curso(id, equipo_page, equipo_per_page)
+        clases = obtener_clases_curso(id)
     except:
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_detalle.html",
@@ -194,7 +192,7 @@ def curso_nuevo():
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.post(f"{BACKEND_URL}/cursos", json=data)
+        crear_curso(data)
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_form.html", curso=None)
 
@@ -202,7 +200,7 @@ def curso_nuevo():
 @views_bp.route("/cursos/<int:id>/editar", methods=["GET", "POST"])
 def curso_editar(id):
     try:
-        curso = requests.get(f"{BACKEND_URL}/cursos/{id}").json()
+        curso = obtener_curso(id)
     except:
         return redirect(url_for("views.cursos"))
     if request.method == "POST":
@@ -212,14 +210,14 @@ def curso_editar(id):
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.put(f"{BACKEND_URL}/cursos/{id}", json=data)
+        actualizar_curso(id, data)
         return redirect(url_for("views.curso_detalle", id=id))
     return render_template("cursos/curso_form.html", curso=curso)
 
 
 @views_bp.route("/cursos/<int:id>/eliminar", methods=["POST"])
 def curso_eliminar(id):
-    requests.delete(f"{BACKEND_URL}/cursos/{id}")
+    eliminar_curso(id)
     return redirect(url_for("views.cursos"))
 
 @views_bp.route("/asistencia", methods=["GET", "POST"])

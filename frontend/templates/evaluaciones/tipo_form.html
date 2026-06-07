@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{% if tipo and tipo.id %}Editar tipo{% else %}Nuevo tipo{% endif %} de evaluación - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('evaluaciones_front.tipos_listado') }}" class="btn-volver">← Volver</a>
+        <h1 class="page-title">{% if tipo and tipo.id %}Editar tipo de evaluación{% else %}Nuevo tipo de evaluación{% endif %}</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <form method="POST" action="{% if tipo and tipo.id %}{{ url_for('evaluaciones_front.tipo_editar', tipo_id=tipo.id) }}{% else %}{{ url_for('evaluaciones_front.tipo_nuevo') }}{% endif %}">
+
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre" value="{{ tipo.nombre if tipo else '' }}" placeholder="Ej: Parcial, Trabajo Práctico, Parcialito..." required autofocus>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('evaluaciones_front.tipos_listado') }}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -59,7 +59,7 @@ create table tipos_evaluacion (
 create table evaluaciones (
     id int not null auto_increment primary key,
     titulo varchar(200),
-    fecha date,
+    fecha datetime,
     tipo_id int not null,
     curso_id int not null,
 
