@@ -1,121 +1,192 @@
 {% extends "base.html" %}
 
-{% block title %}Alumnos - Sistema Académico{% endblock %}
-
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/alumnos.css') }}"
+>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div>
-        <p class="eyebrow" style="color:#2563eb;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;">Alumnos</p>
-        <h1 style="font-size:2rem;margin-bottom:0.35rem;color:#111827;">Listado de alumnos</h1>
-        <p style="color:#6b7280;font-size:0.95rem;">Consultá, buscá y gestioná los alumnos del sistema.</p>
-    </div>
-    <div style="display:flex;gap:8px;">
-        <a href="/alumnos/nuevo" class="btn-primary">+ Agregar alumno</a>
-        <a href="/alumnos/importar" class="btn-secondary">Importar CSV</a>
-    </div>
-</div>
 
 <div class="table-card">
-    <div class="table-card-header" style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;">
-        <h2>ALUMNOS REGISTRADOS</h2>
-        <form method="GET" action="{{ url_for('views.vista_alumnos') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <input type="text" name="busqueda" placeholder="Buscar por padrón, nombre o apellido..."
-                   value="{{ request.args.get('busqueda', '') }}"
-                   style="padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;min-width:240px;">
-            <select name="abandono" style="padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;">
+    <div class="table-card-header">
+        <h2>Listado de alumnos</h2>
+        <form method="GET" action="{{ url_for('views.vista_alumnos') }}" class="table-filters" onsubmit="filtrarAlumnos()">
+            <input
+                type="text"
+                id="buscador"
+                name="busqueda"
+                class="search-input"
+                placeholder="Buscar por padrón, nombre o apellido..."
+                value="{{ request.args.get('busqueda', '') }}"
+            >
+            <button
+                type="submit"
+                class="btn-buscar"
+            >
+                Buscar
+            </button>
+
+            <select
+                id="filtroEstado"
+                name="abandono"
+                class="search-input"
+            >
                 <option value="">Todos</option>
-                <option value="0" {% if request.args.get('abandono') == '0' %}selected{% endif %}>Activos</option>
-                <option value="1" {% if request.args.get('abandono') == '1' %}selected{% endif %}>Abandonados</option>
+                <option value="0"
+                {% if request.args.get('abandono') == '0' %}
+                    selected
+                {% endif %}
+                >
+                Activos</option>
+                <option value="1"
+                {% if request.args.get('abandono') == '1' %}
+                    selected
+                {% endif %}
+                >
+                Abandonados</option>
             </select>
-            <button type="submit" class="btn-primary" style="padding:7px 16px;">Buscar</button>
-            {% if request.args.get('busqueda') or request.args.get('abandono') %}
-            <a href="{{ url_for('views.vista_alumnos') }}" class="btn-secondary" style="padding:7px 12px;">Limpiar</a>
-            {% endif %}
         </form>
+
+        <a
+            href="/alumnos/nuevo"
+            class="btn-agregar"
+        >
+            + Agregar Alumno
+        </a>
+
+        <a
+            href="/alumnos/importar"
+            class="btn-agregar"
+        >
+            Importar CSV
+        </a>
+
     </div>
 
     <table id="tablaAlumnos">
         <thead>
             <tr>
-                <th>Padrón</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Email</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th class="text-center">Padrón</th>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Apellido</th>
+                <th class="text-center">Email</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
+
         <tbody>
             {% for alumno in alumnos %}
-            <tr>
-                <td>{{ alumno.padron }}</td>
-                <td>{{ alumno.nombre }}</td>
-                <td>{{ alumno.apellido }}</td>
-                <td>{{ alumno.email }}</td>
-                <td>
+            <tr class="fila-alumno">
+                <td class="padron text-center">
+                    {{ alumno.padron }}
+                </td>
+                <td class="nombre text-center">
+                    {{ alumno.nombre }}
+                </td>
+                <td class="apellido text-center">
+                    {{ alumno.apellido }}
+                </td>
+                <td class="text-center">
+                    {{ alumno.email }}
+                </td>
+                <td
+                    class="estado text-center"
+                    data-estado="{% if alumno.abandono %}abandono{% else %}activo{% endif %}"
+                >
                     {% if alumno.abandono %}
-                        <span class="badge-estado inactivo">Abandonó</span>
+                        <span class="badge badge-warning">
+                            Abandonó
+                        </span>
                     {% else %}
-                        <span class="badge-estado activo">Activo</span>
+                        <span class="badge badge-success">
+                            Activo
+                        </span>
                     {% endif %}
                 </td>
-                <td class="acciones">
-                    <a href="/alumnos/{{ alumno.id }}" class="btn-accion ver">Ver</a>
-                    <form method="POST" action="/alumnos/{{ alumno.id }}/eliminar" style="display:inline;"
-                          onsubmit="return confirm('¿Seguro que querés eliminar a {{ alumno.nombre }} {{ alumno.apellido }}?')">
-                        <button type="submit" class="btn-accion eliminar">Eliminar</button>
-                    </form>
+
+                <td class="acciones-cell text-center">
+                    <a
+                        href="/alumnos/{{ alumno.id }}"
+                        class="btn-accion btn-ver"
+                        title="Ver alumno"
+                    >
+                        👤
+                    </a>
                 </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6" class="vacio">No hay alumnos registrados.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    {% if total_pages > 1 %}
-    <div class="pagination" style="display:flex;gap:6px;padding:1rem 1.5rem;justify-content:center;align-items:center;">
-        {% if pagina > 1 %}
-        <a href="?pagina={{ pagina - 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
-           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">&lt;</a>
-        {% endif %}
-
-        {% if inicio > 1 %}
-        <a href="?pagina=1&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
-           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">1</a>
-        {% if inicio > 2 %}<span style="padding:5px 4px;color:#9ca3af;">...</span>{% endif %}
-        {% endif %}
-
-        {% for p in range(inicio, fin + 1) %}
-        <a href="?pagina={{ p }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
-           style="padding:5px 10px;border:1px solid {% if p == pagina %}#2563eb{% else %}#d1d5db{% endif %};border-radius:6px;text-decoration:none;color:{% if p == pagina %}#fff{% else %}#374151{% endif %};background:{% if p == pagina %}#2563eb{% else %}#fff{% endif %};">
-            {{ p }}
-        </a>
-        {% endfor %}
-
-        {% if fin < total_pages %}
-        {% if fin < total_pages - 1 %}<span style="padding:5px 4px;color:#9ca3af;">...</span>{% endif %}
-        <a href="?pagina={{ total_pages }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
-           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">{{ total_pages }}</a>
-        {% endif %}
-
-        {% if pagina < total_pages %}
-        <a href="?pagina={{ pagina + 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
-           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">&gt;</a>
-        {% endif %}
-    </div>
+    <!-- Paginación -->
+{% if total_pages > 1 %}
+    <div class="pagination">
+    {% if pagina > 1 %}
+        <a href="?pagina={{ pagina - 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">&lt;</a>
     {% endif %}
+
+    {% if inicio > 1 %}
+        <a href="?pagina=1&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">1</a>
+        {% if inicio > 2 %}
+            <span>...</span>
+        {% endif %}
+    {% endif %}
+
+    {% for p in range(inicio, fin + 1) %}
+        <a href="?pagina={{ p }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}" class="{% if p == pagina %}activa{% endif %}">{{ p }}</a>
+    {% endfor %}
+
+    {% if fin < total_pages %}
+        {% if fin < total_pages - 1 %}
+            <span>...</span>
+        {% endif %}
+
+        <a href="?pagina={{ total_pages }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">
+            {{ total_pages }}
+        </a>
+    {% endif %}
+
+    {% if pagina < total_pages %}
+        <a href="?pagina={{ pagina + 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">&gt;</a>
+    {% endif %}
+
+    </div>
+{% endif %}
 </div>
 
-<style>
-.badge-estado { display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600; }
-.badge-estado.activo { background:#d1fae5;color:#166534; }
-.badge-estado.inactivo { background:#fee2e2;color:#991b1b; }
-</style>
+<!-- Función para filtrar alumnos en el frontend al escribir en el buscador o cambiar el filtro de estado -->
+<script>
+function filtrarAlumnos() {
+
+    const buscador = document.getElementById("buscador").value.toLowerCase();
+    const estadoFiltro = document.getElementById("filtroEstado").value;
+    const filas = document.querySelectorAll(".fila-alumno");
+
+    for (let i = 0; i < filas.length; i++) {
+        let fila = filas[i];
+        let padron = fila.querySelector(".padron").textContent.toLowerCase();   
+        let nombre = fila.querySelector(".nombre").textContent.toLowerCase();
+        let apellido = fila.querySelector(".apellido").textContent.toLowerCase();
+        let estado = fila.querySelector(".estado").dataset.estado;
+
+        let coincideBusqueda = padron.includes(buscador) || nombre.includes(buscador) || apellido.includes(buscador);
+
+        let coincide_Estado =
+            estadoFiltro === "" ||
+            (estadoFiltro === "0" && estado === "activo") ||
+            (estadoFiltro === "1" && estado === "abandono");
+
+        if (coincideBusqueda && coincide_Estado) {
+            fila.style.display = "";
+        } else {
+            fila.style.display = "none";
+        }
+    }
+
+}
+
+</script>
+
 {% endblock %}

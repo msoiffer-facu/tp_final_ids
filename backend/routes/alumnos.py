@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, url_for
 from herramientas.importar_csv import importar_alumnos_csv
 from herramientas.validaciones_alumnos import  validar_data_alumno
-from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db
+from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db, db_get_todos_alumnos
 import os
 import mysql.connector
 
@@ -36,28 +36,10 @@ def obtener_alumnos():
 @alumnos_bp.route("/todos", methods=["GET"])
 def listar_todos_alumnos():
     """Devuelve todos los alumnos sin paginación, con su equipo. Usado para selectores."""
-    from db import get_db
-    import mysql.connector as mc
-    db = None
-    cursor = None
     try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT a.id, a.nombre, a.apellido, a.padron, a.email, a.abandono,
-                   IFNULL(GROUP_CONCAT(e.nombre ORDER BY e.nombre SEPARATOR ', '), '') AS equipo
-            FROM alumnos a
-            LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id
-            LEFT JOIN equipos e ON e.id = ea.equipo_id
-            GROUP BY a.id
-            ORDER BY a.apellido, a.nombre
-        """)
-        alumnos = cursor.fetchall()
-    except mc.Error:
+        alumnos = db_get_todos_alumnos()
+    except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
-    finally:
-        if cursor: cursor.close()
-        if db: db.close()
     return jsonify(alumnos), 200
 
 
