@@ -56,8 +56,16 @@ def logout():
 @profesores_bp.route("/", methods=["GET"])
 def listar_profesores():
     try:
-        profesores = db_get_profesores()
-        return jsonify(profesores), 200
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        profesores, total = db_get_profesores(page, per_page)
+        return jsonify({
+            "profesores": profesores,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": (total + per_page - 1) // per_page
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -92,10 +100,14 @@ def crear_profesor():
         return jsonify({"error": "El campo password es obligatorio"}), 400
 
     try:
+        # verificar email existente antes de intentar insertar (por si la BD no tiene constraint aplicable)
+        existente = db_get_profesor_by_email(email)
+        if existente:
+            return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
         profesor_id = db_create_profesor(nombre, apellido, email, hashear_password(password))
         return jsonify({"mensaje": "Profesor creado", "profesor_id": profesor_id}), 201
     except mysql.connector.IntegrityError:
-        return jsonify({"error": "El usuario o email ya existe"}), 409
+        return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -126,6 +138,12 @@ def actualizar_profesor(profesor_id):
         if nombre is None and apellido is None and email is None and password is None:
             return jsonify({"error": "No hay campos para actualizar"}), 400
 
+        # si se proporciona email, verificar que no esté en uso por otro profesor
+        if email is not None:
+            existente = db_get_profesor_by_email(email)
+            if existente and existente.get("id") != profesor_id:
+                return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
+
         db_update_profesor(
             profesor_id,
             nombre=nombre,
@@ -135,7 +153,7 @@ def actualizar_profesor(profesor_id):
         )
         return jsonify({"mensaje": "Profesor actualizado"}), 200
     except mysql.connector.IntegrityError:
-        return jsonify({"error": "El usuario o email ya existe"}), 409
+        return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

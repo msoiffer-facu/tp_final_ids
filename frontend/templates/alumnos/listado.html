@@ -3,107 +3,119 @@
 {% block title %}Alumnos - Sistema Académico{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/equipos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <p class="eyebrow">Alumnos</p>
-        <h1>Listado de alumnos</h1>
-        <p class="subtitle">Consultá, buscá y gestioná los alumnos del sistema.</p>
+        <p class="eyebrow" style="color:#2563eb;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;">Alumnos</p>
+        <h1 style="font-size:2rem;margin-bottom:0.35rem;color:#111827;">Listado de alumnos</h1>
+        <p style="color:#6b7280;font-size:0.95rem;">Consultá, buscá y gestioná los alumnos del sistema.</p>
     </div>
-    <a href="/alumnos/importar" class="btn primary">+ Importar CSV</a>
-</div>
-
-<div class="panel-card">
-    <div class="panel-card-header">
-        <div>
-            <h2>Alumnos registrados</h2>
-            <p>Hacé click en un alumno para ver su detalle o usá el buscador para filtrar.</p>
-        </div>
-        <span class="badge">{{ alumnos|length }} alumnos</span>
-    </div>
-
-    <!-- Buscador -->
-    <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-        <input type="text" id="buscador" placeholder="Buscar por padrón, nombre o apellido..."
-               onkeyup="filtrarAlumnos()"
-               style="padding:8px 14px; border:1px solid #d1d5db; border-radius:9999px; font-size:14px; flex:1; min-width:200px;">
-        <select id="filtroEstado" onchange="filtrarAlumnos()"
-                style="padding:8px 14px; border:1px solid #d1d5db; border-radius:9999px; font-size:14px;">
-            <option value="">Todos</option>
-            <option value="activo">Activos</option>
-            <option value="abandono">Abandonados</option>
-        </select>
-    </div>
-
-    <div class="team-table-wrap">
-        <table class="team-table" id="tablaAlumnos">
-            <thead>
-                <tr>
-                    <th>Padrón</th>
-                    <th>Alumno</th>
-                    <th>Email</th>
-                    <th>Equipo</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for alumno in alumnos %}
-                <tr class="fila-alumno">
-                    <td class="padron">{{ alumno.padron }}</td>
-                    <td>
-                        <a href="/alumnos/{{ alumno.id }}" class="link-title">
-                            {{ alumno.apellido }}, {{ alumno.nombre }}
-                        </a>
-                    </td>
-                    <td>{{ alumno.email }}</td>
-                    <td>{{ alumno.equipo if alumno.equipo else 'Sin equipo' }}</td>
-                    <td class="estado" data-estado="{% if alumno.abandono %}abandono{% else %}activo{% endif %}">
-                        {% if alumno.abandono %}
-                            <span class="status incompleto">Abandonó</span>
-                        {% else %}
-                            <span class="status activo">Activo</span>
-                        {% endif %}
-                    </td>
-                    <td class="actions-cell">
-                        <a href="/alumnos/{{ alumno.id }}" class="btn small">Ver</a>
-                        <form method="POST" action="/alumnos/{{ alumno.id }}/eliminar" style="display:inline;"
-                              onsubmit="return confirm('¿Seguro que querés eliminar a {{ alumno.nombre }} {{ alumno.apellido }}?')">
-                            <button type="submit" class="btn small danger">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" style="text-align:center; color:#718096; padding:40px;">
-                        No hay alumnos registrados.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div style="display:flex;gap:8px;">
+        <a href="/alumnos/nuevo" class="btn-primary">+ Agregar alumno</a>
+        <a href="/alumnos/importar" class="btn-secondary">Importar CSV</a>
     </div>
 </div>
 
-<script>
-function filtrarAlumnos() {
-    const buscador = document.getElementById("buscador").value.toLowerCase();
-    const estadoFiltro = document.getElementById("filtroEstado").value;
-    const filas = document.querySelectorAll(".fila-alumno");
+<div class="table-card">
+    <div class="table-card-header" style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;">
+        <h2>ALUMNOS REGISTRADOS</h2>
+        <form method="GET" action="{{ url_for('views.vista_alumnos') }}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="text" name="busqueda" placeholder="Buscar por padrón, nombre o apellido..."
+                   value="{{ request.args.get('busqueda', '') }}"
+                   style="padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;min-width:240px;">
+            <select name="abandono" style="padding:7px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;">
+                <option value="">Todos</option>
+                <option value="0" {% if request.args.get('abandono') == '0' %}selected{% endif %}>Activos</option>
+                <option value="1" {% if request.args.get('abandono') == '1' %}selected{% endif %}>Abandonados</option>
+            </select>
+            <button type="submit" class="btn-primary" style="padding:7px 16px;">Buscar</button>
+            {% if request.args.get('busqueda') or request.args.get('abandono') %}
+            <a href="{{ url_for('views.vista_alumnos') }}" class="btn-secondary" style="padding:7px 12px;">Limpiar</a>
+            {% endif %}
+        </form>
+    </div>
 
-    filas.forEach(fila => {
-        const padron = fila.querySelector(".padron").textContent.toLowerCase();
-        const texto = fila.textContent.toLowerCase();
-        const estado = fila.querySelector(".estado").dataset.estado;
+    <table id="tablaAlumnos">
+        <thead>
+            <tr>
+                <th>Padrón</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.padron }}</td>
+                <td>{{ alumno.nombre }}</td>
+                <td>{{ alumno.apellido }}</td>
+                <td>{{ alumno.email }}</td>
+                <td>
+                    {% if alumno.abandono %}
+                        <span class="badge-estado inactivo">Abandonó</span>
+                    {% else %}
+                        <span class="badge-estado activo">Activo</span>
+                    {% endif %}
+                </td>
+                <td class="acciones">
+                    <a href="/alumnos/{{ alumno.id }}" class="btn-accion ver">Ver</a>
+                    <form method="POST" action="/alumnos/{{ alumno.id }}/eliminar" style="display:inline;"
+                          onsubmit="return confirm('¿Seguro que querés eliminar a {{ alumno.nombre }} {{ alumno.apellido }}?')">
+                        <button type="submit" class="btn-accion eliminar">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="vacio">No hay alumnos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-        const coincideBusqueda = padron.includes(buscador) || texto.includes(buscador);
-        const coincideEstado = estadoFiltro === "" || estado === estadoFiltro;
+    {% if total_pages > 1 %}
+    <div class="pagination" style="display:flex;gap:6px;padding:1rem 1.5rem;justify-content:center;align-items:center;">
+        {% if pagina > 1 %}
+        <a href="?pagina={{ pagina - 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
+           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">&lt;</a>
+        {% endif %}
 
-        fila.style.display = (coincideBusqueda && coincideEstado) ? "" : "none";
-    });
-}
-</script>
+        {% if inicio > 1 %}
+        <a href="?pagina=1&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
+           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">1</a>
+        {% if inicio > 2 %}<span style="padding:5px 4px;color:#9ca3af;">...</span>{% endif %}
+        {% endif %}
+
+        {% for p in range(inicio, fin + 1) %}
+        <a href="?pagina={{ p }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
+           style="padding:5px 10px;border:1px solid {% if p == pagina %}#2563eb{% else %}#d1d5db{% endif %};border-radius:6px;text-decoration:none;color:{% if p == pagina %}#fff{% else %}#374151{% endif %};background:{% if p == pagina %}#2563eb{% else %}#fff{% endif %};">
+            {{ p }}
+        </a>
+        {% endfor %}
+
+        {% if fin < total_pages %}
+        {% if fin < total_pages - 1 %}<span style="padding:5px 4px;color:#9ca3af;">...</span>{% endif %}
+        <a href="?pagina={{ total_pages }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
+           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">{{ total_pages }}</a>
+        {% endif %}
+
+        {% if pagina < total_pages %}
+        <a href="?pagina={{ pagina + 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}"
+           style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;text-decoration:none;color:#374151;">&gt;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.badge-estado { display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.75rem;font-weight:600; }
+.badge-estado.activo { background:#d1fae5;color:#166534; }
+.badge-estado.inactivo { background:#fee2e2;color:#991b1b; }
+</style>
 {% endblock %}
