@@ -17,7 +17,11 @@
 
         <form
             method="POST"
+            {% if alumno.id %}
             action="/alumnos/{{ alumno.id }}/editar"
+            {% else %}
+            action="/alumnos/nuevo"
+            {% endif %}
         >
         
             <div class="form__row">
@@ -109,6 +113,7 @@
             </div>
         </form>
 
+        {% if alumno.id %}
         <form
             method="POST"
             action="/alumnos/{{ alumno.id }}/eliminar"
@@ -120,6 +125,7 @@
                 Eliminar alumno
             </button>
         </form>
+        {% endif %}
     </div>
 
 </div>

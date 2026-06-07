@@ -17,6 +17,7 @@ create table clase_presencial
     curso_id int not null,
     fecha    timestamp,
     pedir_asistencia TINYINT(1) DEFAULT 0 NOT NULL,
+    finalizada TINYINT(1) DEFAULT 0 NOT NULL,
     foreign key (curso_id) references cursos(id)
 );
 
@@ -46,7 +47,7 @@ create table profesores (
     id int not null auto_increment primary key,
     nombre varchar(100),
     apellido varchar(100),
-    email varchar(100),
+    email varchar(100) unique,
     password varchar(255)
 );
 
@@ -74,7 +75,7 @@ create table notas (
     alumno_id int not null ,
     evaluacion_id int not null ,
     nota_alumno decimal(4,2) not null,
-
+    estado varchar(20) not null,
 
     foreign key (alumno_id)
         references alumnos(id),

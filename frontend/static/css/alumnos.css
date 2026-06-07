@@ -295,3 +295,66 @@
 .btn-eliminar:hover {
     background: #dc2626;
 }
+
+/* ─────────────────────────────
+   Importar CSV 
+───────────────────────────── */
+
+.import-info {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+
+.error-box {
+    margin-top: 1.5rem;
+    border-left: 4px solid #ef4444;
+}
+
+.success-box {
+    margin-top: 1.5rem;
+    border-left: 4px solid #22c55e;
+}
+
+.error-list {
+    font-size: 0.85rem;
+    color: #374151;
+    margin-left: 1rem;
+}
+
+.success-text {
+    font-size: 0.85rem;
+    color: #374151;
+}
+
+form__input[type="file"] {
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+}
+
+
+.form__input[type="file"]::file-selector-button {
+    padding: 0.5rem 0.9rem;
+
+    margin-right: 0.75rem;
+
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+
+    background: #fff;
+
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    color: #374151;
+
+    cursor: pointer;
+
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.form__input[type="file"]::file-selector-button:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+}
