@@ -1,85 +1,55 @@
+from services.config import BACKEND_URL
 import requests
 
-from services.config import BACKEND_URL
-
-
-def obtener_cursos(page=1, per_page=100):
+def obtener_cursos():
     try:
-        response = requests.get(f"{BACKEND_URL}/cursos", params={"page": page, "per_page": per_page})
-        data = response.json()
-        cursos = data.get("cursos", [])
+        # response = requests.get(f"{BACKEND_URL}/cursos/cursos")
+        # cursos = response.json()
+        cursos = [
+        {
+            "anio": 2026,
+            "cuatrimestre": "1",
+            "id": 1,
+            "modificacion": "nose",
+            "nombre": "clase 12"
+        },
+        {
+            "anio": 2026,
+            "cuatrimestre": "2",
+            "id": 2,
+            "modificacion": "nose",
+            "nombre": "clase 12b"
+        },
+        {
+            "anio": 2025,
+            "cuatrimestre": "1",
+            "id": 3,
+            "modificacion": "nose",
+            "nombre": "clase 1"
+        },
+        {
+            "anio": 2025,
+            "cuatrimestre": "2",
+            "id": 4,
+            "modificacion": "nose",
+            "nombre": "clase 4"
+        },
+        {
+            "anio": 2024,
+            "cuatrimestre": "1",
+            "id": 5,
+            "modificacion": "ninguna",
+            "nombre": "curso 15"
+        }
+        ]
     except:
         cursos = []
     return cursos
 
-
-def obtener_cursos_paginados(page=1, per_page=10):
+def obtener_curso_con_nombre(nombre):
     try:
-        response = requests.get(f"{BACKEND_URL}/cursos", params={"page": page, "per_page": per_page})
-        data = response.json()
+        response = requests.get(f"{BACKEND_URL}/asistencia")
+        clases_p = response.json()
     except:
-        data = {"cursos": [], "page": page, "total_pages": 1}
-    return data
-
-
-def obtener_curso(id):
-    try:
-        response = requests.get(f"{BACKEND_URL}/cursos/{id}")
-        curso = response.json()
-    except:
-        curso = None
-    return curso
-
-
-def crear_curso(data):
-    try:
-        response = requests.post(f"{BACKEND_URL}/cursos", json=data)
-        resultado = response.json()
-    except:
-        resultado = None
-    return resultado
-
-
-def actualizar_curso(id, data):
-    try:
-        response = requests.put(f"{BACKEND_URL}/cursos/{id}", json=data)
-        resultado = response.json()
-    except:
-        resultado = None
-    return resultado
-
-
-def eliminar_curso(id):
-    try:
-        response = requests.delete(f"{BACKEND_URL}/cursos/{id}")
-        resultado = response.json()
-    except:
-        resultado = None
-    return resultado
-
-
-def obtener_alumnos_curso(id, page=1, per_page=10):
-    try:
-        response = requests.get(f"{BACKEND_URL}/cursos/{id}/alumnos", params={"page": page, "per_page": per_page})
-        data = response.json()
-    except:
-        data = {"alumnos": [], "page": page, "total_pages": 1}
-    return data
-
-
-def obtener_equipos_curso(id, page=1, per_page=10):
-    try:
-        response = requests.get(f"{BACKEND_URL}/cursos/{id}/equipos", params={"page": page, "per_page": per_page})
-        data = response.json()
-    except:
-        data = {"equipos": [], "page": page, "total_pages": 1}
-    return data
-
-
-def obtener_clases_curso(id):
-    try:
-        response = requests.get(f"{BACKEND_URL}/cursos/{id}/clases")
-        clases = response.json()
-    except:
-        clases = []
-    return clases
+        clases_p = []
+    return clases_p
