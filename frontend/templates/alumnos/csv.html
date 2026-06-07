@@ -1,99 +1,120 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/alumnos.css') }}"
->
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/alumnos.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<div class="table-card">
+<div class="page-header">
 
-    <div class="table-card-header">
-        <h2>Importar alumnos</h2>
+    <div class="page-header-left">
 
-        <a href="/alumnos" class="btn-agregar">
+        <a href="/alumnos" class="btn-volver">
             ← Volver
         </a>
+
+        <h1 class="page-title">
+            Importar alumnos
+        </h1>
+
     </div>
 
-    <div class="table-card-body">
+    <div class="page-header-right">
 
-  
-        <p class="import-info">
-            CSV · columnas: nombre, apellido, email, padron, abandono
-        </p>
-
-       
-        <div class="modal__content">
-
-            <h2 class="modal__title">
-                Seleccionar archivo CSV
-            </h2>
-
-            <form
-                action="/alumnos/importar"
-                method="POST"
-                enctype="multipart/form-data"
-            >
-
-                <div class="form__group">
-                    <label class="form__label">Archivo</label>
-
-                    <input
-                        type="file"
-                        name="file"
-                        accept=".csv"
-                        class="form__input form__file"
-                        required
-                    >
-                </div>
-
-                <div class="form__actions">
-                    <button
-                        type="submit"
-                        class="form__btn form__btn--submit"
-                    >
-                        Importar CSV
-                    </button>
-                </div>
-
-            </form>
-
-        </div>
-
-
-        {% if errores %}
-        <div class="modal__content error-box">
-
-            <h2 class="modal__title">Errores</h2>
-
-            <ul class="error-list">
-                {% for error in errores %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-
-        </div>
-        {% endif %}
-
-      
-        {% if alumnos %}
-        <div class="modal__content success-box">
-
-            <h2 class="modal__title">Importación exitosa</h2>
-
-            <p class="success-text">
-                {{ alumnos|length }} alumnos cargados correctamente
-            </p>
-
-        </div>
-        {% endif %}
+        <a
+            href="/alumnos/exportar"
+            class="btn-secondary"
+        >
+            Exportar CSV
+        </a>
 
     </div>
 
 </div>
+
+<div class="form-card">
+
+    <div class="table-card-header">
+
+        <h2>
+            Archivo CSV
+        </h2>
+
+    </div>
+
+    <p class="import-info">
+        El archivo debe contener las columnas:
+        nombre, apellido, email, padron y abandono.
+    </p>
+
+    <form
+        action="/alumnos/importar"
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        <div class="form-group">
+
+            <label>
+                Seleccionar archivo
+            </label>
+
+            <input
+                type="file"
+                name="file"
+                accept=".csv"
+                required
+            >
+
+        </div>
+
+        <div class="form-actions">
+
+            <button
+                type="submit"
+                class="btn-primary"
+            >
+                Importar CSV
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% if errores %}
+<div class="table-card resultado-card error-card">
+
+    <div class="table-card-header">
+        <h2>Errores encontrados</h2>
+    </div>
+
+    <ul class="error-list">
+
+        {% for error in errores %}
+        <li>{{ error }}</li>
+        {% endfor %}
+
+    </ul>
+
+</div>
+{% endif %}
+
+{% if alumnos %}
+<div class="table-card resultado-card success-card">
+
+    <div class="table-card-header">
+        <h2>Importación exitosa</h2>
+    </div>
+
+    <p class="success-text">
+        {{ alumnos|length }} alumnos cargados correctamente.
+    </p>
+
+</div>
+{% endif %}
 
 {% endblock %}

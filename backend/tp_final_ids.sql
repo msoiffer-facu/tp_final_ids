@@ -10,6 +10,13 @@ create table cursos (
     modificacion varchar(255)
 );
 
+create table historial (
+    id int not null auto_increment primary key,
+    usuario varchar(100) not null,
+    accion varchar(255) not null,
+    area varchar(100) not null,
+    hora timestamp default current_timestamp
+);
 
 create table clase_presencial
 (

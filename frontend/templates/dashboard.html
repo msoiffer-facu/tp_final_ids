@@ -52,7 +52,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    Vizualizar
+                    Visualizar
                 </a>
                 <a href="/alumnos/pdf" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    Vizualizar
+                    Visualizar
                 </a>
                 <a href="/equipos/pdf" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,75 +109,5 @@
     </div>
 </div>
 
-<!-- Historial -->
-<div class="table-card">
-    <div class="table-card-header">
-        <h2>Historial Registros</h2>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th>usuario</th>
-                <th>accion</th>
-                <th>area</th>
-                <th>hora</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for registro in historial %}
-            <tr>
-                <td class="usuario">{{ registro.usuario }}</td>
-                <td>{{ registro.accion }}</td>
-                <td>{{ registro.area }}</td>
-                <td class="hora">{{ registro.hora }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="pagination">
-        <button>&lt;</button>
-        <span class="current">1</span>
-        <span>2</span>
-        <span>3</span>
-        <span>...</span>
-        <button>&gt;</button>
-    </div>
-</div>
 
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-    const ctx = document.getElementById('promoChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
-            datasets: [{
-                data: [62, 91, 82, 76, 58, 47],
-                backgroundColor: 'rgba(134, 239, 172, 0.8)',
-                borderColor: 'rgba(74, 222, 128, 1)',
-                borderWidth: 1,
-                borderRadius: 3,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { font: { size: 11 }, color: '#6b7280' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 11 }, color: '#6b7280' }
-                }
-            }
-        }
-    });
-</script>
 {% endblock %}

@@ -1,17 +1,43 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/alumnos.css') }}"
->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos.css') }}">
 {% endblock %}
 
 {% block content %}
 
+<div class="page-header">
+
+    <h1 class="page-title">
+        Alumnos
+    </h1>
+
+    <div class="page-header-right">
+
+        <a
+            href="/alumnos/importar"
+            class="btn-primary"
+        >
+            Importar CSV
+        </a>
+
+        <a
+            href="/alumnos/exportar"
+            class="btn-primary"
+        >
+            Exportar CSV
+        </a>
+
+    </div>
+
+</div>
+    
+</div>
+
 <div class="table-card">
+
     <div class="table-card-header">
-        <h2>Listado de alumnos</h2>
+
         <div class="table-filters">
             <input
                 type="text"
@@ -20,6 +46,7 @@
                 placeholder="Buscar por padrón, nombre o apellido..."
                 onkeyup="filtrarAlumnos()"
             >
+
             <button
                 class="btn-buscar"
                 onclick="filtrarAlumnos()"
@@ -36,103 +63,192 @@
                 <option value="activo">Activos</option>
                 <option value="abandono">Abandonados</option>
             </select>
-        </div>
 
-        <a
-            href="/alumnos/importar"
-            class="btn-agregar"
-        >
-            Importar CSV
-        </a>
+        </div>
 
     </div>
 
     <table id="tablaAlumnos">
+
         <thead>
             <tr>
-                <th class="text-center">Padrón</th>
-                <th class="text-center">Nombre</th>
-                <th class="text-center">Apellido</th>
-                <th class="text-center">Email</th>
-                <th class="text-center">Equipo</th>
-                <th class="text-center">Estado</th>
-                <th class="text-center">Acciones</th>
+                <th>Padrón</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Acciones</th>
             </tr>
         </thead>
 
         <tbody>
+
             {% for alumno in alumnos %}
             <tr class="fila-alumno">
-                <td class="padron text-center">
+
+                <td class="padron">
                     {{ alumno.padron }}
                 </td>
-                <td class="nombre text-center">
+
+                <td class="nombre">
                     {{ alumno.nombre }}
                 </td>
-                <td class="apellido text-center">
+
+                <td class="apellido">
                     {{ alumno.apellido }}
                 </td>
-                <td class="text-center">
+
+                <td>
                     {{ alumno.email }}
                 </td>
-                <td class="text-center">
-                    {{ alumno.equipo if alumno.equipo else "Sin equipo" }}
-                </td>
+
                 <td
-                    class="estado text-center"
+                    class="estado"
                     data-estado="{% if alumno.abandono %}abandono{% else %}activo{% endif %}"
                 >
                     {% if alumno.abandono %}
-                        <span class="badge badge-warning">
+                        <span class="badge rojo">
                             Abandonó
                         </span>
                     {% else %}
-                        <span class="badge badge-success">
+                        <span class="badge verde">
                             Activo
                         </span>
                     {% endif %}
                 </td>
 
-                <td class="acciones-cell text-center">
+                <td class="acciones">
+
                     <a
                         href="/alumnos/{{ alumno.id }}"
-                        class="btn-accion btn-ver"
-                        title="Ver alumno"
+                        class="btn-accion ver"
                     >
-                        👤
+                        Ver
                     </a>
+
+                    <a
+                        href="/alumnos/{{ alumno.id }}/editar"
+                        class="btn-accion editar"
+                    >
+                        Editar
+                    </a>
+
+                    <button
+                        class="btn-accion eliminar"
+                        onclick="confirmarEliminar({{ alumno.id }},'{{ alumno.nombre }} {{ alumno.apellido }}')"
+                    >
+                        Eliminar
+                    </button>
                 </td>
+
             </tr>
             {% endfor %}
+
         </tbody>
+
     </table>
+
 </div>
 
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+
+    <div class="modal">
+
+        <p class="modal-titulo">
+            ¿Estás seguro?
+        </p>
+
+        <p class="modal-texto">
+            Estás por eliminar al alumno
+            <strong id="modal-nombre"></strong>.
+            Esta acción no se puede deshacer.
+        </p>
+
+        <div class="modal-btns">
+
+            <button
+                onclick="cerrarModal()"
+                class="btn-cancelar"
+            >
+                Cancelar
+            </button>
+
+            <form
+                id="form-eliminar"
+                method="POST"
+                style="display:inline;"
+            >
+                <button
+                    type="submit"
+                    class="btn-confirmar"
+                >
+                    Sí, eliminar
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
 <script>
+
 function filtrarAlumnos() {
 
     const buscador = document.getElementById("buscador").value.toLowerCase();
     const estadoFiltro = document.getElementById("filtroEstado").value;
     const filas = document.querySelectorAll(".fila-alumno");
 
-    for (let i = 0; i < filas.length; i++) {
-        let fila = filas[i];
-        let padron = fila.querySelector(".padron").textContent;
-        let nombre = fila.querySelector(".nombre").textContent;
-        let apellido = fila.querySelector(".apellido").textContent;
+    filas.forEach(fila => {
+
+        let padron = fila.querySelector(".padron").textContent.toLowerCase();
+        let nombre = fila.querySelector(".nombre").textContent.toLowerCase();
+        let apellido = fila.querySelector(".apellido").textContent.toLowerCase();
+
         let estado = fila.querySelector(".estado").dataset.estado;
 
-        let coincideBusqueda = padron.includes(buscador) || nombre.includes(buscador) || apellido.includes(buscador);
+        let coincideBusqueda =
+            padron.includes(buscador) ||
+            nombre.includes(buscador) ||
+            apellido.includes(buscador);
 
-        let coincide_Estado =
+        let coincideEstado =
             estadoFiltro === "" ||
             estado === estadoFiltro;
 
-        if (coincideBusqueda && coincide_Estado) {fila.style.display = "";} else {fila.style.display = "none";}
-    }
-
+        fila.style.display =
+            coincideBusqueda && coincideEstado
+                ? ""
+                : "none";
+    });
 }
 
+function confirmarEliminar(id, nombre) {
+
+    document.getElementById("modal-nombre").textContent = nombre;
+
+    document.getElementById("form-eliminar").action =
+        "/alumnos/" + id + "/eliminar";
+
+    document.getElementById("modal-overlay").style.display = "flex";
+}
+
+function cerrarModal() {
+    document.getElementById("modal-overlay").style.display = "none";
+}
+
+document.getElementById("modal-overlay")
+.addEventListener("click", function(e) {
+
+    if (e.target === this) {
+        cerrarModal();
+    }
+});
 </script>
 
 {% endblock %}

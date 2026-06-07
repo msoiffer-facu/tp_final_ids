@@ -1,12 +1,36 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, Response
 from db import get_db
+from dbs.db_exportar_csv import obtener_alumnos_exportar
 from herramientas.importar_csv import importar_alumnos_csv
 from herramientas.validaciones_alumnos import validar_email, validar_convertir_padron, validar_convertir_booleano, validar_convertir_string
+from herramientas.exportar_csv import generar_csv_alumnos
 import os
 import mysql.connector
 
 alumnos_bp = Blueprint("alumnos", __name__)
 
+@alumnos_bp.route("/exportar", methods=["GET"])
+def exportar_alumnos():
+
+    try:
+        alumnos = obtener_alumnos_exportar()
+
+        csv_data = generar_csv_alumnos(alumnos)
+
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=alumnos.csv"
+            }
+        )
+
+    except Exception as e:
+        return jsonify({
+            "error": f"Error al exportar alumnos: {e}"
+        }), 500
+    
 @alumnos_bp.route("/", methods=["GET"])
 def listar_alumnos():
     db = None
@@ -138,6 +162,15 @@ def eliminar_alumno(id):
         alumno = cursor.fetchone()
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
+        
+        cursor.execute(
+            "DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
+        
+        cursor.execute("DELETE FROM asistencias WHERE alumno_id=%s", (id,))
+
+        cursor.execute("DELETE FROM equipo_alumnos WHERE alumno_id=%s", (id,))
+        
+        cursor.execute("DELETE FROM notas WHERE alumno_id=%s", (id,))
 
         cursor.execute("DELETE FROM alumnos WHERE id=%s", (id,))
         db.commit()
