@@ -238,6 +238,7 @@ def evaluacion_notas(evaluacion_id):
     if not ok_ev:
         flash(evaluacion, "error")
         return redirect(url_for("evaluaciones_front.evaluaciones_listado"))
+    evaluacion["fecha_formateada"] = _formatear_fecha(evaluacion.get("fecha"))
 
     if request.method == "POST":
         alumno_ids = request.form.getlist("alumno_id")
