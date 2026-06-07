@@ -38,7 +38,7 @@
 <!-- Alumnos presentes-->
 <div class="table-card" style="margin-top: 1.5rem;">
     <div class="table-card-header">
-        <h2>Alumnos</h2>
+        <h2>Alumnos presentes</h2>
     </div>
     <table>
         <thead>
@@ -53,6 +53,7 @@
         </thead>
         <tbody>
             {% for alumno in alumnos %}
+            {% if alumno.presente %}
             <tr>
                 <td>{{ alumno.padron }}</td>
                 <td>{{ alumno.nombre }}</td>
@@ -73,9 +74,56 @@
                     {% endif %}
                 </td>
             </tr>
+            {% endif %}
             {% else %}
             <tr>
-                <td colspan="5" class="vacio">No hay alumnos inscriptos.</td>
+                <td colspan="5" class="vacio">Todavia no se ha pedido asistencia</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Alumnos austentes-->
+<div class="table-card" style="margin-top: 1.5rem;">
+    <div class="table-card-header">
+        <h2>Alumnos austentes</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Padrón</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Asistencia</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            {% if not alumno.presente %}
+            <tr>
+                <td>{{ alumno.padron }}</td>
+                <td>{{ alumno.nombre }}</td>
+                <td>{{ alumno.apellido }}</td>
+                <td>
+                    {% if alumno.presente %}
+                        <span class="badge verde">Presente</span>
+                    {% else %}
+                        <span class="badge gris">Ausente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if alumno.estado %}
+                        <span class="badge verde">Activo</span>
+                    {% else %}
+                        <span class="badge gris">Inactivo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% else %}
+            <tr>
+                <td colspan="5" class="vacio">Todavia no se ha pedido asistencia</td>
             </tr>
             {% endfor %}
         </tbody>

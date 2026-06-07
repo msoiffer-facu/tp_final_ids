@@ -45,9 +45,9 @@ def obtener_clases_p(page, per_page, curso_id=None):
 
     offset = (page - 1) * per_page
     if curso_id is not None:
-        cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s LIMIT %s OFFSET %s", (curso_id, per_page, offset))
+        cursor.execute("SELECT * FROM clase_presencial WHERE curso_id = %s ORDER BY id DESC LIMIT %s OFFSET %s", (curso_id, per_page, offset))
     else:
-        cursor.execute("SELECT * FROM clase_presencial LIMIT %s OFFSET %s", (per_page, offset))
+        cursor.execute("SELECT * FROM clase_presencial ORDER BY id DESC LIMIT %s OFFSET %s", (per_page, offset))
     clases_p = cursor.fetchall()
     cursor.close()
 

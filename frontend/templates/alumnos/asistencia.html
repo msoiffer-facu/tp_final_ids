@@ -55,7 +55,6 @@
         <tbody>
             {% for registro in clases %}
             <tr>
-                <!-- TODO: Crear el endpoint /asistencia/detalles/id para ver los alumnos presentes y los que faltaron-->
                 <td class="usuario"><a href="/asistencia/{{ registro.id }}">{{ registro.id }}</a></td>
                 <td><a href="/cursos/{{ registro.curso.id }}">{{ registro.curso.nombre }}</a></td>
                 <td class="hora">{{ registro.fecha }}</td>
@@ -87,7 +86,7 @@
     {% endif %}
 </div>
 
-<!-- Modal: Agregar/ver/modfiicar clase presencial -->
+<!-- Modal: Agregar/mandar mail/verificar asistencia -->
 <div id="modalClase" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal__content">
         <button class="modal__close" onclick="cerrarModalClase()" aria-label="Cerrar">&times;</button>

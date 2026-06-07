@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import flash
 import requests
 
 from services.config import BACKEND_URL
@@ -29,3 +30,37 @@ def obtener_alumnos_asistencia_clase(clase_id):
     except:
         alumnos = []
     return alumnos
+
+def crear_asistencia(curso_id_form):
+    data = {"curso_id": curso_id_form}
+    response = requests.post(f"{BACKEND_URL}/asistencia", json=data)
+    if response.ok:
+        flash("Asistencia creada correctamente.", "success")
+    else:
+        flash(f"Error al crear la asistencia: {response.text}", "error")
+    return response
+
+def pedir_asistencia(clase_id):
+    data = {"id_clase_p": clase_id}
+    response = requests.post(f"{BACKEND_URL}/asistencia/pedir-asistencia", json=data)
+    if response.ok:
+        flash("QR de asistencia enviado correctamente.", "success")
+    else:
+        flash(f"Error al enviar el QR de asistencia: {response.text}", "error")
+    return response
+
+def finalizar_clase(clase_id):
+    response = requests.post(
+        f"{BACKEND_URL}/asistencia/finalizar-clase",
+        json={"clase_id": clase_id}
+    )
+    if response.ok:
+        flash(f"Clase finalizada correctamente.", "success")
+    else:
+        flash(f"Error al finalizar la clase: {response.text}", "error")
+    return response
+
+def verificar_asistencia(token, clase_id):
+    response = requests.post(f"{BACKEND_URL}/asistencia/verificar-asistencia",
+        json={"token": token, "clase_id": clase_id})
+    return response
