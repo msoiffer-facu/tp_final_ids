@@ -37,34 +37,51 @@
 <div class="table-card">
 
     <div class="table-card-header">
-
-        <div class="table-filters">
+        <h2>Listado de alumnos</h2>
+        <form method="GET" action="{{ url_for('views.vista_alumnos') }}" class="table-filters" onsubmit="filtrarAlumnos()">
             <input
                 type="text"
                 id="buscador"
+                name="busqueda"
                 class="search-input"
                 placeholder="Buscar por padrón, nombre o apellido..."
-                onkeyup="filtrarAlumnos()"
+                value="{{ request.args.get('busqueda', '') }}"
             >
 
             <button
+                type="submit"
                 class="btn-buscar"
-                onclick="filtrarAlumnos()"
             >
                 Buscar
             </button>
 
             <select
                 id="filtroEstado"
+                name="abandono"
                 class="search-input"
-                onchange="filtrarAlumnos()"
             >
                 <option value="">Todos</option>
-                <option value="activo">Activos</option>
-                <option value="abandono">Abandonados</option>
+                <option value="0"
+                {% if request.args.get('abandono') == '0' %}
+                    selected
+                {% endif %}
+                >
+                Activos</option>
+                <option value="1"
+                {% if request.args.get('abandono') == '1' %}
+                    selected
+                {% endif %}
+                >
+                Abandonados</option>
             </select>
+        </form>
 
-        </div>
+        <a
+            href="/alumnos/nuevo"
+            class="btn-agregar"
+        >
+            + Agregar Alumno
+        </a>
 
     </div>
 
@@ -72,12 +89,12 @@
 
         <thead>
             <tr>
-                <th>Padrón</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Email</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th class="text-center">Padrón</th>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Apellido</th>
+                <th class="text-center">Email</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
 
@@ -101,7 +118,6 @@
                 <td>
                     {{ alumno.email }}
                 </td>
-
                 <td
                     class="estado"
                     data-estado="{% if alumno.abandono %}abandono{% else %}activo{% endif %}"
@@ -147,55 +163,43 @@
         </tbody>
 
     </table>
+    <!-- Paginación -->
+{% if total_pages > 1 %}
+    <div class="pagination">
+    {% if pagina > 1 %}
+        <a href="?pagina={{ pagina - 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">&lt;</a>
+    {% endif %}
 
-</div>
+    {% if inicio > 1 %}
+        <a href="?pagina=1&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">1</a>
+        {% if inicio > 2 %}
+            <span>...</span>
+        {% endif %}
+    {% endif %}
 
-<div id="modal-overlay" class="modal-overlay" style="display:none;">
+    {% for p in range(inicio, fin + 1) %}
+        <a href="?pagina={{ p }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}" class="{% if p == pagina %}activa{% endif %}">{{ p }}</a>
+    {% endfor %}
 
-    <div class="modal">
+    {% if fin < total_pages %}
+        {% if fin < total_pages - 1 %}
+            <span>...</span>
+        {% endif %}
 
-        <p class="modal-titulo">
-            ¿Estás seguro?
-        </p>
+        <a href="?pagina={{ total_pages }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">
+            {{ total_pages }}
+        </a>
+    {% endif %}
 
-        <p class="modal-texto">
-            Estás por eliminar al alumno
-            <strong id="modal-nombre"></strong>.
-            Esta acción no se puede deshacer.
-        </p>
-
-        <div class="modal-btns">
-
-            <button
-                onclick="cerrarModal()"
-                class="btn-cancelar"
-            >
-                Cancelar
-            </button>
-
-            <form
-                id="form-eliminar"
-                method="POST"
-                style="display:inline;"
-            >
-                <button
-                    type="submit"
-                    class="btn-confirmar"
-                >
-                    Sí, eliminar
-                </button>
-            </form>
-
-        </div>
+    {% if pagina < total_pages %}
+        <a href="?pagina={{ pagina + 1 }}&busqueda={{ request.args.get('busqueda', '') }}&abandono={{ request.args.get('abandono', '') }}">&gt;</a>
+    {% endif %}
 
     </div>
-
+{% endif %}
 </div>
 
-{% endblock %}
-
-{% block extra_scripts %}
-
+<!-- Función para filtrar alumnos en el frontend al escribir en el buscador o cambiar el filtro de estado -->
 <script>
 
 function filtrarAlumnos() {
@@ -204,12 +208,11 @@ function filtrarAlumnos() {
     const estadoFiltro = document.getElementById("filtroEstado").value;
     const filas = document.querySelectorAll(".fila-alumno");
 
-    filas.forEach(fila => {
-
-        let padron = fila.querySelector(".padron").textContent.toLowerCase();
+    for (let i = 0; i < filas.length; i++) {
+        let fila = filas[i];
+        let padron = fila.querySelector(".padron").textContent.toLowerCase();   
         let nombre = fila.querySelector(".nombre").textContent.toLowerCase();
         let apellido = fila.querySelector(".apellido").textContent.toLowerCase();
-
         let estado = fila.querySelector(".estado").dataset.estado;
 
         let coincideBusqueda =
@@ -219,36 +222,18 @@ function filtrarAlumnos() {
 
         let coincideEstado =
             estadoFiltro === "" ||
-            estado === estadoFiltro;
+            (estadoFiltro === "0" && estado === "activo") ||
+            (estadoFiltro === "1" && estado === "abandono");
 
-        fila.style.display =
-            coincideBusqueda && coincideEstado
-                ? ""
-                : "none";
-    });
-}
-
-function confirmarEliminar(id, nombre) {
-
-    document.getElementById("modal-nombre").textContent = nombre;
-
-    document.getElementById("form-eliminar").action =
-        "/alumnos/" + id + "/eliminar";
-
-    document.getElementById("modal-overlay").style.display = "flex";
-}
-
-function cerrarModal() {
-    document.getElementById("modal-overlay").style.display = "none";
-}
-
-document.getElementById("modal-overlay")
-.addEventListener("click", function(e) {
-
-    if (e.target === this) {
-        cerrarModal();
+        if (coincideBusqueda && coincide_Estado) {
+            fila.style.display = "";
+        } else {
+            fila.style.display = "none";
+        }
     }
-});
+
+}
+
 </script>
 
 {% endblock %}

@@ -8,6 +8,7 @@ from flask import Flask, redirect, request, url_for
 from routes.authenticacion_views import auth_bp
 from routes.views import views_bp
 from routes.profesores import profesores_front_bp
+from routes.asistencia import asistencia_front_bp
 from services.login import usuario_logueado
 
 app = Flask(__name__)
@@ -15,6 +16,7 @@ app = Flask(__name__)
 app.register_blueprint(views_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(profesores_front_bp)
+app.register_blueprint(asistencia_front_bp)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "clave-secreta")
 
 

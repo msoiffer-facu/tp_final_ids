@@ -1,9 +1,12 @@
 from flask import Blueprint, jsonify, request, Response
 from db import get_db
 from dbs.db_exportar_csv import obtener_alumnos_exportar
+from flask import Blueprint, jsonify, request, url_for
 from herramientas.importar_csv import importar_alumnos_csv
 from herramientas.validaciones_alumnos import validar_email, validar_convertir_padron, validar_convertir_booleano, validar_convertir_string
 from herramientas.exportar_csv import generar_csv_alumnos
+from herramientas.validaciones_alumnos import  validar_data_alumno
+from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db
 import os
 import mysql.connector
 
@@ -32,28 +35,32 @@ def exportar_alumnos():
         }), 500
     
 @alumnos_bp.route("/", methods=["GET"])
-def listar_alumnos():
-    db = None
-    cursor = None
+def obtener_alumnos():
+    pagina = request.args.get("pagina", 1, type=int)
+    busqueda = request.args.get("busqueda", "", type=str).strip()
+    abandono = request.args.get("abandono", "", type=str).strip()
 
+    if pagina < 1:
+        return jsonify({"error": "Pagina invalida"}), 400
+
+    limit = 10
+    offset = (pagina - 1) * limit
+    
     try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-
-        cursor.execute("SELECT * FROM alumnos")
-        alumnos = cursor.fetchall()
+        alumnos_pagina, total_registros = db_get_alumnos(offset, limit, busqueda, abandono)
 
     except mysql.connector.Error:
-        return jsonify({"error": "Error interno al listar alumnos"}), 500
-    
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
+        return jsonify({"error": "Error de base de datos"}), 500
 
-    return jsonify(alumnos), 200
+    return jsonify({
+        "alumnos": alumnos_pagina,
+        "total": total_registros,
+        "pagina": pagina,
+        "limit": limit,
+        "total_pages": (total_registros + limit - 1) // limit
+    }), 200
 
+  
 @alumnos_bp.route("/importar", methods=["POST"])
 def importar_lista():
     file = request.files.get("file")
@@ -67,99 +74,42 @@ def importar_lista():
     if extension != '.csv':
         return jsonify({"error": "Formato invalido"}), 400
 
-    resultado = importar_alumnos_csv(file)
-
-    if "error" in resultado:
-        return jsonify({"error": resultado["error"]}), 400
-
-    alumnos = resultado["alumnos"]
-    errores = resultado["errores"]
-    insertados = 0
-
-    db = None
-    cursor = None
-
     try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
+        resultado = importar_alumnos_csv(file)
 
-        for alumno in alumnos:
-            errores_alumnos = []
+        if "error" in resultado:
+            return jsonify({"error": resultado["error"]}), 400
 
-            cursor.execute("SELECT email, padron FROM alumnos WHERE email=%s OR padron=%s", 
-                           (alumno["email"], alumno["padron"]))
-            alumno_repeticion = cursor.fetchone()
-
-            if alumno_repeticion:   
-                if alumno_repeticion["email"] == alumno["email"]:
-                    errores_alumnos.append(f"Email {alumno['email']} ya registrado")
-
-                if alumno_repeticion["padron"] == alumno["padron"]:
-                    errores_alumnos.append(f"Padron {alumno['padron']} ya registrado")
-
-            if errores_alumnos:
-                errores.extend(errores_alumnos)
-                continue
-
-            cursor.execute(
-                "INSERT INTO alumnos (nombre, apellido, email, padron, abandono, estado) VALUES (%s, %s, %s, %s, %s, %s)",
-                (alumno["nombre"], alumno["apellido"], alumno["email"], alumno["padron"], alumno["abandono"], alumno["estado"]))
-            insertados += 1
-        db.commit()
-
-    except mysql.connector.Error as err:
+        resultado_db = cargar_alumnos_db(resultado["alumnos"])
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
+    except Exception as err:
         return jsonify({"error": str(err)}), 500
 
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
-    
     return jsonify({
-        "errores": errores,
-        "insertados": insertados
+        "insertados": resultado_db["insertados"],
+        "existentes": resultado_db["existentes"],
+        "errores": resultado["errores"]
     }), 200
 
-
+  
 @alumnos_bp.route("/<int:id>", methods=["GET"])
 def obtener_alumno(id):
-    db = None
-    cursor = None
-
     try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-
-        cursor.execute("SELECT * FROM alumnos WHERE id=%s", (id,))
-        alumno = cursor.fetchone()
-
+        alumno = db_get_alumno_id(id)
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
 
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
     
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
-
     return jsonify(alumno), 200
 
 
 @alumnos_bp.route("/<int:id>", methods=["DELETE"])
 def eliminar_alumno(id):
-    db = None
-    cursor = None
-
     try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-
-        cursor.execute("SELECT id FROM alumnos WHERE id=%s", (id,))
-        alumno = cursor.fetchone()
+        alumno = db_get_alumno_id(id)
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
         
@@ -172,161 +122,58 @@ def eliminar_alumno(id):
         
         cursor.execute("DELETE FROM notas WHERE alumno_id=%s", (id,))
 
-        cursor.execute("DELETE FROM alumnos WHERE id=%s", (id,))
-        db.commit()
+        db_delete_alumno(id)
 
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
 
     return jsonify({"mensaje": "Alumno eliminado"}), 200
 
 
 @alumnos_bp.route("/<int:id>", methods=["PUT"])
 def modificar_alumno(id):
-    db = None
-    cursor = None
-
     data = request.get_json()
     if data is None:
         return jsonify({"error": "Body faltante"}), 400
-
-    errores = []
-
-    try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
-
-        cursor.execute("SELECT * FROM alumnos WHERE id=%s", (id,))
-        alumno = cursor.fetchone()
-        if not alumno:
-            return jsonify({"error": "Alumno no encontrado"}), 404
-        
-        nombre = validar_convertir_string(data.get("nombre", alumno["nombre"]))
-        apellido = validar_convertir_string(data.get("apellido", alumno["apellido"]))
-        email = data.get("email", alumno["email"])
-        padron = validar_convertir_padron(data.get("padron", alumno["padron"]))
-        abandono = validar_convertir_booleano(data.get("abandono", alumno["abandono"]))
-        estado = validar_convertir_booleano(data.get("estado", alumno["estado"]))
-
-        if nombre is None:
-            errores.append("Nombre invalido")
-
-        if apellido is None:
-            errores.append("Apellido invalido")
-
-        if padron is None:
-            errores.append("Padron invalido")
-        else:
-            cursor.execute("SELECT padron FROM alumnos WHERE padron=%s AND id!=%s", (padron, id))
-            alumno_padron = cursor.fetchone()
-            if alumno_padron:
-                errores.append("Padron ya registrado")
-
-        if not validar_email(email):
-            errores.append("Email invalido")
-        else:
-            cursor.execute("SELECT email FROM alumnos WHERE email=%s AND id!=%s", (email, id))
-            alumno_email = cursor.fetchone()
-            if alumno_email:
-                errores.append("Email ya registrado")
-
-        if abandono is None:
-            errores.append("Abandono invalido")
-
-        if estado is None:
-            errores.append("Estado invalido")
-
-        if errores:
-            return jsonify({"errores": errores}), 400
-
-        cursor.execute("UPDATE alumnos SET nombre=%s, apellido=%s, email=%s, padron=%s, abandono=%s, estado=%s WHERE id=%s", 
-                       (nombre,apellido,email,padron,abandono,estado,id))
-        db.commit()
-
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
     
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
+    try:
+        if not db_get_alumno_id(id):
+            return jsonify({"error": "Alumno no encontrado"}), 404
+
+        alumno_validado = validar_data_alumno(data, id)
+        if alumno_validado["errores"]:
+            return jsonify({"error": ", ".join(alumno_validado["errores"])}), 400
+
+        errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"], id)
+        if errores_db:
+            return jsonify({"error": ", ".join(errores_db)}), 400
+
+        db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
+
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
 
     return jsonify({"mensaje": "Alumno modificado"}), 200
 
 
 @alumnos_bp.route("/", methods=["POST"])
 def crear_alumno():
-    db = None
-    cursor = None
-
     data = request.get_json()
     if data is None:
         return jsonify({"error": "Body faltante"}), 400
 
-    errores = []
-    
-    nombre = validar_convertir_string(data.get("nombre"))
-    apellido = validar_convertir_string(data.get("apellido"))
-    email = data.get("email")
-    padron = validar_convertir_padron(data.get("padron"))
-    abandono = validar_convertir_booleano(data.get("abandono", False))
-    estado = validar_convertir_booleano(data.get("estado", True))
-
     try:
-        db = get_db()
-        cursor = db.cursor(dictionary=True)
+        alumno_validado = validar_data_alumno(data)
+        if alumno_validado["errores"]:
+            return jsonify({"error": ", ".join(alumno_validado["errores"])}), 400
+        
+        errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"])
+        if errores_db:
+            return jsonify({"error": ", ".join(errores_db)}), 400
 
-        if nombre is None:
-            errores.append("Nombre invalido")
+        db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
 
-        if apellido is None:
-            errores.append("Apellido invalido")
-
-        if padron is None:
-            errores.append("Padron invalido")
-        else:
-            cursor.execute("SELECT * FROM alumnos WHERE padron=%s", (padron,))
-            alumno_padron = cursor.fetchone()
-            if alumno_padron:
-                errores.append("Padron ya registrado")
-
-        if not validar_email(email):
-            errores.append("Email invalido")
-        else:
-            cursor.execute("SELECT * FROM alumnos WHERE email=%s", (email,))
-            alumno_email = cursor.fetchone()
-            if alumno_email:
-                errores.append("Email ya registrado")
-
-        if abandono is None:
-            errores.append("Abandono invalido")
-
-        if estado is None:
-            errores.append("Estado invalido")
-
-        if errores:
-            return jsonify({"errores": errores}), 400
-
-        cursor.execute(
-            "INSERT INTO alumnos (nombre, apellido, email, padron, abandono, estado) VALUES (%s, %s, %s, %s, %s, %s)",
-            (nombre, apellido, email, padron, abandono, estado)
-        )
-        db.commit()
-
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
-    
-    finally:
-        if cursor:
-            cursor.close()
-        if db:
-            db.close()
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
 
     return jsonify({"mensaje": "Alumno creado"}), 201
