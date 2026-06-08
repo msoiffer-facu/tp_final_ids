@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Tipos de evaluación - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('evaluaciones_front.evaluaciones_listado') }}" class="btn-volver">← Evaluaciones</a>
+        <h1 class="page-title">Tipos de evaluación</h1>
+    </div>
+    <a href="{{ url_for('evaluaciones_front.tipo_nuevo') }}" class="btn-primary">+ Nuevo tipo</a>
+</div>
+
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tipo in tipos %}
+            <tr>
+                <td class="nombre">{{ tipo.nombre }}</td>
+                <td class="acciones">
+                    <a href="{{ url_for('evaluaciones_front.tipo_editar', tipo_id=tipo.id) }}" class="btn-accion editar">Editar</a>
+                    <button class="btn-accion eliminar" onclick="confirmarEliminar({{ tipo.id }}, '{{ tipo.nombre }}')">Eliminar</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="vacio">No hay tipos de evaluación registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal confirmación eliminar -->
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal">
+        <p class="modal-titulo">¿Eliminar tipo?</p>
+        <p class="modal-texto">Estás por eliminar el tipo <strong id="modal-nombre"></strong>. Solo podés eliminarlo si no hay evaluaciones que lo usen.</p>
+        <div class="modal-btns">
+            <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+            <form id="form-eliminar" method="POST" style="display:inline;">
+                <button type="submit" class="btn-confirmar">Sí, eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function confirmarEliminar(id, nombre) {
+        document.getElementById('modal-nombre').textContent = nombre;
+        document.getElementById('form-eliminar').action = '/evaluaciones/tipos/' + id + '/eliminar';
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+    function cerrarModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal();
+    });
+</script>
+{% endblock %}

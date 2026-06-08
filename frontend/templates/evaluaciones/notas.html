@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Cargar notas - {{ evaluacion.titulo }} - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evaluaciones.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('evaluaciones_front.evaluaciones_listado') }}" class="btn-volver">← Volver</a>
+        <h1 class="page-title">Cargar notas</h1>
+    </div>
+</div>
+
+<!-- Info de la evaluación -->
+<div class="evaluacion-info">
+    <div class="evaluacion-info-item">
+        <span class="evaluacion-info-label">Evaluación</span>
+        <span class="evaluacion-info-value">{{ evaluacion.titulo }}</span>
+    </div>
+    <div class="evaluacion-info-item">
+        <span class="evaluacion-info-label">Tipo</span>
+        <span class="evaluacion-info-value">{{ evaluacion.tipo_nombre }}</span>
+    </div>
+    <div class="evaluacion-info-item">
+        <span class="evaluacion-info-label">Curso</span>
+        <span class="evaluacion-info-value">{{ evaluacion.curso_nombre }}</span>
+    </div>
+    <div class="evaluacion-info-item">
+        <span class="evaluacion-info-label">Fecha</span>
+        <span class="evaluacion-info-value">{{ evaluacion.fecha_formateada }}</span>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('evaluaciones_front.evaluacion_notas', evaluacion_id=evaluacion.id) }}" id="form-notas">
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2>{{ notas|length }} alumno{{ 's' if notas|length != 1 else '' }}</h2>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Padrón</th>
+                    <th>Apellido</th>
+                    <th>Nombre</th>
+                    <th style="text-align:center;">Nota (1–10)</th>
+                    <th style="text-align:center;">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alumno in notas %}
+                <tr>
+                    <input type="hidden" name="alumno_id" value="{{ alumno.alumno_id }}">
+                    <td>{{ alumno.padron }}</td>
+                    <td>{{ alumno.apellido }}</td>
+                    <td>{{ alumno.nombre }}</td>
+                    <td style="text-align:center;">
+                        <input
+                            type="number"
+                            name="nota_alumno"
+                            class="nota-input"
+                            min="1" max="10" step="0.01"
+                            value="{{ alumno.nota_alumno if alumno.nota_alumno is not none else '' }}"
+                            placeholder="–"
+                            data-alumno="{{ alumno.alumno_id }}"
+                            oninput="actualizarEstado(this)"
+                        >
+                    </td>
+                    <td style="text-align:center;">
+                        {% if alumno.estado == 'PROMOCIONADO' %}
+                            <span class="badge-estado badge-promocionado" id="estado-{{ alumno.alumno_id }}">Promocionado</span>
+                        {% elif alumno.estado == 'APROBADO' %}
+                            <span class="badge-estado badge-aprobado" id="estado-{{ alumno.alumno_id }}">Aprobado</span>
+                        {% elif alumno.estado == 'DESAPROBADO' %}
+                            <span class="badge-estado badge-desaprobado" id="estado-{{ alumno.alumno_id }}">Desaprobado</span>
+                        {% else %}
+                            <span class="badge-estado badge-sin-nota" id="estado-{{ alumno.alumno_id }}">Sin nota</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="vacio">No hay alumnos inscriptos en este curso.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if notas %}
+        <div class="notas-actions-bar">
+            <a href="{{ url_for('evaluaciones_front.evaluaciones_listado') }}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-primary">Guardar notas</button>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function actualizarEstado(input) {
+        const val = parseFloat(input.value);
+        const alumnoId = input.dataset.alumno;
+        const badge = document.getElementById('estado-' + alumnoId);
+        if (!badge) return;
+
+        if (isNaN(val) || input.value.trim() === '') {
+            badge.className = 'badge-estado badge-sin-nota';
+            badge.textContent = 'Sin nota';
+        } else if (val >= 7) {
+            badge.className = 'badge-estado badge-promocionado';
+            badge.textContent = 'Promocionado';
+        } else if (val >= 4) {
+            badge.className = 'badge-estado badge-aprobado';
+            badge.textContent = 'Aprobado';
+        } else {
+            badge.className = 'badge-estado badge-desaprobado';
+            badge.textContent = 'Desaprobado';
+        }
+    }
+</script>
+{% endblock %}
