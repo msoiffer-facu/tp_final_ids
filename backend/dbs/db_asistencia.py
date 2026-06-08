@@ -20,6 +20,16 @@ SMTP_USER = "correoprobar6@gmail.com"
 SMTP_PASSWORD = "voph xnfy xtmy bovm"
 
 
+def listar_asistencia_alumno(alumno_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+ 
+    cursor.execute("SELECT * FROM asistencias WHERE alumno_id = %s", (alumno_id,))
+    asistencias = cursor.fetchall()
+    
+    cursor.close()
+    return asistencias
+
 def obtener_promedio_asistencia():
     db = get_db()
     cursor = db.cursor()
@@ -31,6 +41,7 @@ def obtener_promedio_asistencia():
     presentes = cursor.fetchone()[0]
     
     cursor.close()
+    db.close()
     return (presentes / total_alumno) * 100 if total_alumno > 0 else 0
 
 def obtener_clases_p(page, per_page, curso_id=None):

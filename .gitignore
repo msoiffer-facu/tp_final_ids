@@ -2,6 +2,3 @@
 __pycache__/
 .env
 venv/
-!.env.example
-!frontend/.env.example
-!backend/.env.example

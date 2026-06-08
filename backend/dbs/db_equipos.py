@@ -1,11 +1,29 @@
 from db import get_db
 
+def db_listar_equipos_alumno(alumno_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""SELECT equipos.id, equipos.nombre, equipos.descripcion, equipos.curso_id, equipos.fecha_creacion FROM equipos
+            JOIN equipo_alumnos ON equipos.id = equipo_alumnos.equipo_id
+            WHERE equipo_alumnos.alumno_id = %s""", (alumno_id,))
+       
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
 def db_listar_equipos():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT id, nombre, descripcion, curso_id, fecha_creacion FROM equipos")
+        cursor.execute("""
+            SELECT e.id, e.nombre, e.descripcion, e.curso_id, e.fecha_creacion,
+                   COUNT(ea.alumno_id) AS miembros
+            FROM equipos e
+            LEFT JOIN equipo_alumnos ea ON ea.equipo_id = e.id
+            GROUP BY e.id, e.nombre, e.descripcion, e.curso_id, e.fecha_creacion
+        """)
         return cursor.fetchall()
     finally:
         cursor.close()
@@ -78,6 +96,20 @@ def db_asociar_alumnos(equipo_id, alumnos_ids):
                     "INSERT INTO equipo_alumnos (equipo_id, alumno_id) VALUES (%s, %s)",
                     (equipo_id, alumno_id)
                 )
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def db_quitar_alumno_equipo(equipo_id, alumno_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "DELETE FROM equipo_alumnos WHERE equipo_id = %s AND alumno_id = %s",
+            (equipo_id, alumno_id)
+        )
         conn.commit()
     finally:
         cursor.close()

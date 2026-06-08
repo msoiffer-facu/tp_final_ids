@@ -12,7 +12,6 @@ from routes.evaluaciones import evaluaciones_front_bp
 from routes.asistencia import asistencia_front_bp
 from services.login import usuario_logueado
 
-
 app = Flask(__name__)
 
 app.register_blueprint(views_bp)
@@ -23,7 +22,7 @@ app.register_blueprint(asistencia_front_bp)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "clave-secreta")
 
 
-
+"""
 @app.before_request
 def control_acceso():
     if request.endpoint == "static":
@@ -40,6 +39,6 @@ def control_acceso():
         return redirect(url_for("auth.login"))
 
     return None
-
+"""
 if __name__ == "__main__":
     app.run(debug=True, port=os.environ.get("PORT", 5001))
