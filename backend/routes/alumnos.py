@@ -146,7 +146,8 @@ def modificar_alumno(id):
         if errores_db:
             return jsonify({"error": ", ".join(errores_db)}), 400
 
-        db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
+        curso_id = data.get("curso_id")
+        db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"], curso_id)
 
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
@@ -169,7 +170,7 @@ def crear_alumno():
         if errores_db:
             return jsonify({"error": ", ".join(errores_db)}), 400
 
-        db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
+        db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"],alumno_validado["curso_id"])
 
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500

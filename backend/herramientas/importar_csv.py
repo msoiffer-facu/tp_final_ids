@@ -28,7 +28,8 @@ def importar_alumnos_csv(archivo):
             "apellido",
             "email",
             "padron",
-            "abandono"
+            "abandono",
+            "curso"
         ]
 
         headers = [columna.strip().lower() for columna in reader.fieldnames]
@@ -56,6 +57,7 @@ def importar_alumnos_csv(archivo):
             email = fila.get("email")
             padron = validar_convertir_padron(fila.get("padron"))
             abandono = validar_convertir_booleano(fila.get("abandono"))
+            curso = fila.get("curso")
 
             if nombre is None:
                 errores_fila.append("nombre invalido")
@@ -75,6 +77,9 @@ def importar_alumnos_csv(archivo):
 
             if abandono is None:
                 errores_fila.append("abandono invalido")
+            
+            if curso is None:
+                errores_fila.append("curso invalido")
 
             if errores_fila:
                 errores.append(f"Fila {index}: {', '.join(errores_fila)}")
@@ -86,7 +91,8 @@ def importar_alumnos_csv(archivo):
                 "email": email,
                 "padron": padron,
                 "abandono": abandono,
-                "estado": True
+                "estado": True,
+                "curso": curso
             }
             alumnos.append(alumno)
             padrones.add(padron)

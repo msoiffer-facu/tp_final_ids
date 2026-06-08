@@ -162,12 +162,13 @@ def alumno_form(id):
             flash("Error al obtener el alumno", "danger")
             return redirect(url_for("views.vista_alumnos"))
        
-
         alumno = response.json()
+        cursos = obtener_cursos()
 
         return render_template(
             "alumnos/alumno_form.html",
-            alumno=alumno
+            alumno=alumno,
+            cursos=cursos
         )
 
     except requests.RequestException:
@@ -184,8 +185,9 @@ def alumno_editar(id):
     padron = request.form.get("padron")
     abandono = request.form.get("abandono") == "true"
     estado = request.form.get("estado") == "true"
+    curso_id = request.form.get("curso")
 
-    data = {"nombre": nombre, "apellido": apellido, "email": email, "padron": padron, "abandono": abandono, "estado": estado}
+    data = {"nombre": nombre, "apellido": apellido, "email": email, "padron": padron, "abandono": abandono, "estado": estado, "curso_id": curso_id}
 
     try:
         response = requests.put(f"{BACKEND_URL}/alumnos/{id}", json=data)
@@ -551,12 +553,14 @@ def importar_csv():
 @views_bp.route("/alumnos/nuevo", methods=["GET", "POST"])
 def nuevo_alumno():
     if request.method == "POST":
+        abanono = False
         nuevo = {
             "padron": request.form.get("padron"),
             "nombre": request.form.get("nombre"),
             "apellido": request.form.get("apellido"),
             "email": request.form.get("email"),
-            "abandono": request.form.get("abandono")
+            "abandono": abanono,
+            "curso_id":request.form.get("curso")
         }
         resultado = crear_alumno(nuevo)
         if resultado["status_code"] == 201:
@@ -564,4 +568,5 @@ def nuevo_alumno():
         else:
             flash(resultado["data"].get("error", "Error al crear el alumno"), "error")
         return redirect(url_for("views.vista_alumnos"))
-    return render_template("alumnos/abm.html", alumno=None)
+    cursos = obtener_cursos()
+    return render_template("alumnos/abm.html", alumno=None, cursos=cursos)
