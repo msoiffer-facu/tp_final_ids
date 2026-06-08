@@ -92,6 +92,7 @@
                 <th class="text-center">Padrón</th>
                 <th class="text-center">Nombre</th>
                 <th class="text-center">Apellido</th>
+                <th class="text-center">Curso</th>
                 <th class="text-center">Email</th>
                 <th class="text-center">Estado</th>
                 <th class="text-center">Acciones</th>
@@ -113,6 +114,10 @@
 
                 <td class="apellido">
                     {{ alumno.apellido }}
+                </td>
+
+                <td>
+                    {{ alumno.curso or "-" }}
                 </td>
 
                 <td>
