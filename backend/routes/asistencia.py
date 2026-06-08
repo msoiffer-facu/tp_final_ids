@@ -10,17 +10,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
 
+
 @asistencia_bp.route("/alumno/<int:alumno_id>", methods=['GET'])
 def obtener_asistencia_alumno(alumno_id):
     try:
-        asistencias = listar_asistencia_alumno(alumno_id)
+        asistencias = listar_asistencia_detallada_alumno(alumno_id)
     except Exception as e:
-        return f'Error al listar las asistencias del alumno: {e}',500
+        return jsonify({"success": False, "error": str(e), "data": []}), 500 
 
-    if not asistencias:
-        return jsonify("No se encontraron asistencias para el alumno"),200
+    return jsonify({"success": True, "data": asistencias}),200
 
-    return jsonify(asistencias),200
 @asistencia_bp.route("/promedio", methods=['GET'])
 def promedio_asistencia():
     try:

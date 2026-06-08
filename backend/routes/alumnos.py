@@ -3,7 +3,6 @@ from db import get_db
 from dbs.db_exportar_csv import obtener_alumnos_exportar
 from flask import Blueprint, jsonify, request, url_for
 from herramientas.importar_csv import importar_alumnos_csv
-from herramientas.validaciones_alumnos import validar_email, validar_convertir_padron, validar_convertir_booleano, validar_convertir_string
 from herramientas.exportar_csv import generar_csv_alumnos
 from herramientas.validaciones_alumnos import  validar_data_alumno
 from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db, db_get_todos_alumnos
@@ -118,17 +117,9 @@ def obtener_alumno(id):
 def eliminar_alumno(id):
     try:
         alumno = db_get_alumno_id(id)
+
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
-        
-        cursor.execute(
-            "DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
-        
-        cursor.execute("DELETE FROM asistencias WHERE alumno_id=%s", (id,))
-
-        cursor.execute("DELETE FROM equipo_alumnos WHERE alumno_id=%s", (id,))
-        
-        cursor.execute("DELETE FROM notas WHERE alumno_id=%s", (id,))
 
         db_delete_alumno(id)
     except mysql.connector.Error:

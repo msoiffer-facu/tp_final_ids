@@ -20,6 +20,28 @@ SMTP_USER = "correoprobar6@gmail.com"
 SMTP_PASSWORD = "voph xnfy xtmy bovm"
 
 
+#para el detalle del alumno
+def listar_asistencia_detallada_alumno(alumno_id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""SELECT asistencias.id AS asistencia_id, clase_presencial.id AS clase_presencial_id, cursos.nombre AS curso_nombre, clase_presencial.fecha, asistencias.presente, asistencias.asistencia_registrada
+    FROM asistencias
+    JOIN clase_presencial
+        ON asistencias.clase_presencial_id = clase_presencial.id
+    JOIN cursos
+        ON clase_presencial.curso_id = cursos.id
+    WHERE asistencias.alumno_id = %s
+        ORDER BY clase_presencial.fecha""", (alumno_id,))
+
+    resultado = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return resultado
+
+
 def listar_asistencia_alumno(alumno_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
