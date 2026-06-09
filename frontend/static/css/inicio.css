@@ -2,6 +2,7 @@
 .inicio-hero {
     text-align: center;
     margin-bottom: 2rem;
+    padding: 100px 0;
 }
 
 .inicio-fiuba {
@@ -14,14 +15,14 @@
 }
 
 .inicio-hero h1 {
-    font-size: 2rem;
+    font-size: 3rem;
     font-weight: 700;
     color: #111827;
     margin-bottom: 0.35rem;
 }
 
 .inicio-subtitulo {
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     color: #6b7280;
 }
 
@@ -99,7 +100,7 @@
     display: inline-block;
     background: #dbeafe;
     color: #2563eb;
-    font-size: 0.8rem;
+    font-size: 1.5rem;
     font-weight: 600;
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
@@ -114,9 +115,10 @@
 
 .contenido-card {
     background: #ffffff;
+    min-height: 150px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 1.25rem;
+    padding: 2.25rem 1.25rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     transition:
         transform 0.15s,
