@@ -13,7 +13,10 @@ from services.equipo import (
     obtener_miembros_equipo,
     agregar_alumno_equipo,
     quitar_alumno_equipo,
+    asociar_equipo_evaluacion,
+    obtener_evaluaciones_equipo,
 )
+from services.evaluaciones_service import get_evaluaciones
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
 from services.alumnos_service import obtener_alumnos, obtener_alumno, actualizar_alumno, eliminar_alumno, importar_csv_service, crear_alumno
 
@@ -328,18 +331,35 @@ def equipo_detalle(equipo_id):
     except RuntimeError:
         miembros = []
 
+    equipo["miembros"] = len(miembros)
+
     try:
-        resp_alumnos = requests.get(f"{BACKEND_URL}/alumnos/todos", timeout=5)
-        todos_alumnos = resp_alumnos.json() if resp_alumnos.ok else []
-        if not isinstance(todos_alumnos, list):
-            todos_alumnos = []
+        evaluaciones_asociadas = obtener_evaluaciones_equipo(equipo_id)
+        if not isinstance(evaluaciones_asociadas, list):
+            evaluaciones_asociadas = []
+    except RuntimeError:
+        evaluaciones_asociadas = []
+
+    curso_id = equipo.get("curso_id")
+    try:
+        resp_alumnos = requests.get(f"{BACKEND_URL}/cursos/{curso_id}/alumnos", params={"per_page": 1000}, timeout=5)
+        data_alumnos = resp_alumnos.json() if resp_alumnos.ok else {}
+        todos_alumnos = data_alumnos.get("alumnos", []) if isinstance(data_alumnos, dict) else []
     except Exception:
         todos_alumnos = []
 
     ids_miembros = {str(m.get("id", m.get("alumno_id", ""))) for m in miembros}
     alumnos_disponibles = [a for a in todos_alumnos if str(a.get("id")) not in ids_miembros]
 
-    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros, alumnos_disponibles=alumnos_disponibles)
+    evaluaciones = []
+    try:
+        ok, data_ev = get_evaluaciones(per_page=1000, curso_id=curso_id)
+        if ok and isinstance(data_ev, dict):
+            evaluaciones = data_ev.get("evaluaciones", [])
+    except Exception:
+        evaluaciones = []
+
+    return render_template("equipos/abm.html", equipo=equipo, miembros=miembros, alumnos_disponibles=alumnos_disponibles, evaluaciones=evaluaciones, evaluaciones_asociadas=evaluaciones_asociadas)
 
 
 @views_bp.route("/equipos/<int:equipo_id>/alumnos/agregar", methods=["POST"])
@@ -374,6 +394,20 @@ def equipo_delete(equipo_id):
     except RuntimeError as exc:
         flash(str(exc), "error")
     return redirect(url_for("views.equipos"))
+
+
+@views_bp.route("/equipos/<int:equipo_id>/evaluacion", methods=["POST"])
+def equipo_asociar_evaluacion(equipo_id):
+    evaluacion_id = request.form.get("evaluacion_id")
+    if not evaluacion_id:
+        flash("Seleccioná una evaluación.", "danger")
+    else:
+        try:
+            asociar_equipo_evaluacion(equipo_id, int(evaluacion_id))
+            flash("Equipo asociado a la evaluación correctamente.", "success")
+        except RuntimeError as exc:
+            flash(str(exc), "error")
+    return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
 
 
 # ── Cursos ────────────────────────────────────────────────────────────────────

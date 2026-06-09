@@ -10,6 +10,7 @@ from dbs.db_equipos import (
     db_quitar_alumno_equipo,
     db_listar_alumnos_equipo,
     db_asociar_equipo_a_tp,
+    db_listar_evaluaciones_equipo,
 )
 
 equipos_bp = Blueprint("equipos", __name__)
@@ -119,6 +120,15 @@ def quitar_alumno(id, alumno_id):
     except Exception as e:
         return jsonify({"error": f"Error al quitar alumno: {str(e)}"}), 500
     return jsonify({"message": "Alumno quitado del equipo"}), 200
+
+
+@equipos_bp.route("/<int:id>/evaluaciones", methods=["GET"])
+def listar_evaluaciones_equipo(id):
+    try:
+        evaluaciones = db_listar_evaluaciones_equipo(id)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify(evaluaciones), 200
 
 
 @equipos_bp.route("/<int:id>/tps", methods=["POST"])
