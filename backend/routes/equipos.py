@@ -11,6 +11,8 @@ from dbs.db_equipos import (
     db_listar_alumnos_equipo,
     db_asociar_equipo_a_tp,
     db_listar_evaluaciones_equipo,
+    db_desasociar_evaluacion_equipo,
+    db_verificar_evaluacion_equipo,
 )
 
 equipos_bp = Blueprint("equipos", __name__)
@@ -140,10 +142,34 @@ def asociar_equipos_a_tp(id):
         return jsonify({"error": "El campo evaluacion_id es requerido"}), 400
 
     try:
+        equipo = db_buscar_equipo_por_id(id)
+        if not equipo:
+            return jsonify({"error": "Equipo no encontrado"}), 404
+        
         integrantes = db_listar_alumnos_equipo(id)
         if not integrantes:
             return jsonify({"error": "El equipo no tiene alumnos asociados todavía. Asocie alumnos primero."}), 400
+        
         db_asociar_equipo_a_tp(id, evaluacion_id, integrantes)
     except Exception as e:
-        return jsonify({"error": f"Error al asociar equipo al TP: {str(e)}"}), 500
+        error_msg = str(e)
+        if "ya está asociado" in error_msg:
+            return jsonify({"error": error_msg}), 409
+        return jsonify({"error": f"Error al asociar equipo al TP: {error_msg}"}), 500
     return jsonify({"message": "Equipo asociado al Trabajo Práctico con éxito"}), 200
+
+
+@equipos_bp.route("/<int:id>/tps/<int:evaluacion_id>", methods=["DELETE"])
+def desasociar_equipos_a_tp(id, evaluacion_id):
+    try:
+        equipo = db_buscar_equipo_por_id(id)
+        if not equipo:
+            return jsonify({"error": "Equipo no encontrado"}), 404
+        
+        if not db_verificar_evaluacion_equipo(id, evaluacion_id):
+            return jsonify({"error": "Este equipo no está asociado a esta evaluación"}), 404
+        
+        db_desasociar_evaluacion_equipo(id, evaluacion_id)
+    except Exception as e:
+        return jsonify({"error": f"Error al desasociar equipo del TP: {str(e)}"}), 500
+    return jsonify({"message": "Equipo desasociado del Trabajo Práctico con éxito"}), 200
