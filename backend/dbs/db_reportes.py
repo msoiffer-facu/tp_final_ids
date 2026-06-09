@@ -1,7 +1,6 @@
 from db import get_db
 from herramientas.reportes_helpers import (
     normalize_text,
-    parse_bool,
     build_alumno_filters,
     build_equipos_filters,
 )
@@ -33,20 +32,27 @@ def _fetch_alumnos(params):
             return []
 
         columns = _get_table_columns(cursor, "alumnos")
-        join_equipos = "equipo_id" in columns and _table_exists(cursor, "equipos")
+        tiene_equipos = _table_exists(cursor, "equipo_alumnos") and _table_exists(cursor, "equipos")
 
-        select_fields = [f"a.{col}" for col in ["id", "nombre", "apellido", "dni", "email", "nota", "aprobado"] if col in columns]
-        if join_equipos:
-            select_fields.append("e.nombre AS equipo")
+        select_parts = []
+        for col in ["id", "nombre", "apellido", "dni", "email", "nota", "aprobado"]:
+            if col in columns:
+                select_parts.append(f"a.{col}")
 
-        if not select_fields:
-            select_fields = [f"a.{col}" for col in columns]
+        if not select_parts:
+            select_parts = [f"a.{col}" for col in columns]
 
-        sql = f"SELECT {', '.join(select_fields)} FROM alumnos a"
-        if join_equipos:
-            sql += " LEFT JOIN equipos e ON a.equipo_id = e.id"
+        if tiene_equipos:
+            select_parts.append("IFNULL(e.nombre, 'Sin equipo') AS equipo")
 
-        filters, values = build_alumno_filters(params, columns, join_equipos)
+        sql = f"SELECT {', '.join(select_parts)} FROM alumnos a"
+        if tiene_equipos:
+            sql += (
+                " LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id"
+                " LEFT JOIN equipos e ON e.id = ea.equipo_id"
+            )
+
+        filters, values = build_alumno_filters(params, columns, tiene_equipos)
         if filters:
             sql += " WHERE " + " AND ".join(filters)
 
@@ -65,17 +71,30 @@ def _fetch_equipos(params):
         if not _table_exists(cursor, "equipos"):
             return []
 
-        columns = _get_table_columns(cursor, "equipos")
-        select_fields = [col for col in ["id", "nombre", "tutor", "curso", "turno"] if col in columns]
-        if not select_fields:
-            select_fields = columns
+        tiene_cursos = _table_exists(cursor, "cursos")
+        tiene_miembros = _table_exists(cursor, "equipo_alumnos")
 
-        sql = f"SELECT {', '.join(select_fields)} FROM equipos"
-        filters, values = build_equipos_filters(params, columns)
+        sql = "SELECT e.id, e.nombre, e.descripcion"
+        if tiene_cursos:
+            sql += ", IFNULL(c.nombre, 'Sin curso') AS curso"
+        if tiene_miembros:
+            sql += ", COUNT(ea.alumno_id) AS miembros"
+
+        sql += " FROM equipos e"
+        if tiene_cursos:
+            sql += " LEFT JOIN cursos c ON c.id = e.curso_id"
+        if tiene_miembros:
+            sql += " LEFT JOIN equipo_alumnos ea ON ea.equipo_id = e.id"
+
+        filters, values = build_equipos_filters(params, tiene_cursos)
         if filters:
             sql += " WHERE " + " AND ".join(filters)
 
-        sql += " ORDER BY nombre"
+        sql += " GROUP BY e.id, e.nombre, e.descripcion"
+        if tiene_cursos:
+            sql += ", c.nombre"
+        sql += " ORDER BY e.nombre"
+
         cursor.execute(sql, tuple(values))
         equipos = _fetch_rows(cursor)
         return [{k: normalize_text(v) for k, v in equipo.items()} for equipo in equipos]
@@ -91,21 +110,23 @@ def _statistics_data():
             return {"total": 0, "aprobados": 0, "reprobados": 0, "porcentaje_aprobacion": 0.0, "por_equipo": []}
 
         columns = _get_table_columns(cursor, "alumnos")
-        join_equipos = "equipo_id" in columns and _table_exists(cursor, "equipos")
+        tiene_equipos = _table_exists(cursor, "equipo_alumnos") and _table_exists(cursor, "equipos")
 
         if "aprobado" in columns:
+            aprobado_expr = "LOWER(CAST(a.aprobado AS CHAR)) IN ('1','true','si','yes','y','s')"
             count_sql = (
                 "SELECT COUNT(*) AS total, "
-                "SUM(CASE WHEN LOWER(CAST(aprobado AS CHAR)) IN ('1','true','si','yes','y','s') THEN 1 ELSE 0 END) AS aprobados, "
-                "SUM(CASE WHEN LOWER(CAST(aprobado AS CHAR)) NOT IN ('1','true','si','yes','y','s') THEN 1 ELSE 0 END) AS reprobados "
-                "FROM alumnos"
+                f"SUM(CASE WHEN {aprobado_expr} THEN 1 ELSE 0 END) AS aprobados, "
+                f"SUM(CASE WHEN NOT ({aprobado_expr}) THEN 1 ELSE 0 END) AS reprobados "
+                "FROM alumnos a"
             )
         elif "nota" in columns:
+            aprobado_expr = "a.nota >= 6"
             count_sql = (
                 "SELECT COUNT(*) AS total, "
-                "SUM(CASE WHEN nota >= 6 THEN 1 ELSE 0 END) AS aprobados, "
-                "SUM(CASE WHEN nota < 6 THEN 1 ELSE 0 END) AS reprobados "
-                "FROM alumnos"
+                "SUM(CASE WHEN a.nota >= 6 THEN 1 ELSE 0 END) AS aprobados, "
+                "SUM(CASE WHEN a.nota < 6 OR a.nota IS NULL THEN 1 ELSE 0 END) AS reprobados "
+                "FROM alumnos a"
             )
         else:
             cursor.execute("SELECT COUNT(*) AS total FROM alumnos")
@@ -114,28 +135,32 @@ def _statistics_data():
 
         cursor.execute(count_sql)
         total, aprobados, reprobados = cursor.fetchone()
+        total = int(total or 0)
+        aprobados = int(aprobados or 0)
+        reprobados = int(reprobados or 0)
         porcentaje = round((aprobados / total * 100) if total else 0.0, 2)
         por_equipo = []
 
-        if join_equipos:
+        if tiene_equipos:
             cursor.execute(
-                "SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
-                "COUNT(*) AS total, "
-                "SUM(CASE WHEN LOWER(CAST(a.aprobado AS CHAR)) IN ('1','true','si','yes','y','s') THEN 1 ELSE 0 END) AS aprobados "
-                "FROM alumnos a "
-                "LEFT JOIN equipos e ON a.equipo_id = e.id "
-                "GROUP BY equipo "
-                "ORDER BY total DESC"
+                f"SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
+                f"COUNT(*) AS total, "
+                f"SUM(CASE WHEN {aprobado_expr} THEN 1 ELSE 0 END) AS aprobados "
+                f"FROM alumnos a "
+                f"LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id "
+                f"LEFT JOIN equipos e ON e.id = ea.equipo_id "
+                f"GROUP BY e.id, e.nombre "
+                f"ORDER BY total DESC"
             )
             por_equipo = [
-                {"equipo": normalize_text(row[0]), "total": int(row[1]), "aprobados": int(row[2])}
+                {"equipo": normalize_text(row[0]), "total": int(row[1]), "aprobados": int(row[2] or 0)}
                 for row in cursor.fetchall()
             ]
 
         return {
-            "total": int(total),
-            "aprobados": int(aprobados),
-            "reprobados": int(reprobados),
+            "total": total,
+            "aprobados": aprobados,
+            "reprobados": reprobados,
             "porcentaje_aprobacion": porcentaje,
             "por_equipo": por_equipo,
         }

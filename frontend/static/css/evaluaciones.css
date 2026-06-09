@@ -1,0 +1,77 @@
+/* ── Reutiliza los estilos de cursos.css para tablas, botones, modales y formularios ── */
+
+/* ── Badge de estado de nota ── */
+.badge-promocionado { background: #dcfce7; color: #16a34a; }
+.badge-aprobado     { background: #dbeafe; color: #2563eb; }
+.badge-desaprobado  { background: #fee2e2; color: #dc2626; }
+.badge-sin-nota     { background: #f3f4f6; color: #9ca3af; }
+
+.badge-estado {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ── Notas form ── */
+.nota-input {
+    width: 80px;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.nota-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ── Evaluacion info card ── */
+.evaluacion-info {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.evaluacion-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.evaluacion-info-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.evaluacion-info-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* ── Sticky actions bar in notas form ── */
+.notas-actions-bar {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    z-index: 10;
+}

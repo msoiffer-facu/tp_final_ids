@@ -2,3 +2,7 @@
 __pycache__/
 .env
 venv/
+
+backend/routes/__init__.py
+backend/routes/historial.py
+backend/dbs/db_historial.py

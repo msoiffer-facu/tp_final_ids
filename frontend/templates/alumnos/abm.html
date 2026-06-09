@@ -10,21 +10,20 @@
 {% block content %}
 
 <div class="abm-container">
+    <div class="page-header">
+    <div class="page-header-left">
+        <a href="/alumnos" class="btn-volver"> ← Volver </a>
+        <h1 class="page-title"> Nuevo alumno </h1>
+    </div>
+</div>
     <div class="modal__content modal__content--wide">
-        <h1 class="modal__title">
-            Alumno
-        </h1>
+        <h1 class="modal__title"> Alumno </h1>
 
-        <form
-            method="POST"
-            action="/alumnos/{{ alumno.id }}/editar"
-        >
+        <form method="POST" {% if alumno.id %} action="/alumnos/{{ alumno.id }}/editar" {% else %} action="/alumnos/nuevo" {% endif %}>
         
             <div class="form__row">
                 <div class="form__group">
-                    <label class="form__label">
-                        Nombre
-                    </label>
+                    <label class="form__label"> Nombre</label>
 
                     <input
                         type="text"
@@ -74,7 +73,7 @@
                 >
             </div>
 
-            <div class="form__group">
+            <!-- <div class="form__group">
                 <label class="form__label">
                     Estado
                 </label>
@@ -97,6 +96,19 @@
 
                 </select>
 
+            </div> -->
+            <div class="form__group">
+                <label class="form__label">
+                    Curso
+                </label>
+                <select name="curso" class="form__select">
+                    <option value="">Cursos</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                    {% endfor %}
+
+                </select>
+
             </div>
 
             <div class="form__actions">
@@ -109,6 +121,7 @@
             </div>
         </form>
 
+        {% if alumno.id %}
         <form
             method="POST"
             action="/alumnos/{{ alumno.id }}/eliminar"
@@ -120,6 +133,7 @@
                 Eliminar alumno
             </button>
         </form>
+        {% endif %}
     </div>
 
 </div>

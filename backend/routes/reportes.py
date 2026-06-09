@@ -10,6 +10,27 @@ PDF_FILENAME = {
     "equipos": "reporte_equipos.pdf",
 }
 
+# Mapeo de nombres de columna a etiquetas legibles
+_LABELS = {
+    "id": "ID",
+    "nombre": "Nombre",
+    "apellido": "Apellido",
+    "dni": "DNI",
+    "email": "Email",
+    "nota": "Nota",
+    "aprobado": "Aprobado",
+    "equipo": "Equipo",
+    "descripcion": "Descripción",
+    "curso": "Curso",
+    "miembros": "Miembros",
+    "total": "Total",
+    "aprobados": "Aprobados",
+}
+
+
+def _human_headers(keys):
+    return [_LABELS.get(k, k.replace("_", " ").title()) for k in keys]
+
 
 @reportes_bp.route("/alumnos", methods=["GET"])
 def alumnos_listado():
@@ -23,10 +44,10 @@ def alumnos_pdf():
     if not alumnos:
         return jsonify({"error": "No se encontraron alumnos."}), 404
 
-    title = "Listado de Alumnos"
-    headers = list(alumnos[0].keys())
+    keys = list(alumnos[0].keys())
+    headers = _human_headers(keys)
     rows = [list(alumno.values()) for alumno in alumnos]
-    pdf_bytes = generar_pdf_reporte(title, headers, rows)
+    pdf_bytes = generar_pdf_reporte("Listado de Alumnos", headers, rows)
 
     response = make_response(pdf_bytes)
     response.headers["Content-Type"] = "application/pdf"
@@ -46,10 +67,10 @@ def equipos_pdf():
     if not equipos:
         return jsonify({"error": "No se encontraron equipos."}), 404
 
-    title = "Listado de Equipos"
-    headers = list(equipos[0].keys())
+    keys = list(equipos[0].keys())
+    headers = _human_headers(keys)
     rows = [list(equipo.values()) for equipo in equipos]
-    pdf_bytes = generar_pdf_reporte(title, headers, rows)
+    pdf_bytes = generar_pdf_reporte("Listado de Equipos", headers, rows)
 
     response = make_response(pdf_bytes)
     response.headers["Content-Type"] = "application/pdf"
@@ -73,11 +94,12 @@ def estadisticas_pdf():
         ("Porcentaje de aprobación", f"{stats['porcentaje_aprobacion']} %"),
     ]
 
-    headers = ["Equipo", "Total", "Aprobados"]
+    headers = ["Equipo", "Total alumnos", "Aprobados"]
     rows = [[item["equipo"], item["total"], item["aprobados"]] for item in stats["por_equipo"]]
-    pdf_bytes = generar_pdf_reporte("Estadísticas de aprobación", headers, rows, summary)
+    pdf_bytes = generar_pdf_reporte("Estadísticas de Aprobación", headers, rows, summary)
 
     response = make_response(pdf_bytes)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={PDF_FILENAME['estadisticas']}"
     return response
+

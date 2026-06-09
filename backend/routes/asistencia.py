@@ -1,11 +1,24 @@
 from flask import Blueprint, jsonify, request, url_for
 import math
+import threading
+import asyncio
 
 from dbs.db_asistencia import *
-from services.asistencia import *
+from dbs.db_cursos import db_get_curso_by_id
+import services.asistencia as serv_asistencia
 from concurrent.futures import ThreadPoolExecutor
 
 asistencia_bp = Blueprint("asistencia", __name__)
+
+
+@asistencia_bp.route("/alumno/<int:alumno_id>", methods=['GET'])
+def obtener_asistencia_alumno(alumno_id):
+    try:
+        asistencias = listar_asistencia_detallada_alumno(alumno_id)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e), "data": []}), 500 
+
+    return jsonify({"success": True, "data": asistencias}),200
 
 @asistencia_bp.route("/promedio", methods=['GET'])
 def promedio_asistencia():
@@ -27,7 +40,7 @@ def get_clase_presencial():
     if per_page <= 0:
         return "El per_page debe ser mayor a 0",404
     try:
-        clases_p,total_registros = listar_clases(page, per_page, curso_id)
+        clases_p,total_registros = serv_asistencia.listar_clases(page, per_page, curso_id)
     except Exception as err:
         return jsonify(err.__cause__),500
 
@@ -47,7 +60,7 @@ def get_clase_presencial():
 @asistencia_bp.route("/en-proceso", methods=['GET'])
 def get_clases_en_proceso():
     try:
-        clases_ep = listar_clases_en_proceso()
+        clases_ep = serv_asistencia.listar_clases_en_proceso()
     except Exception as err:
         return jsonify(err.__cause__),500
 
@@ -65,16 +78,14 @@ def create_clase_presencial():
         return "curso_id es requerido",404
 
     try:
-        curso = buscar_curso(curso_id)
+        curso = db_get_curso_by_id(curso_id)
     except Exception as e:
         return f'Error interno al buscar el curso: {e}',500
 
     if not curso:
         return "El curso con el que quiere hacer la clase no existe", 404
-    try:
-        crear_clase_p(curso)
-    except Exception:
-        return"Error interno al crear la clase presencial",500
+    
+    serv_asistencia.crear_asistencia(curso)
 
     return "", 201
 
@@ -87,19 +98,14 @@ def modificar_clase_presencial(id):
     if fecha is None or curso_id is None:
         return "fecha y curso_id son requeridos",404
 
-    try:
-        clase_p = buscar_clase_p(id)
-    except Exception:
-        return"Error interno al bucar la clase presencial",500
+    clase_p = serv_asistencia.buscar_asistencias(id)
 
     if not clase_p:
         return "Usuario no encontrado",404
 
-    try:
-        #TODO: hacer funcion en db para crear la clase presncial
-        actualizar_clase_p(id, fecha, curso_id)
-    except Exception:
-        return"Error interno al actualizar la clase presencial",500
+    serv_asistencia.actualizar_asistencia(id, fecha, curso_id)
+
+    clase_p = serv_asistencia.buscar_asistencias(id)
 
     return jsonify(clase_p),204
 
@@ -107,70 +113,49 @@ def modificar_clase_presencial(id):
 def eliminar_clase_presencial(id):
     if id is None:
         return "El id es necesario",404
-
-    try:
-        clase_p = buscar_clase_p(id)
-    except Exception:
-        return "Error interno al obtener la clase",500
+    
+    clase_p = serv_asistencia.buscar_asistencias(id)
 
     if not clase_p:
         return "clase presencial no encontrada",404
 
-    try:
-        eliminar_clase_p(id)
-    except Exception:
-        return "Error interno al eliminar la clase",500
+    eliminar_asistencia(id)
+
     return "", 204
+
+@asistencia_bp.route("/<id>/alumnos", methods=['GET'])
+def details_clase_presencial(id):
+    if id is None:
+        return "El id es necesario",404
+
+    alumnos = serv_asistencia.listar_alumnos_asistencia_clase(id)
+
+    if not alumnos:
+        return "clase presencial no encontrada",404
+
+    return jsonify(alumnos), 200
+
+
 
 @asistencia_bp.route("/pedir-asistencia", methods=['POST'])
 def create_asistencia():
     data = request.get_json()
     id_clase = data.get("id_clase_p")
 
-    try:
-        clase = buscar_clase_p(id_clase)
-    except Exception:
-        return "Error interno al buscar la clase",500
+    clase = serv_asistencia.buscar_asistencias(id_clase)
 
     if not clase:
         return "No existe una clase con ese id", 404
 
-    try:
-        alumnos = listar_alumnos_por_curso(clase["curso_id"])
-    except Exception:
-        return "Error interno al listar a los alumnos del curso",500
+    tokens = serv_asistencia.pedir_asistencia(clase, id_clase)
+ 
+    # Lanzar el envío en background sin bloquear la respuesta HTTP
+    thread = threading.Thread(target=serv_asistencia._enviar_qr_en_thread, args=(tokens, id_clase))
+    thread.daemon = True
+    thread.start()
+ 
+    return "Se creo la asistencia correctamente", 200
 
-    if not alumnos:
-        return "No hay alumnos en esta clase",404
-
-    try:
-        crear_asistencia_alumnos(alumnos, id_clase)
-    except Exception:
-        return "Error interno al crear las asistencias",500
-
-    #TODO: ver como limpiar la tabla tokens_asistencia cada x cantidad de tiempo
-    tokens = crear_token_alumno(alumnos)
-
-    # with ThreadPoolExecutor(max_workers=1) as executor:
-    #     executor.map(crear_enviar_qr_alumnos, tokens)
-    try:
-        for token in tokens:
-            crear_enviar_qr_alumnos(token)
-    except Exception:
-        return "Error interno crear o enviar el qr",500
-    try:
-        asistencia_enviada(id_clase)
-    except Exception as e:
-        return f"Error interno al cambiar el valor de pedir_asistencia: {e}",500
-
-
-    # return jsonify(
-    #     {
-    #         "tokens":tokens
-    #     }
-    # ),200
-
-    return "Se envio el qr a los alumnos",200
 
 @asistencia_bp.route("/verificar-asistencia", methods=['POST'])
 def verificar_asistencia():
@@ -181,9 +166,18 @@ def verificar_asistencia():
     if not token:
         return "Token no enviado", 400
 
-    try:
-        respuesta = comprobar_token(token, clase_id)
-    except Exception as e:
-        return f'Error al revisar el token. {e}', 500
+    respuesta = serv_asistencia.revisar_token(token,clase_id)
 
     return respuesta, 200
+
+@asistencia_bp.route("/finalizar-clase", methods=['POST'])
+def finalizar_clase():
+    data = request.get_json()
+    clase_id = data.get("clase_id")
+
+    if not clase_id:
+        return "ID de clase no proporcionado", 400
+
+    serv_asistencia.finalizar_tomar_asistencia(clase_id)
+
+    return "Clase finalizada correctamente", 200

@@ -13,11 +13,18 @@ profesores_front_bp = Blueprint("profesores_front", __name__)
 
 @profesores_front_bp.route("/profesores")
 def profesores():
-    ok, resultado = get_profesores()
+    page = int(request.args.get("page", 1))
+    per_page = 15
+    ok, resultado = get_profesores(page=page, per_page=per_page)
     if not ok:
         flash(resultado, "error")
-        resultado = []
-    return render_template("profesores/listado.html", profesores=resultado)
+        resultado = {"profesores": [], "page": 1, "total_pages": 1}
+    return render_template(
+        "profesores/listado.html",
+        profesores=resultado.get("profesores", []),
+        page=resultado.get("page", 1),
+        total_pages=resultado.get("total_pages", 1),
+    )
 
 
 @profesores_front_bp.route("/profesores/<int:profesor_id>")
@@ -41,6 +48,9 @@ def profesor_nuevo():
         ok, resultado = crear_profesor(datos)
         if not ok:
             flash(resultado, "error")
+            # Asegurar que el dict tenga la clave 'id' para que la plantilla no lance UndefinedError
+            if "id" not in datos:
+                datos["id"] = None
             return render_template("profesores/form.html", profesor=datos)
 
         flash("Profesor creado correctamente.", "success")

@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ alumno.nombre }} {{ alumno.apellido }}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div class="page-header-left">
+        <a href="/alumnos" class="btn-volver">
+            ← Volver
+        </a>
+
+        <h1 class="page-title">
+            {{ alumno.nombre }} {{ alumno.apellido }}
+        </h1>
+    </div>
+
+    <div class="page-header-right">
+
+        <a
+            href="/alumnos/{{ alumno.id }}/editar"
+            class="btn-secondary"
+        >
+            Editar
+        </a>
+
+    </div>
+
+</div>
+
+<div class="detalle-grid">
+
+    <div class="detalle-card">
+        <p class="detalle-label">Padrón</p>
+        <p class="detalle-valor">{{ alumno.padron }}</p>
+    </div>
+
+    <div class="detalle-card">
+        <p class="detalle-label">Email</p>
+        <p class="detalle-valor">{{ alumno.email }}</p>
+    </div>
+
+    <div class="detalle-card">
+        <p class="detalle-label">Estado</p>
+
+        <p class="detalle-valor">
+
+            {% if alumno.abandono %}
+                <span class="badge rojo">
+                    Abandonó
+                </span>
+            {% else %}
+                <span class="badge verde">
+                    Activo
+                </span>
+            {% endif %}
+
+        </p>
+
+    </div>
+
+</div>
+
+<!-- Equipos -->
+
+<div class="table-card" style="margin-top:1.5rem;">
+
+    <div class="table-card-header">
+        <h2>Equipos</h2>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for equipo in equipos %}
+            <tr>
+
+                <td class="nombre">
+                    {{ equipo.nombre }}
+                </td>
+
+                <td>
+                    {{ equipo.descripcion or "-" }}
+                </td>
+
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="vacio">
+                    No pertenece a ningún equipo.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- Notas -->
+
+<div class="table-card" style="margin-top:1rem;">
+
+    <div class="table-card-header">
+        <h2>Notas</h2>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Evaluación</th>
+                <th>Nota</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for nota in notas %}
+            <tr>
+
+                <td>
+                    {{ nota.nombre }}
+                </td>
+
+                <td>
+                    {{ nota.nota_alumno }}
+                </td>
+
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="vacio">
+                    No hay notas registradas.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- Asistencias -->
+
+<div class="table-card" style="margin-top:1rem;">
+
+    <div class="table-card-header">
+        <h2>Asistencias</h2>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>ID Clase</th>
+                <th>Presente</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for asistencia in asistencias.data %}
+            <tr>
+
+                <td>
+                    {{ asistencia.clase_presencial_id }}
+                </td>
+
+                <td>
+
+                    {% if asistencia.presente %}
+                        <span class="badge verde">
+                            Sí
+                        </span>
+                    {% else %}
+                        <span class="badge rojo">
+                            No
+                        </span>
+                    {% endif %}
+
+                </td>
+
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="vacio">
+                    No hay asistencias registradas.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
