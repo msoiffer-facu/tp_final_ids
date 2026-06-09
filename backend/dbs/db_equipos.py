@@ -127,6 +127,24 @@ def db_listar_alumnos_equipo(equipo_id):
         conn.close()
 
 
+def db_listar_evaluaciones_equipo(equipo_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT DISTINCT e.id, e.titulo, e.fecha
+            FROM notas n
+            JOIN evaluaciones e ON e.id = n.evaluacion_id
+            WHERE n.alumno_id IN (
+                SELECT alumno_id FROM equipo_alumnos WHERE equipo_id = %s
+            )
+        """, (equipo_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def db_asociar_equipo_a_tp(equipo_id, evaluacion_id, integrantes):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)

@@ -80,3 +80,18 @@ def obtener_miembros_equipo(curso_id, equipo_id):
         timeout=5,
     )
     return _parse_response(resp)
+
+
+def obtener_evaluaciones_equipo(equipo_id):
+    resp = backend_request("GET", f"/equipos/{equipo_id}/evaluaciones", timeout=5)
+    return _parse_response(resp)
+
+
+def asociar_equipo_evaluacion(equipo_id, evaluacion_id):
+    resp = backend_request(
+        "POST",
+        f"/equipos/{equipo_id}/tps",
+        json={"evaluacion_id": evaluacion_id},
+        timeout=5,
+    )
+    return _parse_response(resp)

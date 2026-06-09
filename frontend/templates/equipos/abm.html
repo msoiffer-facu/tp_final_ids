@@ -86,11 +86,52 @@
     </div>
 </div>
 
+<div class="members-card" style="margin-bottom:24px;">
+    <div class="members-header">
+        <div>
+            <h2>Asociar a evaluación</h2>
+            <p>Vincula este equipo a una evaluación del curso. Se registrarán todos los integrantes actuales.</p>
+        </div>
+    </div>
+
+    {% if evaluaciones %}
+    <form method="POST" action="{{ url_for('views.equipo_asociar_evaluacion', equipo_id=equipo.id) }}" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <label style="flex:1; min-width:200px;">
+            Evaluación
+            <select name="evaluacion_id" required style="width:100%; padding:9px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; margin-top:4px;">
+                <option value="" disabled selected>Seleccioná una evaluación</option>
+                {% for ev in evaluaciones %}
+                <option value="{{ ev.id }}">{{ ev.titulo }} ({{ ev.fecha[:10] if ev.fecha else '' }})</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button type="submit" class="btn primary" style="white-space:nowrap;">Asociar equipo</button>
+    </form>
+    {% else %}
+    <p style="color:#718096; font-size:13px;">No hay evaluaciones disponibles para este curso.</p>
+    {% endif %}
+
+    {% if evaluaciones_asociadas %}
+    <div style="margin-top:20px;">
+        <div class="section-divider"></div>
+        <p style="font-weight:600; font-size:14px; margin-bottom:10px; color:#374151;">Evaluaciones asociadas</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            {% for ev in evaluaciones_asociadas %}
+            <span style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:20px; padding:5px 14px; font-size:13px; font-weight:500;">
+                {{ ev.titulo }}
+                <span style="color:#93c5fd; font-weight:400;">· {{ ev.fecha[:10] if ev.fecha else '' }}</span>
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
 <div class="members-card">
     <div class="members-header">
         <div>
             <h2>Miembros del equipo</h2>
-            <p>Lista de los alumnos asignados al equipo. Un alumno puede pertenecer a más de un equipo.</p>
+            <p>Lista de los alumnos asignados al equipo. Solo se muestran alumnos inscriptos en el curso.</p>
         </div>
         <span class="badge">{{ miembros|length }} alumnos</span>
     </div>
