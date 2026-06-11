@@ -132,12 +132,11 @@ def db_listar_evaluaciones_equipo(equipo_id):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("""
-            SELECT DISTINCT e.id, e.titulo, e.fecha
-            FROM notas n
-            JOIN evaluaciones e ON e.id = n.evaluacion_id
-            WHERE n.alumno_id IN (
-                SELECT alumno_id FROM equipo_alumnos WHERE equipo_id = %s
-            )
+            SELECT e.id, e.titulo, e.fecha
+            FROM evaluaciones e
+            JOIN evaluacion_equipos ee ON e.id = ee.evaluacion_id
+            WHERE ee.equipo_id = %s
+            ORDER BY e.fecha DESC
         """, (equipo_id,))
         return cursor.fetchall()
     finally:
@@ -149,6 +148,21 @@ def db_asociar_equipo_a_tp(equipo_id, evaluacion_id, integrantes):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
+        # Verificar si ya existe la asociación
+        cursor.execute(
+            "SELECT 1 FROM evaluacion_equipos WHERE equipo_id = %s AND evaluacion_id = %s",
+            (equipo_id, evaluacion_id)
+        )
+        if cursor.fetchone():
+            raise Exception("Este equipo ya está asociado a esta evaluación")
+        
+        # Insertar en evaluacion_equipos
+        cursor.execute(
+            "INSERT INTO evaluacion_equipos (equipo_id, evaluacion_id) VALUES (%s, %s)",
+            (equipo_id, evaluacion_id)
+        )
+        
+        # Insertar notas para cada integrante
         for integrante in integrantes:
             alumno_id = integrante["alumno_id"]
             cursor.execute(
@@ -157,10 +171,38 @@ def db_asociar_equipo_a_tp(equipo_id, evaluacion_id, integrantes):
             )
             if not cursor.fetchone():
                 cursor.execute(
-                    "INSERT INTO notas (alumno_id, evaluacion_id, nota_alumno) VALUES (%s, %s, %s)",
-                    (alumno_id, evaluacion_id, 0)
+                    "INSERT INTO notas (alumno_id, evaluacion_id) VALUES (%s, %s)",
+                    (alumno_id, evaluacion_id)
                 )
         conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def db_desasociar_evaluacion_equipo(equipo_id, evaluacion_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "DELETE FROM evaluacion_equipos WHERE equipo_id = %s AND evaluacion_id = %s",
+            (equipo_id, evaluacion_id)
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def db_verificar_evaluacion_equipo(equipo_id, evaluacion_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT 1 FROM evaluacion_equipos WHERE equipo_id = %s AND evaluacion_id = %s",
+            (equipo_id, evaluacion_id)
+        )
+        return cursor.fetchone() is not None
     finally:
         cursor.close()
         conn.close()

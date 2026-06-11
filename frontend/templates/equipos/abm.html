@@ -120,6 +120,10 @@
             <span style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:20px; padding:5px 14px; font-size:13px; font-weight:500;">
                 {{ ev.titulo }}
                 <span style="color:#93c5fd; font-weight:400;">· {{ ev.fecha[:10] if ev.fecha else '' }}</span>
+                <form method="POST" action="{{ url_for('views.equipo_desasociar_evaluacion', equipo_id=equipo.id, evaluacion_id=ev.id) }}"
+                      onsubmit="return confirm('¿Desasociar {{ ev.titulo }} de este equipo?')" style="margin:0;">
+                    <button type="submit" style="background:none; border:none; cursor:pointer; color:#93c5fd; font-size:15px; line-height:1; padding:0;" title="Quitar evaluación">&times;</button>
+                </form>
             </span>
             {% endfor %}
         </div>

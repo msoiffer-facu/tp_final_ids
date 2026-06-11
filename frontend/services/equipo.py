@@ -95,3 +95,12 @@ def asociar_equipo_evaluacion(equipo_id, evaluacion_id):
         timeout=5,
     )
     return _parse_response(resp)
+
+
+def desasociar_equipo_evaluacion(equipo_id, evaluacion_id):
+    resp = backend_request(
+        "DELETE",
+        f"/equipos/{equipo_id}/tps/{evaluacion_id}",
+        timeout=5,
+    )
+    return _parse_response(resp)

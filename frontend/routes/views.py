@@ -15,6 +15,7 @@ from services.equipo import (
     quitar_alumno_equipo,
     asociar_equipo_evaluacion,
     obtener_evaluaciones_equipo,
+    desasociar_equipo_evaluacion,
 )
 from services.evaluaciones_service import get_evaluaciones
 from services.login import usuario_logueado, limpiar_sesion, guardar_sesion
@@ -416,6 +417,16 @@ def equipo_delete(equipo_id):
     except RuntimeError as exc:
         flash(str(exc), "error")
     return redirect(url_for("views.equipos"))
+
+
+@views_bp.route("/equipos/<int:equipo_id>/evaluacion/<int:evaluacion_id>/quitar", methods=["POST"])
+def equipo_desasociar_evaluacion(equipo_id, evaluacion_id):
+    try:
+        desasociar_equipo_evaluacion(equipo_id, evaluacion_id)
+        flash("Evaluación desasociada correctamente.", "success")
+    except RuntimeError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
 
 
 @views_bp.route("/equipos/<int:equipo_id>/evaluacion", methods=["POST"])

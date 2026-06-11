@@ -1,0 +1,1775 @@
+openapi: 3.0.3
+info:
+  title: API Backend - Sistema de Gestión Académica
+  description: |
+    Documentación de la API REST del backend del Trabajo Final de Introducción al Desarrollo de Software.
+
+    Esta API permite gestionar: **Profesores**: autenticación (login/logout), CRUD de cuentas, **Alumnos**: CRUD, importación/exportación CSV, **Cursos**: CRUD, gestión de alumnos inscriptos, clases presenciales, equipos, **Equipos**: CRUD, asociación de alumnos y TPs, **Asistencia**: clases presenciales, envío de QRs por mail, verificación de tokens, **Evaluaciones**: tipos de evaluación, CRUD de evaluaciones, gestión de notas, **Notas**: CRUD genérico de notas, **Reportes**: listados y generación de PDFs (alumnos, equipos, estadísticas).
+
+    ## Autenticación
+    La API utiliza sesiones Flask (cookie `session`). Para acceder a endpoints protegidos
+    primero se debe iniciar sesión con `POST /profesores/login`.
+
+    ## Códigos de estado HTTP
+    200 OK | 201 Creado | 204 Sin contenido | 400 Solicitud inválida |
+    401 No autenticado | 404 No encontrado | 409 Conflicto | 422 No procesable | 500 Error interno
+
+  version: "1.5.0"
+
+servers:
+  - url: http://localhost:5000
+    description: Servidor de desarrollo
+
+tags:
+  - { name: Profesores, description: Autenticación y gestión de profesores }
+  - { name: Alumnos, description: Gestión de alumnos, importación y exportación CSV }
+  - { name: Cursos, description: Gestión de cursos, alumnos, clases y equipos }
+  - { name: Equipos, description: Gestión de equipos y asociación a TPs }
+  - { name: Asistencia, description: Clases presenciales, QRs y tokens }
+  - { name: Evaluaciones, description: Tipos de evaluación, evaluaciones y notas }
+  - { name: Notas, description: CRUD genérico de notas }
+  - { name: Reportes, description: Reportes JSON y PDF }
+
+security:
+  - sessionAuth: []
+
+paths:
+
+  # ===================== PROFESORES =====================
+  /profesores/login:
+    post:
+      tags: [Profesores]
+      summary: Iniciar sesión
+      description: Autentica un profesor y crea la sesión Flask.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfesorLogin' }
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje: { type: string, example: Login exitoso }
+                  profesor_id: { type: integer, example: 1 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /profesores/logout:
+    post:
+      tags: [Profesores]
+      summary: Cerrar sesión
+      description: Limpia la sesión actual.
+      responses:
+        '200':
+          description: Logout exitoso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+
+  /profesores/:
+    get:
+      tags: [Profesores]
+      summary: Listar profesores
+      security: []
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1, minimum: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 10, minimum: 1 } }
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProfesoresPaginados' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Profesores]
+      summary: Crear profesor
+      security: []
+      description: Registra un nuevo profesor. La contraseña se almacena hasheada con pbkdf2:sha256.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfesorCreate' }
+      responses:
+        '201':
+          description: Profesor creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje: { type: string, example: Profesor creado }
+                  profesor_id: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409':
+          description: Email ya en uso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /profesores/{profesor_id}:
+    parameters:
+      - { in: path, name: profesor_id, required: true, schema: { type: integer } }
+    get:
+      tags: [Profesores]
+      summary: Obtener un profesor
+      security: []
+      responses:
+        '200':
+          description: Profesor encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profesor' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    put:
+      tags: [Profesores]
+      summary: Actualizar profesor
+      description: Actualización parcial. Requiere sesión activa.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfesorUpdate' }
+      responses:
+        '200':
+          description: Profesor actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Email ya en uso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Profesores]
+      summary: Eliminar profesor
+      description: Requiere sesión activa.
+      responses:
+        '200':
+          description: Profesor eliminado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  # ===================== ALUMNOS =====================
+  /alumnos/:
+    get:
+      tags: [Alumnos]
+      summary: Listar alumnos (paginado, búsqueda y filtro)
+      parameters:
+        - { in: query, name: pagina, schema: { type: integer, default: 1, minimum: 1 } }
+        - { in: query, name: busqueda, schema: { type: string }, description: Texto a buscar en nombre, apellido, padrón o email }
+        - { in: query, name: abandono, schema: { type: string, enum: ["", "0", "1"] }, description: Filtrar por flag de abandono }
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlumnosPaginados' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Alumnos]
+      summary: Crear alumno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AlumnoCreate' }
+      responses:
+        '201':
+          description: Alumno creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /alumnos/todos:
+    get:
+      tags: [Alumnos]
+      summary: Listar todos los alumnos (sin paginación)
+      description: Devuelve todos los alumnos con su equipo concatenado. Pensado para selectores.
+      responses:
+        '200':
+          description: Lista completa
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AlumnoListado' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /alumnos/importar:
+    post:
+      tags: [Alumnos]
+      summary: Importar alumnos desde CSV
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo CSV (.csv) con la lista de alumnos.
+      responses:
+        '200':
+          description: Resultado de la importación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportarAlumnosResultado' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /alumnos/exportar:
+    get:
+      tags: [Alumnos]
+      summary: Exportar alumnos a CSV
+      description: Devuelve un `text/csv` con todos los alumnos como attachment.
+      responses:
+        '200':
+          description: Archivo CSV
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /alumnos/{id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Alumnos]
+      summary: Obtener un alumno
+      responses:
+        '200':
+          description: Alumno encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlumnoDetalle' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    put:
+      tags: [Alumnos]
+      summary: Modificar alumno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AlumnoUpdate' }
+      responses:
+        '200':
+          description: Alumno modificado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Alumnos]
+      summary: Eliminar alumno
+      description: Elimina también las relaciones en `alumnos_curso`, `asistencias`, `equipo_alumnos` y `notas`.
+      responses:
+        '200':
+          description: Alumno eliminado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  # ===================== CURSOS =====================
+  /cursos/:
+    get:
+      tags: [Cursos]
+      summary: Listar cursos
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CursosPaginados' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Cursos]
+      summary: Crear curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CursoCreate' }
+      responses:
+        '201':
+          description: Curso creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Curso creado exitosamente. }
+                  id: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /cursos/{id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Cursos]
+      summary: Obtener un curso
+      responses:
+        '200':
+          description: Curso encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Curso' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    put:
+      tags: [Cursos]
+      summary: Actualizar curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CursoUpdate' }
+      responses:
+        '200':
+          description: Curso actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Cursos]
+      summary: Eliminar curso
+      responses:
+        '200':
+          description: Curso eliminado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  # ===================== CURSOS: ALUMNOS, CLASES, EQUIPOS =====================
+  /cursos/{id}/alumnos:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Cursos]
+      summary: Listar alumnos de un curso
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Alumnos del curso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlumnosPaginados' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Cursos]
+      summary: Inscribir alumno en un curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alumno_id]
+              properties:
+                alumno_id: { type: integer }
+      responses:
+        '201':
+          description: Alumno inscripto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Alumno ya inscripto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /cursos/{id}/alumnos/{alumno_id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+      - { in: path, name: alumno_id, required: true, schema: { type: integer } }
+    delete:
+      tags: [Cursos]
+      summary: Desinscribir alumno de un curso
+      responses:
+        '200':
+          description: Alumno desinscripto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404':
+          description: Curso o inscripción no encontrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /cursos/{id}/clases:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Cursos]
+      summary: Listar clases presenciales de un curso
+      responses:
+        '200':
+          description: Lista de clases
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ClasePresencial' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Cursos]
+      summary: Crear una clase presencial en el curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fecha]
+              properties:
+                fecha: { type: string, format: date-time, example: "2026-06-08 18:00:00" }
+      responses:
+        '201':
+          description: Clase creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  id: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /cursos/{id}/clases/{clase_id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+      - { in: path, name: clase_id, required: true, schema: { type: integer } }
+    delete:
+      tags: [Cursos]
+      summary: Eliminar una clase presencial
+      responses:
+        '200':
+          description: Clase eliminada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404':
+          description: Curso o clase no encontrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /cursos/{id}/equipos:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Cursos]
+      summary: Listar equipos de un curso
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 10 } }
+      responses:
+        '200':
+          description: Lista paginada de equipos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EquiposPaginados' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Cursos]
+      summary: Crear un equipo en el curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+                descripcion: { type: string }
+      responses:
+        '201':
+          description: Equipo creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  id: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /cursos/{id}/equipos/{equipo_id}/alumnos:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+      - { in: path, name: equipo_id, required: true, schema: { type: integer } }
+    get:
+      tags: [Cursos]
+      summary: Listar alumnos de un equipo
+      responses:
+        '200':
+          description: Alumnos del equipo
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AlumnoSimple' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Cursos]
+      summary: Agregar un alumno a un equipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alumno_id]
+              properties:
+                alumno_id: { type: integer }
+      responses:
+        '201':
+          description: Alumno agregado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409':
+          description: El alumno ya está en el equipo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /cursos/{id}/equipos/{equipo_id}/alumnos/{alumno_id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+      - { in: path, name: equipo_id, required: true, schema: { type: integer } }
+      - { in: path, name: alumno_id, required: true, schema: { type: integer } }
+    delete:
+      tags: [Cursos]
+      summary: Quitar un alumno de un equipo
+      responses:
+        '200':
+          description: Alumno quitado del equipo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404':
+          description: El alumno no pertenece a este equipo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  # ===================== EQUIPOS =====================
+  /equipos/:
+    get:
+      tags: [Equipos]
+      summary: Listar todos los equipos
+      description: Devuelve todos los equipos con conteo de miembros.
+      responses:
+        '200':
+          description: Lista de equipos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EquipoConMiembros' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Equipos]
+      summary: Crear un equipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, curso_id]
+              properties:
+                nombre: { type: string }
+                descripcion: { type: string }
+                curso_id: { type: integer }
+      responses:
+        '201':
+          description: Equipo creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  id: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /equipos/alumno/{alumno_id}:
+    parameters:
+      - { in: path, name: alumno_id, required: true, schema: { type: integer } }
+    get:
+      tags: [Equipos]
+      summary: Listar equipos de un alumno
+      responses:
+        '200':
+          description: Lista de equipos del alumno
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Equipo' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /equipos/{id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Equipos]
+      summary: Obtener un equipo
+      responses:
+        '200':
+          description: Equipo encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipo' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    put:
+      tags: [Equipos]
+      summary: Editar un equipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+                descripcion: { type: string }
+      responses:
+        '200':
+          description: Equipo actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Equipos]
+      summary: Eliminar un equipo
+      responses:
+        '204': { description: Equipo eliminado (sin contenido) }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /equipos/{id}/alumnos:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    post:
+      tags: [Equipos]
+      summary: Asociar varios alumnos a un equipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alumnos]
+              properties:
+                alumnos:
+                  type: array
+                  items: { type: integer }
+                  description: Lista de IDs de alumnos a asociar.
+      responses:
+        '200':
+          description: Alumnos asociados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /equipos/{id}/alumnos/{alumno_id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+      - { in: path, name: alumno_id, required: true, schema: { type: integer } }
+    delete:
+      tags: [Equipos]
+      summary: Quitar un alumno de un equipo
+      responses:
+        '200':
+          description: Alumno quitado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /equipos/{id}/tps:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    post:
+      tags: [Equipos]
+      summary: Asociar un equipo a un Trabajo Práctico (evaluación)
+      description: Crea una entrada de nota (en 0) para cada integrante del equipo en la evaluación indicada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evaluacion_id]
+              properties:
+                evaluacion_id: { type: integer }
+      responses:
+        '200':
+          description: Equipo asociado al TP
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400':
+          description: El equipo no tiene integrantes o falta evaluacion_id
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  # ===================== ASISTENCIA =====================
+  /asistencia/:
+    get:
+      tags: [Asistencia]
+      summary: Listar clases presenciales (paginado)
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1, minimum: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 10, minimum: 1 } }
+        - { in: query, name: curso, schema: { type: integer }, description: Filtrar por curso_id }
+      responses:
+        '200':
+          description: Lista paginada de clases
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clases_presenciales:
+                    type: array
+                    items: { $ref: '#/components/schemas/ClasePresencialDetalle' }
+                  total: { type: integer }
+                  page: { type: integer }
+                  per_page: { type: integer }
+                  total_pages: { type: integer }
+        '404': { $ref: '#/components/responses/NotFoundText' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Asistencia]
+      summary: Crear una clase presencial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [curso_id]
+              properties:
+                curso_id: { type: integer }
+      responses:
+        '201': { description: Clase creada }
+        '404':
+          description: El curso no existe
+          content:
+            text/plain:
+              schema: { type: string }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /asistencia/en-proceso:
+    get:
+      tags: [Asistencia]
+      summary: Listar clases presenciales en proceso (no finalizadas)
+      responses:
+        '200':
+          description: Lista de clases en proceso
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ClasePresencialDetalle' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /asistencia/{id}:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    put:
+      tags: [Asistencia]
+      summary: Modificar una clase presencial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fecha, curso_id]
+              properties:
+                fecha: { type: string, format: date-time }
+                curso_id: { type: integer }
+      responses:
+        '204':
+          description: Clase actualizada (devuelve la clase en el body)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClasePresencial' }
+        '404': { $ref: '#/components/responses/NotFoundText' }
+    delete:
+      tags: [Asistencia]
+      summary: Eliminar una clase presencial
+      responses:
+        '204': { description: Clase eliminada }
+        '404': { $ref: '#/components/responses/NotFoundText' }
+
+  /asistencia/{id}/alumnos:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    get:
+      tags: [Asistencia]
+      summary: Listar alumnos (y estado de asistencia) de una clase
+      responses:
+        '200':
+          description: Lista de alumnos con su estado de presencia
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AlumnoAsistencia' }
+        '404': { $ref: '#/components/responses/NotFoundText' }
+
+  /asistencia/pedir-asistencia:
+    post:
+      tags: [Asistencia]
+      summary: Pedir asistencia (envía QRs por mail)
+      description: |
+        Crea tokens para los alumnos del curso, marca la clase como `pedir_asistencia=1`,
+        y lanza el envío de mails con QR en un thread en background.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_clase_p]
+              properties:
+                id_clase_p: { type: integer }
+      responses:
+        '200':
+          description: Se creó la asistencia correctamente
+          content:
+            text/plain:
+              schema: { type: string, example: Se creo la asistencia correctamente }
+        '404': { $ref: '#/components/responses/NotFoundText' }
+
+  /asistencia/verificar-asistencia:
+    post:
+      tags: [Asistencia]
+      summary: Verificar el token QR de un alumno
+      description: Marca la asistencia del alumno como presente si el token es válido, no expiró y no fue utilizado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+                clase_id: { type: integer }
+      responses:
+        '200':
+          description: Resultado de la verificación
+          content:
+            text/plain:
+              schema: { type: string, example: Se a verificado el token correctamente }
+        '400': { $ref: '#/components/responses/NotFoundText' }
+
+  /asistencia/finalizar-clase:
+    post:
+      tags: [Asistencia]
+      summary: Finalizar una clase presencial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clase_id]
+              properties:
+                clase_id: { type: integer }
+      responses:
+        '200':
+          description: Clase finalizada correctamente
+          content:
+            text/plain:
+              schema: { type: string, example: Clase finalizada correctamente }
+        '400': { $ref: '#/components/responses/NotFoundText' }
+
+  /asistencia/alumno/{alumno_id}:
+    parameters:
+      - { in: path, name: alumno_id, required: true, schema: { type: integer } }
+    get:
+      tags: [Asistencia]
+      summary: Listar asistencia detallada de un alumno
+      responses:
+        '200':
+          description: Lista de asistencias del alumno
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AsistenciaDetalleAlumno' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /asistencia/promedio:
+    get:
+      tags: [Asistencia]
+      summary: Obtener el promedio general de asistencia
+      responses:
+        '200':
+          description: Porcentaje promedio
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  promedio_asistencia: { type: number, format: float, example: 78.5 }
+        '500': { $ref: '#/components/responses/InternalError' }
+  # ===================== EVALUACIONES =====================
+  /evaluaciones/:
+    get:
+      tags: [Evaluaciones]
+      summary: Listar evaluaciones
+      parameters:
+        - { in: query, name: page, schema: { type: integer, default: 1 } }
+        - { in: query, name: per_page, schema: { type: integer, default: 10 } }
+        - { in: query, name: tipo_id, schema: { type: integer } }
+        - { in: query, name: curso_id, schema: { type: integer } }
+      responses:
+        '200':
+          description: Lista paginada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EvaluacionesPaginadas' }
+    post:
+      tags: [Evaluaciones]
+      summary: Crear evaluación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, fecha, tipo_id, curso_id]
+              properties:
+                titulo: { type: string }
+                fecha: { type: string, format: date }
+                tipo_id: { type: integer }
+                curso_id: { type: integer }
+      responses:
+        '201':
+          description: Evaluación creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  mensaje: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /evaluaciones/{id_evaluacion}:
+    parameters:
+      - { in: path, name: id_evaluacion, required: true, schema: { type: integer } }
+    get:
+      tags: [Evaluaciones]
+      summary: Obtener una evaluación
+      responses:
+        '200':
+          description: Evaluación encontrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Evaluacion' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Evaluaciones]
+      summary: Actualizar evaluación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo, fecha, tipo_id, curso_id]
+              properties:
+                titulo: { type: string }
+                fecha: { type: string, format: date }
+                tipo_id: { type: integer }
+                curso_id: { type: integer }
+      responses:
+        '200':
+          description: Evaluación actualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Evaluaciones]
+      summary: Eliminar evaluación
+      responses:
+        '200':
+          description: Evaluación eliminada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /evaluaciones/{id_evaluacion}/notas:
+    parameters:
+      - { in: path, name: id_evaluacion, required: true, schema: { type: integer } }
+    get:
+      tags: [Evaluaciones]
+      summary: Obtener las notas de una evaluación
+      description: Devuelve los alumnos del curso asociado, con su nota (si existe).
+      responses:
+        '200':
+          description: Lista de alumnos y notas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/NotaAlumno' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Evaluaciones]
+      summary: Guardar notas de una evaluación
+      description: Crea o actualiza la nota de cada alumno (nota entre 1 y 10).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notas]
+              properties:
+                notas:
+                  type: array
+                  items: { $ref: '#/components/schemas/NotaInput' }
+      responses:
+        '200':
+          description: Notas guardadas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: Nota fuera de rango (1-10)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /evaluaciones/tipos:
+    get:
+      tags: [Evaluaciones]
+      summary: Listar tipos de evaluación
+      responses:
+        '200':
+          description: Lista de tipos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TipoEvaluacion' }
+    post:
+      tags: [Evaluaciones]
+      summary: Crear un tipo de evaluación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+      responses:
+        '201':
+          description: Tipo creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  nombre: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /evaluaciones/tipos/{id_tipo}:
+    parameters:
+      - { in: path, name: id_tipo, required: true, schema: { type: integer } }
+    get:
+      tags: [Evaluaciones]
+      summary: Obtener un tipo de evaluación
+      responses:
+        '200':
+          description: Tipo encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TipoEvaluacion' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Evaluaciones]
+      summary: Actualizar un tipo de evaluación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre: { type: string }
+      responses:
+        '200':
+          description: Tipo actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Evaluaciones]
+      summary: Eliminar un tipo de evaluación
+      responses:
+        '200':
+          description: Tipo eliminado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  # ===================== NOTAS (CRUD genérico) =====================
+  /notas/:
+    get:
+      tags: [Notas]
+      summary: Listar todas las notas
+      responses:
+        '200':
+          description: Lista de notas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/NotaCompleta' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Notas]
+      summary: Crear una nota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alumno_id, evaluacion_id, nota_alumno, estado]
+              properties:
+                alumno_id: { type: integer }
+                evaluacion_id: { type: integer }
+                nota_alumno: { type: number, format: float }
+                estado: { type: string, enum: [PROMOCIONADO, APROBADO, DESAPROBADO] }
+      responses:
+        '201':
+          description: Nota creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje: { type: string }
+                  nota_id: { type: integer }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /notas/alumno/{alumno_id}:
+    parameters:
+      - { in: path, name: alumno_id, required: true, schema: { type: integer } }
+    get:
+      tags: [Notas]
+      summary: Listar notas de un alumno
+      responses:
+        '200':
+          description: Lista de notas del alumno
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/NotaCompleta' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /notas/equipo/{equipo_id}:
+    parameters:
+      - { in: path, name: equipo_id, required: true, schema: { type: integer } }
+    get:
+      tags: [Notas]
+      summary: Listar notas de un equipo
+      responses:
+        '200':
+          description: Lista de notas del equipo
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/NotaCompleta' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /notas/{nota_id}:
+    parameters:
+      - { in: path, name: nota_id, required: true, schema: { type: integer } }
+    put:
+      tags: [Notas]
+      summary: Modificar una nota
+      description: "El estado se calcula automáticamente según la nota: >=7 PROMOVIDO, >=4 APROBADO, sino DESAPROBADO."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nota_alumno]
+              properties:
+                nota_alumno: { type: number, format: float, minimum: 1, maximum: 10 }
+      responses:
+        '200':
+          description: Nota modificada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Notas]
+      summary: Eliminar una nota
+      responses:
+        '200':
+          description: Nota eliminada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  # ===================== REPORTES =====================
+  /api/reportes/alumnos:
+    get:
+      tags: [Reportes]
+      summary: Listado de alumnos para reportes
+      description: Devuelve los alumnos con sus datos relevantes. Acepta varios query params de filtrado (definidos en `herramientas/reportes_helpers.py`).
+      responses:
+        '200':
+          description: Datos para reporte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                  count: { type: integer }
+
+  /api/reportes/alumnos/pdf:
+    get:
+      tags: [Reportes]
+      summary: Generar PDF del listado de alumnos
+      responses:
+        '200':
+          description: Archivo PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404':
+          description: No se encontraron alumnos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/reportes/equipos:
+    get:
+      tags: [Reportes]
+      summary: Listado de equipos para reportes
+      responses:
+        '200':
+          description: Datos para reporte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                  count: { type: integer }
+
+  /api/reportes/equipos/pdf:
+    get:
+      tags: [Reportes]
+      summary: Generar PDF del listado de equipos
+      responses:
+        '200':
+          description: Archivo PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404':
+          description: No se encontraron equipos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/reportes/estadisticas:
+    get:
+      tags: [Reportes]
+      summary: Estadísticas de aprobación
+      responses:
+        '200':
+          description: Estadísticas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Estadisticas' }
+
+  /api/reportes/estadisticas/pdf:
+    get:
+      tags: [Reportes]
+      summary: Generar PDF de estadísticas
+      responses:
+        '200':
+          description: Archivo PDF
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
+  responses:
+    BadRequest:
+      description: Solicitud inválida (validación fallida)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: No autenticado (sesión ausente o inválida)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFoundText:
+      description: Recurso no encontrado (texto plano)
+      content:
+        text/plain:
+          schema: { type: string }
+    InternalError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: Mensaje descriptivo del error }
+
+    Mensaje:
+      type: object
+      properties:
+        message: { type: string, example: Operación exitosa }
+
+    # ─── Profesor ───
+    ProfesorLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, example: "profesor@fi.uba.ar" }
+        password: { type: string, format: password, example: "secret123" }
+
+    ProfesorCreate:
+      type: object
+      required: [nombre, apellido, email, password]
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+
+    ProfesorUpdate:
+      type: object
+      description: Actualización parcial. Ningún campo es obligatorio.
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+
+    Profesor:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, description: Hash de la contraseña }
+
+    ProfesoresPaginados:
+      type: object
+      properties:
+        profesores:
+          type: array
+          items: { $ref: '#/components/schemas/Profesor' }
+        total: { type: integer }
+        page: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+
+    # ─── Alumno ───
+    AlumnoCreate:
+      type: object
+      required: [nombre, apellido, email, padron]
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        padron: { type: string, example: "100000" }
+        abandono: { type: boolean, default: false }
+        estado: { type: string, example: "REGULAR" }
+        curso_id: { type: integer }
+
+    AlumnoUpdate:
+      type: object
+      properties:
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        padron: { type: string }
+        abandono: { type: boolean }
+        estado: { type: string }
+        curso_id: { type: integer }
+
+    AlumnoDetalle:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        padron: { type: string }
+        abandono: { type: boolean, description: "0 o 1" }
+        estado: { type: string, example: "REGULAR" }
+        curso_id: { type: integer, nullable: true }
+
+    AlumnoListado:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        apellido: { type: string }
+        padron: { type: string }
+        email: { type: string, format: email }
+        abandono: { type: boolean }
+        equipo: { type: string, description: "Equipos concatenados o cadena vacía" }
+
+    AlumnoSimple:
+      type: object
+      properties:
+        id: { type: integer }
+        padron: { type: string }
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+
+    AlumnosPaginados:
+      type: object
+      properties:
+        alumnos:
+          type: array
+          items: { $ref: '#/components/schemas/AlumnoDetalle' }
+        total: { type: integer }
+        pagina: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+
+    ImportarAlumnosResultado:
+      type: object
+      properties:
+        insertados: { type: integer }
+        existentes: { type: integer }
+        errores:
+          type: array
+          items: { type: string }
+
+    # ─── Curso ───
+    Curso:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        cuatrimestre: { type: string, enum: ["1", "2"] }
+        anio: { type: integer }
+        modificacion: { type: string, format: date, nullable: true }
+
+    CursoCreate:
+      type: object
+      required: [nombre, cuatrimestre, anio]
+      properties:
+        nombre: { type: string }
+        cuatrimestre: { type: string, enum: ["1", "2"] }
+        anio: { type: integer }
+        modificacion: { type: string, format: date, nullable: true }
+
+    CursoUpdate:
+      type: object
+      required: [nombre, cuatrimestre, anio]
+      properties:
+        nombre: { type: string }
+        cuatrimestre: { type: string, enum: ["1", "2"] }
+        anio: { type: integer }
+        modificacion: { type: string, format: date, nullable: true }
+
+    CursosPaginados:
+      type: object
+      properties:
+        cursos:
+          type: array
+          items: { $ref: '#/components/schemas/Curso' }
+        total: { type: integer }
+        page: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+
+    # ─── Equipo ───
+    Equipo:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        descripcion: { type: string, nullable: true }
+        curso_id: { type: integer }
+        fecha_creacion: { type: string, format: date-time, nullable: true }
+
+    EquipoConMiembros:
+      allOf:
+        - $ref: '#/components/schemas/Equipo'
+        - type: object
+          properties:
+            miembros: { type: integer, description: Cantidad de integrantes }
+
+    EquiposPaginados:
+      type: object
+      properties:
+        equipos:
+          type: array
+          items: { $ref: '#/components/schemas/Equipo' }
+        total: { type: integer }
+        page: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+
+    # ─── Asistencia ───
+    ClasePresencial:
+      type: object
+      properties:
+        id: { type: integer }
+        curso_id: { type: integer }
+        fecha: { type: string, format: date-time }
+        pedir_asistencia: { type: boolean, description: "0 o 1" }
+        finalizada: { type: boolean, description: "0 o 1" }
+
+    ClasePresencialDetalle:
+      type: object
+      properties:
+        id: { type: integer }
+        fecha: { type: string, format: date-time }
+        curso:
+          type: object
+          properties:
+            id: { type: integer }
+            nombre: { type: string }
+            total_alumnos: { type: integer }
+        pedir_asistencia: { type: boolean }
+        finalizada: { type: boolean }
+
+    AlumnoAsistencia:
+      type: object
+      properties:
+        padron: { type: string }
+        nombre: { type: string }
+        apellido: { type: string }
+        email: { type: string, format: email }
+        estado: { type: string }
+        presente: { type: boolean }
+        asistencia_registrada: { type: string, format: date-time, nullable: true }
+
+    AsistenciaDetalleAlumno:
+      type: object
+      properties:
+        asistencia_id: { type: integer }
+        clase_presencial_id: { type: integer }
+        curso_nombre: { type: string }
+        fecha: { type: string, format: date-time }
+        presente: { type: boolean }
+        asistencia_registrada: { type: string, format: date-time, nullable: true }
+
+    # ─── Evaluaciones y Notas ───
+    Evaluacion:
+      type: object
+      properties:
+        id: { type: integer }
+        titulo: { type: string }
+        fecha: { type: string, format: date }
+        tipo_id: { type: integer }
+        curso_id: { type: integer }
+        tipo_nombre: { type: string }
+        curso_nombre: { type: string }
+
+    EvaluacionesPaginadas:
+      type: object
+      properties:
+        evaluaciones:
+          type: array
+          items: { $ref: '#/components/schemas/Evaluacion' }
+        total: { type: integer }
+        page: { type: integer }
+        per_page: { type: integer }
+        total_pages: { type: integer }
+
+    TipoEvaluacion:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+
+    NotaInput:
+      type: object
+      required: [alumno_id, nota_alumno]
+      properties:
+        alumno_id: { type: integer }
+        nota_alumno: { type: number, format: float, minimum: 1, maximum: 10 }
+
+    NotaAlumno:
+      type: object
+      properties:
+        alumno_id: { type: integer }
+        padron: { type: string }
+        nombre: { type: string }
+        apellido: { type: string }
+        nota_id: { type: integer, nullable: true }
+        nota_alumno: { type: number, format: float, nullable: true }
+        estado: { type: string, enum: [PROMOCIONADO, APROBADO, DESAPROBADO], nullable: true }
+
+    NotaCompleta:
+      type: object
+      properties:
+        id: { type: integer }
+        nota_alumno: { type: number, format: float }
+        estado: { type: string, enum: [PROMOCIONADO, APROBADO, DESAPROBADO] }
+        nombre: { type: string, description: Nombre del alumno (en algunos joins) }
+        apellido: { type: string }
+        padron: { type: string }
+        titulo: { type: string, description: Título de la evaluación }
+        fecha: { type: string, format: date }
+        nombre_tipo: { type: string, description: Tipo de evaluación (en join) }
+
+    # ─── Reportes ───
+    Estadisticas:
+      type: object
+      properties:
+        total: { type: integer }
+        aprobados: { type: integer }
+        reprobados: { type: integer }
+        porcentaje_aprobacion: { type: number, format: float }
+        por_equipo:
+          type: array
+          items:
+            type: object
+            properties:
+              equipo: { type: string }
+              total: { type: integer }
+              aprobados: { type: integer }
