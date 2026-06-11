@@ -124,22 +124,6 @@ create table tokens_asistencia (
         references alumnos(id)
 );
 
-create table asistencias (
-    id int not null auto_increment primary key,
-    alumno_id int not null,
-    clase_presencial_id int not null,
-    presente boolean DEFAULT 0 NOT NULL,
-    token_id int not null,
-    asistencia_registrada timestamp,
-
-    foreign key (alumno_id)
-        references alumnos(id),
-    foreign key (clase_presencial_id)
-        references clase_presencial(id),
-    foreign key (token_id)
-        references tokens_asistencia(id)
-);
-
 create table login(
     id int not null auto_increment primary key,
     profesor_id int not null ,
@@ -159,4 +143,20 @@ create table evaluacion_equipos (
         references evaluaciones(id),
     foreign key (equipo_id)
         references equipos(id)
+);
+
+create table asistencias (
+    id int not null auto_increment primary key,
+    alumno_id int not null,
+    clase_presencial_id int not null,
+    presente boolean DEFAULT 0 NOT NULL,
+    token_id int not null,
+    asistencia_registrada timestamp,
+
+    foreign key (alumno_id)
+        references alumnos(id),
+    foreign key (clase_presencial_id)
+        references clase_presencial(id),
+    foreign key (token_id)
+        references tokens_asistencia(id)
 );

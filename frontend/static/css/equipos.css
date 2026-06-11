@@ -1,14 +1,4 @@
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.page-header.small-gap {
-    gap: 0.75rem;
-}
+/* ── Estilos específicos de equipos ── */
 
 .page-header .eyebrow {
     color: #2563eb;
@@ -65,18 +55,6 @@
 .detail-card-header span {
     color: #6b7280;
     font-size: 0.95rem;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.45rem 0.8rem;
-    background: #eff6ff;
-    color: #2563eb;
-    font-weight: 700;
-    border-radius: 9999px;
-    font-size: 0.8rem;
 }
 
 .team-table-wrap {
@@ -218,25 +196,17 @@
     background: #fff;
 }
 
-.form-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+.form-grid .form-actions {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
 }
 
 .full-width {
     grid-column: 1 / -1;
 }
 
-.members-card {
-    padding: 1.5rem;
-}
-
-.members-header {
-    margin-bottom: 1rem;
-}
-
+/* ── Botones específicos de equipos ── */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -270,6 +240,14 @@
 
 .btn:hover {
     filter: brightness(0.98);
+}
+
+.btn.small {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 @media (max-width: 900px) {

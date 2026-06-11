@@ -33,20 +33,10 @@ def index():
 
 @views_bp.route("/inicio")
 def inicio():
-    materia = {
-        "titulo": "Introducción al Desarrollo de Software",
-        "subtitulo": "Facultad de Ingeniería · UBA",
-        "descripcion": (
-            "Materia de segundo año que introduce a los alumnos en los "
-            "fundamentos del desarrollo de software moderno: desde la terminal "
-            "hasta el despliegue de aplicaciones web completas."
-        ),
-    }
     info_cursada = [
-        {"label": "Cuatrimestre", "valor": "2do - 2025"},
+        {"label": "Cuatrimestre", "valor": "2do - 2026"},
         {"label": "Carga horaria", "valor": "6 hs semanales"},
-        {"label": "Modalidad", "valor": "Presencial"},
-        {"label": "Correlativa", "valor": "Algoritmos y Programación II"},
+        {"label": "Modalidad", "valor": "Presencial/virtual"},
     ]
     contenidos = [
         {"titulo": "Bases de datos MySQL", "descripcion": "Diseño de tablas, consultas SQL, INSERT, UPDATE y JOINs."},
@@ -58,7 +48,6 @@ def inicio():
     ]
     return render_template(
         "inicio.html",
-        materia=materia,
         info_cursada=info_cursada,
         contenidos=contenidos,
     )
@@ -169,7 +158,7 @@ def estadisticas_pdf():
 def alumno_detalle(id):
     try:
      alumno = requests.get(f"{BACKEND_URL}/alumnos/{id}").json()
-     equipos = requests.get(f"{BACKEND_URL}/equipos/{id}").json()
+     equipos = requests.get(f"{BACKEND_URL}/equipos/alumno/{id}").json()
      if isinstance(equipos, dict):
           equipos = [equipos]  
      notas = requests.get(f"{BACKEND_URL}/notas/alumno/{id}").json()
