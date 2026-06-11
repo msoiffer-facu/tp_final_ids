@@ -158,7 +158,7 @@ def estadisticas_pdf():
 def alumno_detalle(id):
     try:
      alumno = requests.get(f"{BACKEND_URL}/alumnos/{id}").json()
-     equipos = requests.get(f"{BACKEND_URL}/equipos/{id}").json()
+     equipos = requests.get(f"{BACKEND_URL}/equipos/alumno/{id}").json()
      if isinstance(equipos, dict):
           equipos = [equipos]  
      notas = requests.get(f"{BACKEND_URL}/notas/alumno/{id}").json()
