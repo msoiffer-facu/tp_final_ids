@@ -56,6 +56,7 @@ def inicio():
 @views_bp.route("/dashboard")
 def dashboard():
     stats = {}
+    chart_data = {"labels": [], "c1": [], "c2": [], "cursos": {}}
     try:
         alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
         total_alumnos = len(alumnos)
@@ -80,14 +81,44 @@ def dashboard():
         "notas_subidas": notas_subidas,
         "alumnos_promocionados": alumnos_promocionados
     }
-        #historial = requests.get(f"{BACKEND_URL}/historial").json()
+
+        promocionados_response = requests.get(
+            f"{BACKEND_URL}/api/reportes/promocionados/cuatrimestre"
+        )
+        promocionados_response.raise_for_status()
+        promocionados = promocionados_response.json().get("data", [])
+        chart_periodos = {}
+        for item in promocionados:
+            anio, cuatrimestre = item["periodo"].split("-C", 1)
+            chart_periodos.setdefault(anio, {})
+            chart_periodos[anio][cuatrimestre] = item
+
+        labels = sorted(chart_periodos.keys())
+        chart_data = {
+            "labels": labels,
+            "c1": [
+                chart_periodos[anio].get("1", {}).get("promedio", 0)
+                for anio in labels
+            ],
+            "c2": [
+                chart_periodos[anio].get("2", {}).get("promedio", 0)
+                for anio in labels
+            ],
+            "cursos": {
+                anio: {
+                    "1": chart_periodos[anio].get("1", {}).get("cursos", []),
+                    "2": chart_periodos[anio].get("2", {}).get("cursos", []),
+                }
+                for anio in labels
+            },
+        }
 
     except requests.RequestException:
         flash("Error al obtener datos del backend.", "danger")
-        return render_template(("dashboard.html"),stats=stats)
+        return render_template(("dashboard.html"),stats=stats, chart_data=chart_data)
    
     print("Promocionados:", alumnos_promocionados)
-    return render_template("dashboard.html", stats=stats)
+    return render_template("dashboard.html", stats=stats, chart_data=chart_data)
 
 
 

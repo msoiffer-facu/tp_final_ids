@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from herramientas.exportar_csv import generar_csv
 from herramientas.generar_pdf import generar_pdf_reporte
-from dbs.db_reportes import _fetch_alumnos, _fetch_equipos, _statistics_data
+from dbs.db_reportes import _fetch_alumnos, _fetch_equipos, _statistics_data, _promocionados_por_cuatrimestre
 
 reportes_bp = Blueprint("reportes", __name__, url_prefix="/api/reportes")
 
@@ -121,6 +121,12 @@ def equipos_csv():
 def estadisticas_listado():
     stats = _statistics_data()
     return jsonify(stats)
+
+
+@reportes_bp.route("/promocionados/cuatrimestre", methods=["GET"])
+def promocionados_cuatrimestre():
+    data = _promocionados_por_cuatrimestre()
+    return jsonify({"data": data, "count": len(data)})
 
 
 @reportes_bp.route("/estadisticas/pdf", methods=["GET"])
