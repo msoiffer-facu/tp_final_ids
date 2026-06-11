@@ -4,26 +4,30 @@ from db import get_db
 
 # ─── CURSOS ───
 
-def db_get_cursos(page=1, per_page=10):
+def db_get_cursos(page=1, per_page=10, cuatrimestre=""):
     offset = (page - 1) * per_page
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("SELECT COUNT(*) as total FROM cursos")
+
+    where = "WHERE c.cuatrimestre = %s" if cuatrimestre else ""
+    params_count = (cuatrimestre,) if cuatrimestre else ()
+
+    cursor.execute(f"SELECT COUNT(*) as total FROM cursos c {where}", params_count)
     total = cursor.fetchone()["total"]
 
-    query = """
+    query = f"""
         SELECT c.*, COUNT(ac.alumnos_id) as cantidad_alumnos
         FROM cursos c
         LEFT JOIN alumnos_curso ac ON ac.curso_id = c.id
+        {where}
         GROUP BY c.id
     """
 
     if per_page == -1:
-        cursor.execute(query)
+        cursor.execute(query, params_count)
     else:
-        cursor.execute(query + " LIMIT %s OFFSET %s", (per_page, offset))
-    
+        cursor.execute(query + " LIMIT %s OFFSET %s", params_count + (per_page, offset))
+
     cursos = cursor.fetchall()
     cursor.close()
     conn.close()

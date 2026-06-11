@@ -448,17 +448,19 @@ def equipo_asociar_evaluacion(equipo_id):
 @views_bp.route("/cursos")
 def cursos():
     page = int(request.args.get("page", 1))
+    cuatrimestre = request.args.get("cuatrimestre", "")
     per_page = 10
-    response = requests.get(
-        f"{BACKEND_URL}/cursos",
-        params={"page": page, "per_page": per_page}
-    )
+    params = {"page": page, "per_page": per_page}
+    if cuatrimestre:
+        params["cuatrimestre"] = cuatrimestre
+    response = requests.get(f"{BACKEND_URL}/cursos", params=params)
     data = response.json()
     return render_template(
         "cursos/cursos.html",
         cursos=data["cursos"],
         page=data["page"],
-        total_pages=data["total_pages"]
+        total_pages=data["total_pages"],
+        cuatrimestre=cuatrimestre
     )
 
 
