@@ -137,18 +137,22 @@ if (promoChartCanvas && window.Chart) {
             labels: promoChartData.labels,
             datasets: [
                 {
-                    label: "C1",
+                    label: "1er cuatrimestre",
                     data: promoChartData.c1,
                     backgroundColor: "#2563eb",
                     borderRadius: 4,
-                    maxBarThickness: 42
+                    categoryPercentage: 0.72,
+                    barPercentage: 1,
+                    maxBarThickness: 56
                 },
                 {
-                    label: "C2",
+                    label: "2do cuatrimestre",
                     data: promoChartData.c2,
                     backgroundColor: "#16a34a",
                     borderRadius: 4,
-                    maxBarThickness: 42
+                    categoryPercentage: 0.72,
+                    barPercentage: 1,
+                    maxBarThickness: 56
                 }
             ]
         },
