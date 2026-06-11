@@ -153,6 +153,66 @@ def estadisticas_pdf():
     except requests.RequestException:
         flash("Error al generar PDF.", "danger")
         return render_template("dashboard.html")
+
+
+@views_bp.route("/alumnos/csv")
+def alumnos_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/alumnos/csv")
+        response.raise_for_status()
+
+        return Response(
+            response.content,
+            content_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=reporte_alumnos.csv"
+            }
+        )
+
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return redirect(url_for("views.dashboard"))
+
+
+@views_bp.route("/equipos/csv")
+def equipos_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/equipos/csv")
+        response.raise_for_status()
+
+        return Response(
+            response.content,
+            content_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=reporte_equipos.csv"
+            }
+        )
+
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return redirect(url_for("views.dashboard"))
+
+
+@views_bp.route("/estadisticas/csv")
+def estadisticas_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/estadisticas/csv")
+        response.raise_for_status()
+
+        return Response(
+            response.content,
+            content_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=reporte_estadisticas.csv"
+            }
+        )
+
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return redirect(url_for("views.dashboard"))
  
 @views_bp.route("/alumnos/<int:id>")
 def alumno_detalle(id):
