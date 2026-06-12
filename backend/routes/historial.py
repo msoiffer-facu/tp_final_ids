@@ -7,13 +7,16 @@ from services.historial import (
 
 historial_bp = Blueprint("historial", __name__)
 """
+ historial: acciones -> cuando un profe modifica a un alumno o a un curso
 
- falta:
- csv exportar y cambiar su html
- boton eliminar alumno boton editar alumno
- historial 
- tabla de agus
- acciones -> cuando un profe modifica a un alumno o a un curso
+ tabla de agus??
+ 
+ se repite el abm de alumnos en views
+
+ id de clase precensial, nomrbre del curso hora de la asistencia
+
+ agregarle boton para asignarle un curso al alumno
+
 
 """
 
