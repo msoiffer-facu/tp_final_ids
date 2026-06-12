@@ -2,6 +2,16 @@ import csv
 import io
 
 
+def generar_csv(headers, rows):
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(headers)
+    writer.writerows(rows)
+
+    return output.getvalue()
+
+
 def generar_csv_alumnos(alumnos):
     output = io.StringIO()
 
