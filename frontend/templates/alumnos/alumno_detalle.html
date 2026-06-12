@@ -35,35 +35,27 @@
 
 </div>
 
-<div class="detalle-grid">
-
-    <div class="detalle-card">
-        <p class="detalle-label">Padrón</p>
-        <p class="detalle-valor">{{ alumno.padron }}</p>
+<div class="perfil-card">
+    
+    <div class="perfil-row">
+        <span class="perfil-label">Padrón</span>
+        <span class="perfil-value">{{ alumno.padron }}</span>
     </div>
 
-    <div class="detalle-card">
-        <p class="detalle-label">Email</p>
-        <p class="detalle-valor">{{ alumno.email }}</p>
+    <div class="perfil-row">
+        <span class="perfil-label">Email</span>
+        <span class="perfil-value">{{ alumno.email }}</span>
     </div>
 
-    <div class="detalle-card">
-        <p class="detalle-label">Estado</p>
-
-        <p class="detalle-valor">
-
+    <div class="perfil-row">
+        <span class="perfil-label">Estado</span>
+        <span class="perfil-value">
             {% if alumno.abandono %}
-                <span class="badge rojo">
-                    Abandonó
-                </span>
+                <span class="badge rojo">Abandonó</span>
             {% else %}
-                <span class="badge verde">
-                    Activo
-                </span>
+                <span class="badge verde">Activo</span>
             {% endif %}
-
-        </p>
-
+        </span>
     </div>
 
 </div>
@@ -165,43 +157,36 @@
     <div class="table-card-header">
         <h2>Asistencias</h2>
     </div>
-
     <table>
 
         <thead>
             <tr>
-                <th>ID Clase</th>
+                <th>Clase</th>
+                <th>Curso</th>
+                <th>Fecha</th>
+                <th>Hora</th>
                 <th>Presente</th>
             </tr>
         </thead>
 
         <tbody>
-
             {% for asistencia in asistencias %}
             <tr>
-
+                <td>{{ asistencia.clase_presencial_id }}</td>
+                <td>{{ asistencia.curso_nombre }}</td>
+                <td>{{ asistencia.fecha }}</td>
+                <td>{{ asistencia.asistencia_registrada }}</td>
                 <td>
-                    {{ asistencia.clase_presencial_id }}
-                </td>
-
-                <td>
-
                     {% if asistencia.presente %}
-                        <span class="badge verde">
-                            Sí
-                        </span>
+                     <span class="badge verde">Sí</span>
                     {% else %}
-                        <span class="badge rojo">
-                            No
-                        </span>
+                     <span class="badge rojo">No</span>
                     {% endif %}
-
                 </td>
-
             </tr>
             {% else %}
             <tr>
-                <td colspan="2" class="vacio">
+                <td colspan="5" class="vacio">
                     No hay asistencias registradas.
                 </td>
             </tr>

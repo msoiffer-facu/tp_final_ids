@@ -38,43 +38,49 @@
 
     <div class="table-card-header">
         <h2>Listado de alumnos</h2>
-        <form method="GET" action="{{ url_for('views.vista_alumnos') }}" class="table-filters" onsubmit="filtrarAlumnos()">
-            <input
-                type="text"
-                id="buscador"
-                name="busqueda"
-                class="search-input"
-                placeholder="Buscar por padrón, nombre o apellido..."
-                value="{{ request.args.get('busqueda', '') }}"
-            >
+        <form method="GET" action="{{ url_for('views.vista_alumnos') }}" class="table-filters">
 
-            <button
-                type="submit"
-                class="btn-buscar"
-            >
-                Buscar
-            </button>
+    <input
+        type="text"
+        id="buscador"
+        name="busqueda"
+        class="search-input"
+        placeholder="Buscar por padrón, nombre o apellido..."
+        value="{{ request.args.get('busqueda', '') }}"
+    >
+    <button
+        type="submit"
+        class="btn-buscar"
+    >
+        Buscar
+    </button>
 
-            <select
-                id="filtroEstado"
-                name="abandono"
-                class="search-input"
-            >
-                <option value="">Todos</option>
-                <option value="0"
-                {% if request.args.get('abandono') == '0' %}
-                    selected
-                {% endif %}
-                >
-                Activos</option>
-                <option value="1"
-                {% if request.args.get('abandono') == '1' %}
-                    selected
-                {% endif %}
-                >
-                Abandonados</option>
-            </select>
-        </form>
+    <select
+        id="filtroEstado"
+        name="abandono"
+        class="search-input"
+        onchange="this.form.submit()"
+    >
+        <option value="">Todos</option>
+
+        <option value="0"
+            {% if request.args.get('abandono') == '0' %}
+                selected
+            {% endif %}
+        >
+            Activos
+        </option>
+
+        <option value="1"
+            {% if request.args.get('abandono') == '1' %}
+                selected
+            {% endif %}
+        >
+            Abandonados
+        </option>
+    </select>
+
+</form>
 
         <a
             href="/alumnos/nuevo"
@@ -148,13 +154,16 @@
                     >
                         Editar
                     </a>
-
-                    <button
-                        class="btn-accion eliminar"
-                        onclick="confirmarEliminar({{ alumno.id }},'{{ alumno.nombre }} {{ alumno.apellido }}')"
+                    <form
+                    method="POST" 
+                    action="/alumnos/{{ alumno.id }}/eliminar" 
+                    style="display:inline;"
+                    onsubmit="return confirm('¿Eliminar a {{ alumno.nombre }} {{ alumno.apellido }}?')"
                     >
+                    <button type="submit" class="btn-accion eliminar">
                         Eliminar
                     </button>
+                </form>
                 </td>
 
             </tr>
@@ -196,44 +205,6 @@
     {% endif %}
 
     </div>
-{% endif %}
+    {% endif %}
 </div>
-
-<!-- Función para filtrar alumnos en el frontend al escribir en el buscador o cambiar el filtro de estado -->
-<script>
-
-function filtrarAlumnos() {
-
-    const buscador = document.getElementById("buscador").value.toLowerCase();
-    const estadoFiltro = document.getElementById("filtroEstado").value;
-    const filas = document.querySelectorAll(".fila-alumno");
-
-    for (let i = 0; i < filas.length; i++) {
-        let fila = filas[i];
-        let padron = fila.querySelector(".padron").textContent.toLowerCase();   
-        let nombre = fila.querySelector(".nombre").textContent.toLowerCase();
-        let apellido = fila.querySelector(".apellido").textContent.toLowerCase();
-        let estado = fila.querySelector(".estado").dataset.estado;
-
-        let coincideBusqueda =
-            padron.includes(buscador) ||
-            nombre.includes(buscador) ||
-            apellido.includes(buscador);
-
-        let coincideEstado =
-            estadoFiltro === "" ||
-            (estadoFiltro === "0" && estado === "activo") ||
-            (estadoFiltro === "1" && estado === "abandono");
-
-        if (coincideBusqueda && coincide_Estado) {
-            fila.style.display = "";
-        } else {
-            fila.style.display = "none";
-        }
-    }
-
-}
-
-</script>
-
 {% endblock %}
