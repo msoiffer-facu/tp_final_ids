@@ -17,7 +17,8 @@ def get_cursos():
     try:
         page = int(request.args.get("page", 1))
         per_page = int(request.args.get("per_page", 10))
-        cursos, total = db_get_cursos(page, per_page)  # ← cambia la firma
+        cuatrimestre = request.args.get("cuatrimestre", "")
+        cursos, total = db_get_cursos(page, per_page, cuatrimestre)
     except:
         return jsonify({"error": "error en el servidor"}), 500
     return jsonify({
