@@ -15,14 +15,6 @@ def obtener_alumnos(pagina=1, busqueda="", abandono=""):
         }
     }
 
-def obtener_alumno(id):
-    response = requests.get(f"{BACKEND_URL}/alumnos/{id}")
-    
-    return {
-        "status_code": response.status_code,
-        "data": response.json()
-    }
-
 def actualizar_alumno(id, datos):
     response = requests.put(f"{BACKEND_URL}/alumnos/{id}",json=datos)
     return {
@@ -30,7 +22,7 @@ def actualizar_alumno(id, datos):
         "data": response.json()
     }
 
-def eliminar_alumno(id):
+def eliminar_alumno_service(id):
     response = requests.delete(f"{BACKEND_URL}/alumnos/{id}")
     
     return {
@@ -50,4 +42,46 @@ def crear_alumno(datos):
     return {
         "status_code": response.status_code,
         "data": response.json()
+    }
+
+def obtener_alumno(id):
+    response = requests.get(f"{BACKEND_URL}/alumnos/{id}")
+    
+    return {
+        "status_code": response.status_code,
+        "data": response.json()
+    }
+
+def obtener_equipos_alumno(id):
+    response = requests.get(
+        f"{BACKEND_URL}/equipos/alumno/{id}"
+    )
+
+    return {
+        "status_code": response.status_code,
+        "data": response.json()
+    }
+
+
+def obtener_notas_alumno(id):
+    response = requests.get(
+        f"{BACKEND_URL}/notas/alumno/{id}"
+    )
+
+    return {
+        "status_code": response.status_code,
+        "data": response.json()
+    }
+
+
+def obtener_asistencias_alumno(id):
+    response = requests.get(f"{BACKEND_URL}/asistencia/alumno/{id}")
+
+    try:
+        data = response.json()
+
+    except Exception:
+        return {"status_code": response.status_code, "data": []}
+
+    return {"status_code": response.status_code,"data": data
     }
