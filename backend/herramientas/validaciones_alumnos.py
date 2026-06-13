@@ -93,7 +93,8 @@ def validar_data_alumno(data, id=None):
         "padron": padron_validado,
         "abandono": abandono_validado,
         "estado": estado_validado,
-        "errores": errores
+        "errores": errores,
+        "curso_id":data.get("curso_id")
     }
 
 def validar_importacion_db(alumnos):

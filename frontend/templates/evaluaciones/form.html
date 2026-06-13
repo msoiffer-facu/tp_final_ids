@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{% if evaluacion and evaluacion.id %}Editar evaluación{% else %}Nueva evaluación{% endif %} - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <a href="{{ url_for('evaluaciones_front.evaluaciones_listado') }}" class="btn-volver">← Volver</a>
+        <h1 class="page-title">{% if evaluacion and evaluacion.id %}Editar evaluación{% else %}Nueva evaluación{% endif %}</h1>
+    </div>
+</div>
+
+<div class="form-card">
+    <form method="POST" action="{% if evaluacion and evaluacion.id %}{{ url_for('evaluaciones_front.evaluacion_editar', evaluacion_id=evaluacion.id) }}{% else %}{{ url_for('evaluaciones_front.evaluacion_nueva') }}{% endif %}">
+
+        <div class="form-group">
+            <label for="titulo">Título</label>
+            <input type="text" id="titulo" name="titulo" value="{{ evaluacion.titulo if evaluacion else '' }}" placeholder="Ej: Parcial 1" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="tipo_id">Tipo de evaluación</label>
+                <select id="tipo_id" name="tipo_id" required>
+                    <option value="">Seleccionar tipo...</option>
+                    {% for tipo in tipos %}
+                    <option value="{{ tipo.id }}" {% if evaluacion and evaluacion.tipo_id == tipo.id %}selected{% endif %}>{{ tipo.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="fecha">Fecha</label>
+                <input type="date" id="fecha" name="fecha" value="{{ evaluacion.fecha if evaluacion else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="hora">Hora</label>
+                <input type="time" id="hora" name="hora" value="{{ evaluacion.hora if evaluacion and evaluacion.hora else '' }}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="curso_id">Curso</label>
+            <select id="curso_id" name="curso_id" required>
+                <option value="">Seleccionar curso...</option>
+                {% for curso in cursos %}
+                <option value="{{ curso.id }}" {% if evaluacion and evaluacion.curso_id == curso.id %}selected{% endif %}>
+                    {{ curso.nombre }} ({{ curso.anio }} - C{{ curso.cuatrimestre }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('evaluaciones_front.evaluaciones_listado') }}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,6 +1,9 @@
 def normalize_text(value):
     if value is None:
         return ""
+    # Convertir datetime a string legible
+    if hasattr(value, "strftime"):
+        return value.strftime("%d/%m/%Y")
     return str(value)
 
 
@@ -15,7 +18,7 @@ def parse_bool(value):
     return None
 
 
-def build_alumno_filters(params, columns, join_equipos):
+def build_alumno_filters(params, columns, tiene_equipos):
     filters = []
     values = []
 
@@ -30,7 +33,7 @@ def build_alumno_filters(params, columns, join_equipos):
     if apellido and "apellido" in columns:
         filters.append("LOWER(a.apellido) LIKE %s")
         values.append(f"%{apellido.lower()}%")
-    if equipo and join_equipos:
+    if equipo and tiene_equipos:
         filters.append("LOWER(e.nombre) LIKE %s")
         values.append(f"%{equipo.lower()}%")
     if aprobado is not None and "aprobado" in columns:
@@ -42,18 +45,18 @@ def build_alumno_filters(params, columns, join_equipos):
     return filters, values
 
 
-def build_equipos_filters(params, columns):
+def build_equipos_filters(params, tiene_cursos):
     filters = []
     values = []
 
     nombre = params.get("nombre")
-    tutor = params.get("tutor")
+    curso = params.get("curso")
 
-    if nombre and "nombre" in columns:
-        filters.append("LOWER(nombre) LIKE %s")
+    if nombre:
+        filters.append("LOWER(e.nombre) LIKE %s")
         values.append(f"%{nombre.lower()}%")
-    if tutor and "tutor" in columns:
-        filters.append("LOWER(tutor) LIKE %s")
-        values.append(f"%{tutor.lower()}%")
+    if curso and tiene_cursos:
+        filters.append("LOWER(c.nombre) LIKE %s")
+        values.append(f"%{curso.lower()}%")
 
     return filters, values

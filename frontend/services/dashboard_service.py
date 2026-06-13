@@ -1,9 +1,10 @@
 import requests
 from services.config import BACKEND_URL
+from services.login import backend_request
 
-def obtener_dashboard():
+def obtener_dashboard_estadisticas():
     try:
-        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos/todos").json()
         equipos = requests.get(f"{BACKEND_URL}/equipos").json()
         notas = requests.get(f"{BACKEND_URL}/notas").json()
 
@@ -11,11 +12,10 @@ def obtener_dashboard():
             f"{BACKEND_URL}/asistencia/promedio"
         ).json().get("promedio_asistencia", 0)
 
-        alumnos_promocionados = 0
-
-        for nota in notas:
-            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO":
-                alumnos_promocionados += 1
+        alumnos_promocionados = len([
+            nota for nota in notas
+            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO"
+        ])
 
         return {
             "status_code": 200,
@@ -35,3 +35,17 @@ def obtener_dashboard():
                 "error": str(e)
             }
         }
+
+
+def obtener_dashboard_historial(limit=5):
+    try:
+        resultado = backend_request("GET", "/historial", params={"limit": limit})
+        if resultado.status_code != 200:
+            return []
+
+        data = resultado.json()
+        return data.get("historial", []) if isinstance(data, dict) else []
+    except requests.RequestException:
+        return []
+    except ValueError:
+        return []

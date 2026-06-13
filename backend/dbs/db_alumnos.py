@@ -9,11 +9,11 @@ def db_get_alumnos(offset, limit=10, busqueda="", abandono=""):
     where_clauses = []
 
     if busqueda != "":
-        where_clauses.append("(nombre LIKE %s OR apellido LIKE %s OR CAST(padron AS CHAR) LIKE %s OR email LIKE %s)")
+        where_clauses.append("(a.nombre LIKE %s OR a.apellido LIKE %s OR CAST(a.padron AS CHAR) LIKE %s OR a.email LIKE %s)")
         params.extend([texto, texto, texto, texto])
 
     if abandono != "":
-        where_clauses.append("abandono = %s")
+        where_clauses.append("a.abandono = %s")
         params.append(abandono)
 
     where_clause = ""
@@ -21,14 +21,16 @@ def db_get_alumnos(offset, limit=10, busqueda="", abandono=""):
         where_clause = " WHERE " + " AND ".join(where_clauses)
 
     query = (
-        "SELECT * FROM alumnos"
+        "SELECT a.*, c.nombre as curso FROM alumnos a "
+        "LEFT JOIN alumnos_curso ac ON ac.alumnos_id = a.id "
+        "LEFT JOIN cursos c ON c.id = ac.curso_id "
         f"{where_clause} "
         "LIMIT %s OFFSET %s"
     )
     cursor.execute(query, tuple(params + [limit, offset]))
     alumnos = cursor.fetchall()
 
-    count_query = f"SELECT COUNT(*) as total FROM alumnos {where_clause}"
+    count_query = f"SELECT COUNT(*) as total FROM alumnos a {where_clause}"
     cursor.execute(count_query, tuple(params))
     total = cursor.fetchone()["total"]
 
@@ -36,10 +38,29 @@ def db_get_alumnos(offset, limit=10, busqueda="", abandono=""):
     db.close()
     return alumnos, total
 
+def db_get_todos_alumnos():
+    """Devuelve todos los alumnos con sus equipos. Sin paginación, para selectores."""
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT a.id, a.nombre, a.apellido, a.padron, a.email, a.abandono,
+               IFNULL(GROUP_CONCAT(e.nombre ORDER BY e.nombre SEPARATOR ', '), '') AS equipo
+        FROM alumnos a
+        LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id
+        LEFT JOIN equipos e ON e.id = ea.equipo_id
+        GROUP BY a.id
+        ORDER BY a.apellido, a.nombre
+    """)
+    alumnos = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return alumnos
+
+
 def db_get_alumno_id(id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM alumnos WHERE id=%s", (id,))
+    cursor.execute("SELECT a.*, ac.curso_id FROM alumnos a LEFT JOIN alumnos_curso ac ON ac.alumnos_id = a.id WHERE a.id=%s", (id,))
     alumno = cursor.fetchone()
     cursor.close()
     db.close()
@@ -59,12 +80,13 @@ def db_delete_alumno(id):
 
     cursor.execute("DELETE FROM alumnos WHERE id=%s", (id,))
 
+
     db.commit()
     cursor.close()
     db.close()
 
 
-def db_create_alumno(nombre, apellido, email, padron, abandono, estado):
+def db_create_alumno(nombre, apellido, email, padron, abandono, estado,curso_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -72,10 +94,16 @@ def db_create_alumno(nombre, apellido, email, padron, abandono, estado):
         (nombre, apellido, email, padron, abandono, estado)
         )
     db.commit()
+    id = cursor.lastrowid
+    cursor.execute(
+        "INSERT INTO alumnos_curso (alumnos_id,curso_id) VALUES (%s, %s)",
+        (id,curso_id)
+        )
+    db.commit()
     cursor.close()
     db.close()
 
-def db_update_alumno(id, nombre=None, apellido=None, email=None, padron=None, abandono=None, estado=None):
+def db_update_alumno(id, nombre=None, apellido=None, email=None, padron=None, abandono=None, estado=None, curso_id=None):
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
@@ -104,6 +132,13 @@ def db_update_alumno(id, nombre=None, apellido=None, email=None, padron=None, ab
         query = f"UPDATE alumnos SET {', '.join(campos)} WHERE id = %s"
         valores.append(id)
         cursor.execute(query, tuple(valores))
+        db.commit()
+
+    # Actualizar curso si se proporciona
+    if curso_id is not None:
+        cursor.execute("DELETE FROM alumnos_curso WHERE alumnos_id = %s", (id,))
+        if curso_id and str(curso_id).isdigit():
+            cursor.execute("INSERT INTO alumnos_curso (alumnos_id, curso_id) VALUES (%s, %s)", (id, int(curso_id)))
         db.commit()
 
     cursor.close()
@@ -144,7 +179,7 @@ def cargar_alumnos_db(alumnos):
             existentes += 1
             continue
 
-        db_create_alumno(alumno["nombre"], alumno["apellido"], alumno["email"], alumno["padron"], alumno["abandono"], alumno["estado"])
+        db_create_alumno(alumno["nombre"], alumno["apellido"], alumno["email"], alumno["padron"], alumno["abandono"], alumno["estado"],alumno["curso"])
         insertados += 1
 
     return {

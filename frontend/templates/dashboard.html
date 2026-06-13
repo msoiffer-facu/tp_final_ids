@@ -45,6 +45,7 @@
         <div class="action-row">
             <p>Listado alumnos</p>
             <div class="action-btns">
+
                 <a href="/alumnos" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -61,6 +62,14 @@
                     </svg>
                     PDF
                 </a>
+                <a href="/alumnos/importar" class="btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    Importar CSV
+                </a>
+
             </div>
         </div>
 
@@ -104,6 +113,40 @@
         </div>
     </div>
 </div>
+<div class="table-card history-table-card">
+    <div class="table-card-header">
+        <div class="history-title-block">
+            <p class="history-kicker">Registro</p>
+            <h2>Actividad reciente</h2>
+        </div>
+        <span class="history-count">{{ historial|length if historial else 0 }}</span>
+    </div>
 
-
+    <table>
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Área</th>
+                <th>Hora</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if historial and historial|length > 0 %}
+                {% for item in historial %}
+                    <tr>
+                        <td class="usuario">{{ item.usuario }}</td>
+                        <td>{{ item.accion }}</td>
+                        <td>{{ item.area }}</td>
+                        <td class="hora">{{ item.hora }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" class="vacio">No hay actividad registrada</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
