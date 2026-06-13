@@ -163,7 +163,7 @@
                     method="POST" 
                     action="/alumnos/{{ alumno.id }}/eliminar" 
                     style="display:inline;"
-                    onsubmit="return confirm('¿Eliminar a {{ alumno.nombre }} {{ alumno.apellido }}?')"
+                    onclick="confirmEliminar({{ alumno.id }}, '{{alumno.nombre}}', '{{ alumno.apellido }}')"
                     >
                     <button type="submit" class="btn-accion eliminar">
                         Eliminar
