@@ -10,6 +10,7 @@ from routes.profesores import profesores_bp
 from routes.evaluaciones import evaluaciones_bp
 from routes.notas import notas_bp
 from routes.reportes import reportes_bp
+from routes.historial import historial_bp
 from routes.alumnos import alumnos_bp
 from routes.cursos import cursos_bp
 from routes.equipos import equipos_bp
@@ -36,6 +37,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 app.register_blueprint(profesores_bp, url_prefix="/profesores")
 app.register_blueprint(evaluaciones_bp, url_prefix="/evaluaciones")
 app.register_blueprint(reportes_bp)
+app.register_blueprint(historial_bp, url_prefix="/historial")
 app.register_blueprint(cursos_bp, url_prefix="/cursos")
 app.register_blueprint(notas_bp, url_prefix="/notas")
 app.register_blueprint(asistencia_bp, url_prefix="/asistencia")

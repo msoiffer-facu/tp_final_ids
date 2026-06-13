@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 import mysql.connector
 from dbs.db_cursos import (
     db_get_cursos, db_get_curso_by_id, db_create_curso, db_update_curso, db_delete_curso,
@@ -7,6 +7,7 @@ from dbs.db_cursos import (
     db_get_equipos, db_create_equipo,
     db_get_alumnos_equipo, db_agregar_alumno_equipo, db_quitar_alumno_equipo
 )
+from dbs.db_historial import registrar_historial_cursos
 
 cursos_bp = Blueprint("cursos", __name__)
 
@@ -56,6 +57,8 @@ def create_curso():
             return jsonify({"error": "El campo cuatrimestre es obligatorio y debe ser '1' o '2'."}), 400
 
         nuevo_id = db_create_curso(nombre, cuatrimestre, anio, modificacion)
+        registrar_historial_cursos(f"Creó el curso '{nombre}'", session.get("email"))
+    
     except:
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
@@ -80,6 +83,7 @@ def update_curso(id):
             return jsonify({"error": "El campo cuatrimestre es obligatorio y debe ser '1' o '2'."}), 400
 
         db_update_curso(id, nombre, cuatrimestre, anio, modificacion)
+        registrar_historial_cursos(f"Modificó el curso '{nombre}'", session.get("email"))
     except:
         return jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso actualizado exitosamente."}), 200
@@ -91,6 +95,7 @@ def delete_curso(id):
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
         db_delete_curso(id)
+        registrar_historial_cursos(f"Eliminó el curso '{id}'", session.get("email"))
     except:
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso eliminado exitosamente."}), 200
@@ -132,6 +137,8 @@ def inscribir_alumno(id):
 
     try:
         db_inscribir_alumno(id, alumno_id)
+        registrar_historial_cursos(f"Inscribió alumno {alumno_id} al curso {id}", session.get("email"))
+
         return jsonify({"message": "Alumno inscripto exitosamente."}), 201
     except mysql.connector.IntegrityError:
         return jsonify({"error": "El alumno ya está inscripto en este curso."}), 409
@@ -145,6 +152,8 @@ def desinscribir_alumno(id, alumno_id):
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
         afectados = db_desinscribir_alumno(id, alumno_id)
+        registrar_historial_cursos(f"Desinscribió alumno {alumno_id} del curso {id}", session.get("email"))
+        
         if afectados == 0:
             return jsonify({"error": "Inscripción no encontrada."}), 404
     except:
@@ -191,6 +200,7 @@ def delete_clase(id, clase_id):
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
         afectados = db_delete_clase(clase_id, id)
+        
         if afectados == 0:
             return jsonify({"error": "Clase no encontrada."}), 404
     except:
@@ -234,6 +244,8 @@ def create_equipo(id):
             return jsonify({"error": "El campo nombre es obligatorio."}), 400
 
         nuevo_id = db_create_equipo(nombre, descripcion, id)
+        registrar_historial_cursos(f"Creó equipo '{nombre}' en curso {id}", session.get("email"))
+
     except:
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Equipo creado exitosamente.", "id": nuevo_id}), 201
@@ -259,6 +271,8 @@ def agregar_alumno_equipo(id, equipo_id):
 
     try:
         db_agregar_alumno_equipo(equipo_id, alumno_id)
+        registrar_historial_cursos(f"Agregó alumno {alumno_id} al equipo {equipo_id}", session.get("email"))
+
         return jsonify({"message": "Alumno agregado al equipo exitosamente."}), 201
     except mysql.connector.IntegrityError:
         return jsonify({"error": "El alumno ya está en este equipo."}), 409
@@ -268,6 +282,8 @@ def agregar_alumno_equipo(id, equipo_id):
 def quitar_alumno_equipo(id, equipo_id, alumno_id):
     try:
         afectados = db_quitar_alumno_equipo(equipo_id, alumno_id)
+        registrar_historial_cursos(f"Quitó alumno {alumno_id} del equipo {equipo_id}", session.get("email"))
+        
         if afectados == 0:
             return jsonify({"error": "El alumno no pertenece a este equipo."}), 404
     except:
