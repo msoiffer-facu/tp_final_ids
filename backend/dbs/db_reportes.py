@@ -166,3 +166,76 @@ def _statistics_data():
         }
     finally:
         conn.close()
+
+
+def _promocionados_por_cuatrimestre():
+    conn = get_db()
+    try:
+        cursor = conn.cursor()
+        required_tables = ["cursos", "alumnos_curso", "evaluaciones", "notas"]
+        if any(not _table_exists(cursor, table) for table in required_tables):
+            return []
+
+        cursor.execute(
+            """
+            SELECT
+                c.id,
+                c.nombre,
+                c.anio,
+                c.cuatrimestre,
+                COUNT(DISTINCT ac.alumnos_id) AS total_alumnos,
+                COUNT(DISTINCT CASE
+                    WHEN n.estado = 'PROMOCIONADO' THEN n.alumno_id
+                    ELSE NULL
+                END) AS promocionados
+            FROM cursos c
+            LEFT JOIN alumnos_curso ac
+                ON ac.curso_id = c.id
+            LEFT JOIN evaluaciones e
+                ON e.curso_id = c.id
+            LEFT JOIN notas n
+                ON n.evaluacion_id = e.id
+                AND n.alumno_id = ac.alumnos_id
+            GROUP BY c.id, c.nombre, c.anio, c.cuatrimestre
+            ORDER BY c.anio, c.cuatrimestre, c.nombre
+            """
+        )
+
+        por_periodo = {}
+        for curso_id, nombre, anio, cuatrimestre, total, promocionados in cursor.fetchall():
+            if anio is None or cuatrimestre is None:
+                continue
+
+            periodo = f"{anio}-C{cuatrimestre}"
+            total = int(total or 0)
+            promocionados = int(promocionados or 0)
+            porcentaje = round((promocionados / total * 100) if total else 0, 2)
+
+            if periodo not in por_periodo:
+                por_periodo[periodo] = {
+                    "periodo": periodo,
+                    "total_alumnos": 0,
+                    "promocionados": 0,
+                    "cursos": [],
+                }
+
+            por_periodo[periodo]["total_alumnos"] += total
+            por_periodo[periodo]["promocionados"] += promocionados
+            por_periodo[periodo]["cursos"].append({
+                "id": curso_id,
+                "nombre": normalize_text(nombre),
+                "total_alumnos": total,
+                "promocionados": promocionados,
+                "porcentaje": porcentaje,
+            })
+
+        resultado = []
+        for item in por_periodo.values():
+            total = item["total_alumnos"]
+            promocionados = item["promocionados"]
+            item["promedio"] = round((promocionados / total * 100) if total else 0, 2)
+            resultado.append(item)
+
+        return resultado
+    finally:
+        conn.close()
