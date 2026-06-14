@@ -118,3 +118,81 @@
     height: 14px;
     flex-shrink: 0;
 }
+
+.history-kicker {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #2563eb;
+    margin-bottom: 0.2rem;
+}
+
+.history-title-block h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.history-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    margin-left: 0.75rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.history-table-card {
+    margin-top: 30px;
+}
+
+.history-table-card .table-card-header {
+    align-items: center;
+}
+
+.history-table-card table {
+    table-layout: fixed;
+}
+
+.history-table-card th:nth-child(1),
+.history-table-card td:nth-child(1) {
+    width: 18%;
+}
+
+.history-table-card th:nth-child(2),
+.history-table-card td:nth-child(2) {
+    width: 46%;
+}
+
+.history-table-card th:nth-child(3),
+.history-table-card td:nth-child(3) {
+    width: 18%;
+}
+
+.history-table-card th:nth-child(4),
+.history-table-card td:nth-child(4) {
+    width: 18%;
+}
+
+.history-table-card td.hora {
+    font-size: 0.75rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.history-table-card td.usuario {
+    font-weight: 600;
+    color: #111827;
+}
+
+.history-table-card td.vacio {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 2rem;
+}

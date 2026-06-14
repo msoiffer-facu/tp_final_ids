@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from dbs.db_equipos import (
     db_listar_equipos_alumno,
     db_listar_equipos,
@@ -14,6 +14,7 @@ from dbs.db_equipos import (
     db_desasociar_evaluacion_equipo,
     db_verificar_evaluacion_equipo,
 )
+from dbs.db_historial import registrar_historial_equipos
 
 equipos_bp = Blueprint("equipos", __name__)
 
@@ -47,6 +48,9 @@ def crear_equipo():
 
     try:
         nuevo_id = db_crear_equipo(nombre, descripcion, curso_id)
+
+        registrar_historial_equipos(f"Creó el equipo '{nombre}'", session.get("email"))
+
     except Exception as e:
         return jsonify({"error": f"Error al crear el equipo: {str(e)}"}), 500
     return jsonify({"message": "Equipo creado con éxito", "id": nuevo_id}), 201
@@ -79,7 +83,15 @@ def editar_equipo(id):
         equipo = db_buscar_equipo_por_id(id)
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
+ retoques
         db_editar_equipo(id, nombre, descripcion, estado)
+
+        
+        db_editar_equipo(id, nombre, descripcion)
+
+        registrar_historial_equipos(f"Creó el equipo '{nombre}'", session.get("email"))
+        
+ main
     except Exception as e:
         return jsonify({"error": f"Error al editar equipo: {str(e)}"}), 500
     return jsonify({"message": "Equipo actualizado correctamente"}), 200
@@ -91,7 +103,11 @@ def eliminar_equipo(id):
         equipo = db_buscar_equipo_por_id(id)
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
+        
         db_eliminar_equipo(id)
+
+        registrar_historial_equipos(f"Eliminó el equipo '{equipo['nombre']}'", session.get("email"))
+
     except Exception as e:
         return jsonify({"error": f"Error al eliminar equipo: {str(e)}"}), 500
     return "", 204
@@ -109,7 +125,11 @@ def asociar_alumnos(id):
         equipo = db_buscar_equipo_por_id(id)
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
+        
         db_asociar_alumnos(id, alumnos_ids)
+
+        registrar_historial_equipos(f"Asoció alumnos al equipo '{equipo['nombre']}'", session.get("email"))
+
     except Exception as e:
         return jsonify({"error": f"Error al asociar alumnos: {str(e)}"}), 500
     return jsonify({"message": "Alumnos asociados al equipo correctamente"}), 200
@@ -122,6 +142,9 @@ def quitar_alumno(id, alumno_id):
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
         db_quitar_alumno_equipo(id, alumno_id)
+
+        registrar_historial_equipos(f"Quitó un alumno del equipo '{equipo['nombre']}'", session.get("email"))
+
     except Exception as e:
         return jsonify({"error": f"Error al quitar alumno: {str(e)}"}), 500
     return jsonify({"message": "Alumno quitado del equipo"}), 200
@@ -154,6 +177,9 @@ def asociar_equipos_a_tp(id):
             return jsonify({"error": "El equipo no tiene alumnos asociados todavía. Asocie alumnos primero."}), 400
         
         db_asociar_equipo_a_tp(id, evaluacion_id, integrantes)
+
+        registrar_historial_equipos(f"Asoció el equipo '{equipo['nombre']}' a una evaluación", session.get("email"))
+
     except Exception as e:
         error_msg = str(e)
         if "ya está asociado" in error_msg:
@@ -173,6 +199,9 @@ def desasociar_equipos_a_tp(id, evaluacion_id):
             return jsonify({"error": "Este equipo no está asociado a esta evaluación"}), 404
         
         db_desasociar_evaluacion_equipo(id, evaluacion_id)
+ 
+        registrar_historial_equipos(f"Desasoció el equipo '{equipo['nombre']}' de una evaluación", session.get("email"))
+
     except Exception as e:
         return jsonify({"error": f"Error al desasociar equipo del TP: {str(e)}"}), 500
     return jsonify({"message": "Equipo desasociado del Trabajo Práctico con éxito"}), 200

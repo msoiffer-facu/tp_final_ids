@@ -41,17 +41,20 @@ def obtener_notas_alumno_db(alumno_id):
     cursor = conn.cursor(dictionary=True)
 
     try:
-        cursor.execute("""SELECT notas.id, notas.nota_alumno, notas.estado, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre 
-            FROM notas
-            JOIN alumnos
-                ON notas.alumno_id = alumnos.id
-            JOIN evaluaciones
-                ON notas.evaluacion_id = evaluaciones.id
-            JOIN tipos_evaluacion
-                ON evaluaciones.tipo_id = tipos_evaluacion.id
-            WHERE notas.alumno_id = %s""", (alumno_id,))
+      cursor.execute("""SELECT notas.id, notas.nota_alumno, notas.estado, alumnos.nombre, alumnos.apellido, evaluaciones.titulo, evaluaciones.fecha, tipos_evaluacion.nombre, 
+                     cursos.nombre AS curso, cursos.cuatrimestre, cursos.anio
+                      FROM notas
+                     JOIN alumnos
+                      ON notas.alumno_id = alumnos.id
+                     JOIN evaluaciones
+                      ON notas.evaluacion_id = evaluaciones.id
+                     JOIN tipos_evaluacion
+                      ON evaluaciones.tipo_id = tipos_evaluacion.id
+                     JOIN cursos
+                      ON evaluaciones.curso_id = cursos.id 
+                     WHERE notas.alumno_id = %s""", (alumno_id,))
 
-        return cursor.fetchall()
+      return cursor.fetchall()
 
     finally:
         cursor.close()
