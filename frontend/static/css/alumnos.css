@@ -117,15 +117,291 @@
     background: #dc2626;
 }
 
-/* ── CSV ── */
+/* ── Búsqueda específica de alumnos ── */
+#buscador {
+    width: 320px;
+}
+
+/* ==========================================================
+   DETALLE DE ALUMNO
+========================================================== */
+
+.perfil-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.perfil-horizontal {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.perfil-item {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.perfil-label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.perfil-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.perfil-padron {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* ==========================================================
+   TARJETAS DE TABLAS
+========================================================== */
+
+.table-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-card-header h2 {
+    margin: 0;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-card thead {
+    background: #f9fafb;
+}
+
+.table-card th {
+    padding: .9rem 1rem;
+    text-align: left;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-card td {
+    padding: .9rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+    font-size: .92rem;
+}
+
+.table-card tbody tr:hover {
+    background: #f9fafb;
+}
+
+.table-card tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tabla-detalle {
+    table-layout: fixed;
+}
+
+.tabla-notas th:nth-child(1),
+.tabla-notas td:nth-child(1) {
+    width: 30%;
+}
+
+.tabla-notas th:nth-child(2),
+.tabla-notas td:nth-child(2) {
+    width: 18%;
+}
+
+.tabla-notas th:nth-child(3),
+.tabla-notas td:nth-child(3) {
+    width: 16%;
+}
+
+.tabla-notas th:nth-child(4),
+.tabla-notas td:nth-child(4) {
+    width: 10%;
+}
+
+.tabla-notas th:nth-child(5),
+.tabla-notas td:nth-child(5) {
+    width: 8%;
+    text-align: center;
+}
+
+.tabla-notas th:nth-child(6),
+.tabla-notas td:nth-child(6) {
+    width: 18%;
+    text-align: center;
+}
+
+.tabla-asistencias th:nth-child(1),
+.tabla-asistencias td:nth-child(1) {
+    width: 12%;
+}
+
+.tabla-asistencias th:nth-child(2),
+.tabla-asistencias td:nth-child(2) {
+    width: 24%;
+}
+
+.tabla-asistencias th:nth-child(3),
+.tabla-asistencias td:nth-child(3) {
+    width: 22%;
+}
+
+.tabla-asistencias th:nth-child(4),
+.tabla-asistencias td:nth-child(4) {
+    width: 22%;
+}
+
+.tabla-asistencias th:nth-child(5),
+.tabla-asistencias td:nth-child(5) {
+    width: 20%;
+    text-align: center;
+}
+
+.vacio {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+}
+
+/* ==========================================================
+   BLOQUE PROMEDIO
+========================================================== */
+
+.resumen-notas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+.resumen-card .table-card-header {
+    align-items: center;
+}
+
+.promedio-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: .85rem 1rem;
+    min-width: 140px;
+    flex: 1;
+}
+
+.promedio-box .perfil-label {
+    font-size: .75rem;
+    display: block;
+    margin-bottom: .25rem;
+}
+
+.promedio-box .perfil-value {
+    font-size: .98rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* ==========================================================
+   BADGES
+========================================================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .3rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.badge.verde {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.rojo {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge.azul {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge.gris {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* ==========================================================
+   LISTADO DE ALUMNOS
+========================================================== */
+
+.alumno-nombre {
+    font-weight: 600;
+    color: #111827;
+}
+
+.estado-activo {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.estado-inactivo {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ==========================================================
+   CSV
+========================================================== */
+
 .import-info {
-    font-size: 0.9rem;
+    font-size: .9rem;
     color: #6b7280;
     margin-bottom: 1rem;
 }
 
 .resultado-card {
     margin-top: 1rem;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
 }
 
 .error-card {
@@ -137,23 +413,44 @@
 }
 
 .error-list {
-    font-size: 0.85rem;
-    color: #374151;
-    margin-left: 1rem;
     padding: 1rem 2rem;
+    margin: 0;
+    color: #374151;
 }
 
 .error-list li {
-    margin-bottom: 0.4rem;
+    margin-bottom: .4rem;
 }
 
 .success-text {
-    font-size: 0.85rem;
-    color: #374151;
     padding: 1rem 1.5rem;
+    color: #374151;
 }
 
-/* ── Búsqueda específica de alumnos ── */
-#buscador {
-    width: 320px;
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .perfil-horizontal {
+        grid-template-columns: 1fr;
+    }
+
+    .table-card {
+        overflow-x: auto;
+    }
+
+    .table-card table {
+        min-width: 700px;
+    }
+
+    .table-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #buscador {
+        width: 100%;
+    }
 }

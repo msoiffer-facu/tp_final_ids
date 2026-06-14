@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request, url_for, session
 import math
 import threading
 import asyncio
@@ -7,6 +7,7 @@ from dbs.db_asistencia import *
 from dbs.db_cursos import db_get_curso_by_id
 import services.asistencia as serv_asistencia
 from concurrent.futures import ThreadPoolExecutor
+from dbs.db_historial import registrar_historial_asistencia
 
 asistencia_bp = Blueprint("asistencia", __name__)
 
@@ -24,6 +25,8 @@ def obtener_asistencia_alumno(alumno_id):
 def promedio_asistencia():
     try:
         promedio_asistencia = obtener_promedio_asistencia()
+        print(type(promedio_asistencia))
+        print(promedio_asistencia)
     except Exception:
         return 'Error al calcular el promedio de asistencia',500
 
@@ -81,6 +84,8 @@ def create_clase_presencial():
         curso = db_get_curso_by_id(curso_id)
     except Exception as e:
         return f'Error interno al buscar el curso: {e}',500
+    
+    crear_historial
 
     if not curso:
         return "El curso con el que quiere hacer la clase no existe", 404
@@ -154,6 +159,8 @@ def create_asistencia():
     thread.daemon = True
     thread.start()
  
+    registrar_historial_asistencia(f"Se pidio asistencia de la clase {id_clase}", session.get("email"))
+    
     return "Se creo la asistencia correctamente", 200
 
 

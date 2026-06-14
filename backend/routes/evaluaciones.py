@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from dbs.db_evaluaciones import (
     db_obtener_todas_las_evaluaciones,
     db_obtener_evaluacion,
@@ -13,6 +13,7 @@ from dbs.db_evaluaciones import (
     db_obtener_notas_evaluacion,
     db_guardar_notas_evaluacion,
 )
+from dbs.db_historial import registrar_historial_evaluaciones
 
 evaluaciones_bp = Blueprint('evaluaciones', __name__)
 
@@ -42,6 +43,9 @@ def crear_tipo():
     nuevo_id = db_crear_tipo_evaluacion(nombre)
     if nuevo_id is None:
         return jsonify({"error": "No se pudo crear el tipo"}), 500
+    
+    registrar_historial_evaluaciones(f"Creó el tipo de evaluación '{nombre}'", session.get("email"))
+
     return jsonify({"id": nuevo_id, "nombre": nombre}), 201
 
 
@@ -56,16 +60,22 @@ def actualizar_tipo(id_tipo):
     exito = db_actualizar_tipo_evaluacion(id_tipo, nombre)
     if not exito:
         return jsonify({"error": "No se pudo actualizar el tipo"}), 500
+    
+    registrar_historial_evaluaciones(f"Modificó el tipo de evaluación '{nombre}'", session.get("email"))
+
     return jsonify({"mensaje": "Tipo actualizado correctamente"}), 200
 
 
 @evaluaciones_bp.route('/tipos/<int:id_tipo>', methods=['DELETE'])
 def eliminar_tipo(id_tipo):
-    if not db_obtener_tipo_evaluacion(id_tipo):
+    tipo = db_obtener_tipo_evaluacion(id_tipo)
+    if not tipo:
         return jsonify({"error": "Tipo no encontrado"}), 404
     exito = db_eliminar_tipo_bd(id_tipo)
     if not exito:
         return jsonify({"error": "No se pudo eliminar el tipo"}), 500
+
+    registrar_historial_evaluaciones(f"Eliminó el tipo de evaluación '{tipo['nombre']}'", session.get("email"))
     return jsonify({"mensaje": "Tipo eliminado correctamente"}), 200
 
 
@@ -107,8 +117,12 @@ def crear_evaluacion():
         return jsonify({"error": "titulo, fecha, tipo_id y curso_id son obligatorios"}), 400
 
     nuevo_id = db_crear_evaluacion(titulo, fecha, tipo_id, curso_id)
+
     if nuevo_id is None:
         return jsonify({"error": "No se pudo crear la evaluación"}), 500
+    
+    registrar_historial_evaluaciones(f"Creó la evaluación '{titulo}'", session.get("email"))
+
     return jsonify({"id": nuevo_id, "mensaje": "Evaluación creada correctamente"}), 201
 
 
@@ -129,14 +143,24 @@ def actualizar_evaluacion(id_evaluacion):
     exito = db_actualizar_evaluacion(id_evaluacion, titulo, fecha, tipo_id, curso_id)
     if not exito:
         return jsonify({"error": "No se pudo actualizar la evaluación"}), 500
+    
+    registrar_historial_evaluaciones(f"Modificó la evaluación '{titulo}'", session.get("email"))
+
     return jsonify({"mensaje": "Evaluación actualizada correctamente"}), 200
 
 
 @evaluaciones_bp.route('/<int:id_evaluacion>', methods=['DELETE'])
 def eliminar_evaluacion(id_evaluacion):
+    evaluacion = db_obtener_evaluacion(id_evaluacion)
+    if not evaluacion:
+        return jsonify({"error": "Evaluación no encontrada"}), 404
+    
     exito = db_eliminar_evaluacion_bd(id_evaluacion)
+
     if exito:
+        registrar_historial_evaluaciones(f"Eliminó la evaluación '{evaluacion['titulo']}'", session.get("email"))
         return jsonify({"mensaje": "Evaluación eliminada correctamente"}), 200
+
     return jsonify({"error": "No se encontró la evaluación o no se pudo eliminar"}), 404
 
 
@@ -147,6 +171,9 @@ def obtener_notas(id_evaluacion):
     if not db_obtener_evaluacion(id_evaluacion):
         return jsonify({"error": "Evaluación no encontrada"}), 404
     notas = db_obtener_notas_evaluacion(id_evaluacion)
+
+    registrar_historial_evaluaciones(f"Cargó notas de la evaluación ID {id_evaluacion}", session.get("email"))
+
     return jsonify(notas), 200
 
 
