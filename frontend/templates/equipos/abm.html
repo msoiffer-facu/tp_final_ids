@@ -75,12 +75,19 @@
             </label>
             <label>
                 Estado
-                <input type="text" name="estado" value="{{ equipo.estado }}">
+                <select name="estado" style="width:100%; border:1px solid #d1d5db; border-radius:0.75rem; padding:0.9rem 1rem; font-size:0.95rem; color:#111827; background:#fff;">
+                    <option value="Activo" {% if equipo.estado == 'Activo' %}selected{% endif %}>Activo</option>
+                    <option value="Inactivo" {% if equipo.estado == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                    <option value="Abandono" {% if equipo.estado == 'Abandono' %}selected{% endif %}>Abandono</option>
+                </select>
             </label>
 
             <div class="form-actions full-width">
                 <button type="submit" name="action" value="save" class="btn primary">Guardar cambios</button>
-                <button type="submit" name="action" value="delete" class="btn danger">Eliminar equipo</button>
+                <button type="submit" name="action" value="delete" class="btn danger"
+                        onclick="return confirm('¿Seguro que querés eliminar el equipo {{ equipo.nombre }}? Esta acción no se puede deshacer.')">
+                    Eliminar equipo
+                </button>
             </div>
         </form>
     </div>

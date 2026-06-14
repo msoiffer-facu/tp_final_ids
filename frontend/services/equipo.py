@@ -39,11 +39,11 @@ def crear_equipo(nombre, descripcion, curso_id):
     return _parse_response(resp)
 
 
-def editar_equipo(equipo_id, nombre, descripcion):
+def editar_equipo(equipo_id, nombre, descripcion, estado="Activo"):
     resp = backend_request(
         "PUT",
         f"/equipos/{equipo_id}",
-        json={"nombre": nombre, "descripcion": descripcion},
+        json={"nombre": nombre, "descripcion": descripcion, "estado": estado},
         timeout=5,
     )
     return _parse_response(resp)

@@ -68,15 +68,18 @@ def editar_equipo(id):
     data = request.get_json()
     nombre = data.get("nombre")
     descripcion = data.get("descripcion")
+    estado = data.get("estado", "Activo")
 
     if not nombre:
         return jsonify({"error": "El campo nombre es requerido"}), 400
+    if estado not in ("Activo", "Inactivo", "Abandono"):
+        return jsonify({"error": "Estado inválido"}), 400
 
     try:
         equipo = db_buscar_equipo_por_id(id)
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
-        db_editar_equipo(id, nombre, descripcion)
+        db_editar_equipo(id, nombre, descripcion, estado)
     except Exception as e:
         return jsonify({"error": f"Error al editar equipo: {str(e)}"}), 500
     return jsonify({"message": "Equipo actualizado correctamente"}), 200
