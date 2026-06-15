@@ -153,8 +153,6 @@ def create_asistencia():
         return "No existe una clase con ese id", 404
 
     tokens = serv_asistencia.pedir_asistencia(clase, id_clase)
-    print(type(tokens))
-    print(tokens)
  
     # Lanzar el envío en background sin bloquear la respuesta HTTP
     thread = threading.Thread(target=serv_asistencia._enviar_qr_en_thread, args=(tokens, id_clase))
