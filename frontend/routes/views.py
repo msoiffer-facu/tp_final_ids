@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, sessio
 import requests
 from services.asistencia import *
 from services.config import BACKEND_URL
-from services.curso import obtener_cursos, obtener_curso
+from services.curso import obtener_cursos, obtener_curso, crear_curso, actualizar_curso, eliminar_curso
 from services.equipo import (
     obtener_equipos,
     crear_equipo,
@@ -549,7 +549,10 @@ def curso_nuevo():
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.post(f"{BACKEND_URL}/cursos", json=data)
+        resultado = crear_curso(data)
+        if resultado["status_code"] != 201:
+            flash(resultado["data"].get("error", "Error al crear curso"), "danger")
+
         return redirect(url_for("views.cursos"))
     return render_template("cursos/curso_form.html", curso=None)
 
@@ -557,9 +560,11 @@ def curso_nuevo():
 @views_bp.route("/cursos/<int:id>/editar", methods=["GET", "POST"])
 def curso_editar(id):
     try:
-        curso = requests.get(f"{BACKEND_URL}/cursos/{id}").json()
+        curso = obtener_curso(id)
+
     except Exception:
         return redirect(url_for("views.cursos"))
+    
     if request.method == "POST":
         data = {
             "nombre": request.form.get("nombre"),
@@ -567,12 +572,20 @@ def curso_editar(id):
             "anio": int(request.form.get("anio")),
             "modificacion": request.form.get("modificacion")
         }
-        requests.put(f"{BACKEND_URL}/cursos/{id}", json=data)
+
+        resultado = actualizar_curso(id, data)
+        if resultado["status_code"] != 200:
+            flash(resultado["data"].get("error", "Error al actualizar curso"), "danger")
+
         return redirect(url_for("views.curso_detalle", id=id))
     return render_template("cursos/curso_form.html", curso=curso)
 
 
 @views_bp.route("/cursos/<int:id>/eliminar", methods=["POST"])
 def curso_eliminar(id):
-    requests.delete(f"{BACKEND_URL}/cursos/{id}")
+    resultado = eliminar_curso(id)
+
+    if resultado["status_code"] != 200:
+        flash(resultado["data"].get("error", "Error al eliminar curso"), "danger")
+
     return redirect(url_for("views.cursos"))

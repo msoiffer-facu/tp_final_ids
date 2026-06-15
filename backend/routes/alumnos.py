@@ -186,7 +186,7 @@ def crear_alumno():
             return jsonify({"error": ", ".join(errores_db)}), 400
 
         db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"],alumno_validado["curso_id"])
-        
+       
         registrar_historial_alumnos(f"Agregó al alumno {alumno_validado['nombre']} {alumno_validado['apellido']}", session.get("email"))
 
     except mysql.connector.Error:

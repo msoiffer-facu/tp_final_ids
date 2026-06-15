@@ -59,7 +59,7 @@ def create_curso():
 
         nuevo_id = db_create_curso(nombre, cuatrimestre, anio, modificacion)
         registrar_historial_cursos(f"Creó el curso '{nombre}'", session.get("email"))
-    
+        
     except:
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
@@ -96,7 +96,9 @@ def delete_curso(id):
         if not db_get_curso_by_id(id):
             return jsonify({"error": "Curso no encontrado."}), 404
         db_delete_curso(id)
+        print("registro historial eliminar")
         registrar_historial_cursos(f"Eliminó el curso '{id}'", session.get("email"))
+        print("ya se registro historial eliminar")
     except:
         return  jsonify({"error": "error en el servidor"}), 500
     return jsonify({"message": "Curso eliminado exitosamente."}), 200
@@ -246,6 +248,7 @@ def create_equipo(id):
 
         nuevo_id = db_create_equipo(nombre, descripcion, id)
         registrar_historial_cursos(f"Creó equipo '{nombre}' en curso {id}", session.get("email"))
+        print("ya se regiatro")
 
     except:
         return  jsonify({"error": "error en el servidor"}), 500
