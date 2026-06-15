@@ -7,7 +7,8 @@ create table cursos (
     nombre varchar(100),
     cuatrimestre varchar(20),
     anio int not null,
-    modificacion varchar(255)
+    modificacion varchar(255),
+    UNIQUE (nombre, cuatrimestre, anio)   
 );
 
 create table historial (

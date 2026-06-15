@@ -83,7 +83,7 @@ def editar_equipo(id):
         equipo = db_buscar_equipo_por_id(id)
         if not equipo:
             return jsonify({"error": "Equipo no encontrado"}), 404
- retoques
+
         db_editar_equipo(id, nombre, descripcion, estado)
 
         
@@ -91,7 +91,7 @@ def editar_equipo(id):
 
         registrar_historial_equipos(f"Creó el equipo '{nombre}'", session.get("email"))
         
- main
+
     except Exception as e:
         return jsonify({"error": f"Error al editar equipo: {str(e)}"}), 500
     return jsonify({"message": "Equipo actualizado correctamente"}), 200
