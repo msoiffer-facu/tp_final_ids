@@ -69,17 +69,14 @@ def db_get_alumno_id(id):
 def db_delete_alumno(id):
     db = get_db()
     cursor = db.cursor()
-
-    cursor.execute("DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
-
     cursor.execute("DELETE FROM asistencias WHERE alumno_id=%s", (id,))
-
+    cursor.execute("DELETE FROM tokens_asistencia WHERE alumno_id=%s", (id,))
     cursor.execute("DELETE FROM equipo_alumnos WHERE alumno_id=%s", (id,))
-
     cursor.execute("DELETE FROM notas WHERE alumno_id=%s", (id,))
-
+    cursor.execute("DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
     cursor.execute("DELETE FROM alumnos WHERE id=%s", (id,))
 
+    cursor.execute("")
 
     db.commit()
     cursor.close()
