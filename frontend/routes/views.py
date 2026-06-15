@@ -335,7 +335,7 @@ def equipo_nuevo():
         descripcion = request.form.get("descripcion", "").strip()
         curso_id = request.form.get("curso_id", "").strip()
 
-        if not nombre or not descripcion or not curso_id:
+        if not nombre or not curso_id:
             flash("Completa los campos obligatorios para crear el equipo.", "danger")
             return render_template(
                 "equipos/nuevo.html",
