@@ -85,12 +85,12 @@ def create_clase_presencial():
     except Exception as e:
         return f'Error interno al buscar el curso: {e}',500
     
-    crear_historial
 
     if not curso:
         return "El curso con el que quiere hacer la clase no existe", 404
     
     serv_asistencia.crear_asistencia(curso)
+    registrar_historial_asistencia(f"Se pidio asistencia de la clase {curso_id}", session.get("email"))
 
     return "", 201
 
@@ -159,7 +159,6 @@ def create_asistencia():
     thread.daemon = True
     thread.start()
  
-    registrar_historial_asistencia(f"Se pidio asistencia de la clase {id_clase}", session.get("email"))
     
     return "Se creo la asistencia correctamente", 200
 
