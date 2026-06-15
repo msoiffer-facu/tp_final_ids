@@ -76,8 +76,6 @@ def db_delete_alumno(id):
     cursor.execute("DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
     cursor.execute("DELETE FROM alumnos WHERE id=%s", (id,))
 
-    cursor.execute("")
-
     db.commit()
     cursor.close()
     db.close()
