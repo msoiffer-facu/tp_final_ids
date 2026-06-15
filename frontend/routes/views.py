@@ -1,5 +1,4 @@
 from flask import Blueprint, Response, render_template, redirect, url_for, request, session, flash
-from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
 from services.asistencia import *
 from services.config import BACKEND_URL
@@ -135,6 +134,48 @@ def estadisticas_pdf():
 
     except requests.RequestException:
         flash("Error al generar PDF.", "danger")
+        return render_template("dashboard.html")
+
+
+@views_bp.route("/alumnos/csv")
+def alumnos_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/alumnos/csv")
+        return Response(
+            response.content,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=reporte_alumnos.csv"}
+        )
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return render_template("dashboard.html")
+
+
+@views_bp.route("/equipos/csv")
+def equipos_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/equipos/csv")
+        return Response(
+            response.content,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=reporte_equipos.csv"}
+        )
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return render_template("dashboard.html")
+
+
+@views_bp.route("/estadisticas/csv")
+def estadisticas_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/estadisticas/csv")
+        return Response(
+            response.content,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=reporte_estadisticas.csv"}
+        )
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
         return render_template("dashboard.html")
   
 @views_bp.route("/alumnos/<int:id>")
