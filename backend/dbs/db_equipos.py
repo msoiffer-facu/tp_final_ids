@@ -18,11 +18,11 @@ def db_listar_equipos():
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("""
-            SELECT e.id, e.nombre, e.descripcion, e.curso_id, e.fecha_creacion,
+            SELECT e.id, e.nombre, e.descripcion, e.curso_id, e.estado, e.fecha_creacion,
                    COUNT(ea.alumno_id) AS miembros
             FROM equipos e
             LEFT JOIN equipo_alumnos ea ON ea.equipo_id = e.id
-            GROUP BY e.id, e.nombre, e.descripcion, e.curso_id, e.fecha_creacion
+            GROUP BY e.id, e.nombre, e.descripcion, e.curso_id, e.estado, e.fecha_creacion
         """)
         return cursor.fetchall()
     finally:
@@ -49,20 +49,20 @@ def db_buscar_equipo_por_id(id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT id, nombre, descripcion, curso_id, fecha_creacion FROM equipos WHERE id = %s", (id,))
+        cursor.execute("SELECT id, nombre, descripcion, curso_id, estado, fecha_creacion FROM equipos WHERE id = %s", (id,))
         return cursor.fetchone()
     finally:
         cursor.close()
         conn.close()
 
 
-def db_editar_equipo(id, nombre, descripcion):
+def db_editar_equipo(id, nombre, descripcion, estado):
     conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE equipos SET nombre = %s, descripcion = %s WHERE id = %s",
-            (nombre, descripcion, id)
+            "UPDATE equipos SET nombre = %s, descripcion = %s, estado = %s WHERE id = %s",
+            (nombre, descripcion, estado, id)
         )
         conn.commit()
     finally:

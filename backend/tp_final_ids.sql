@@ -95,6 +95,7 @@ create table equipos(
     nombre         varchar(100),
     descripcion    varchar(255),
     curso_id       int not null,
+    estado         varchar(20) not null default 'Activo',
     fecha_creacion timestamp default current_timestamp,
 
     foreign key (curso_id)

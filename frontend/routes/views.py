@@ -320,7 +320,7 @@ def equipos():
 
     for equipo in equipos:
         equipo["curso"] = cursos_map.get(equipo.get("curso_id"), f"Curso {equipo.get('curso_id')}")
-        equipo["estado"] = equipo.get("estado", "Activo")
+        equipo["estado"] = equipo.get("estado") or "Activo"
         equipo["miembros"] = equipo.get("miembros", 0)
 
     return render_template("equipos/listado.html", equipos=equipos)
@@ -372,7 +372,7 @@ def equipo_detalle(equipo_id):
 
     curso = obtener_curso(equipo.get("curso_id"))
     equipo["curso"] = curso["nombre"] if curso else f"Curso {equipo.get('curso_id')}"
-    equipo["estado"] = equipo.get("estado", "Activo")
+    equipo["estado"] = equipo.get("estado") or "Activo"
     equipo["miembros"] = equipo.get("miembros", 0)
 
     if request.method == "POST":
@@ -387,12 +387,13 @@ def equipo_detalle(equipo_id):
 
         nombre = request.form.get("nombre", "").strip()
         descripcion = request.form.get("descripcion", "").strip()
+        estado = request.form.get("estado", "Activo").strip()
 
         if not nombre:
             flash("El nombre del equipo es obligatorio.", "danger")
         else:
             try:
-                editar_equipo(equipo_id, nombre, descripcion)
+                editar_equipo(equipo_id, nombre, descripcion, estado)
                 flash("Datos del equipo actualizados.", "success")
                 return redirect(url_for("views.equipo_detalle", equipo_id=equipo_id))
             except RuntimeError as exc:

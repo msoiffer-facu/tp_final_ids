@@ -11,7 +11,7 @@
     <div>
         <p class="eyebrow">Equipos</p>
         <h1>Listado de equipos</h1>
-        <p class="subtitle">Seleccioná un equipo para ver sus datos, editarlo o eliminarlo.</p>
+        <p class="subtitle">Seleccioná un equipo para editarlo o eliminarlo.</p>
     </div>
     <a href="{{ url_for('views.equipo_nuevo') }}" class="btn-primary">+ Nuevo equipo</a>
 </div>
@@ -19,14 +19,35 @@
 <div class="table-card">
     <div class="table-card-header" style="display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem; border-bottom:1px solid #e5e7eb;">
         <h2>EQUIPOS REGISTRADOS</h2>
-        <span style="font-size:0.85rem; color:#6b7280;">{{ equipos|length }} equipo(s)</span>
+        <span id="contadorEquipos" style="font-size:0.85rem; color:#6b7280;">{{ equipos|length }} equipo(s)</span>
     </div>
 
-    <!-- Buscador -->
-    <div style="padding:0.75rem 1.5rem; border-bottom:1px solid #f3f4f6;">
+    <div style="padding:0.75rem 1.5rem; border-bottom:1px solid #f3f4f6; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
         <input type="text" id="buscador" placeholder="Buscar por nombre o curso..."
-               onkeyup="filtrar()"
-               style="width:100%; padding:8px 14px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+               oninput="filtrar()"
+               style="flex:1; min-width:180px; padding:8px 14px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+
+        <select id="filtroEstado" onchange="filtrar()"
+                style="padding:8px 14px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#fff; color:#374151;">
+            <option value="">Todos los estados</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="abandono">Abandono</option>
+        </select>
+
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px; color:#374151;">
+            <label for="filtroMiembrosMin" style="white-space:nowrap;">Miembros:</label>
+            <input type="number" id="filtroMiembrosMin" placeholder="Mín" min="0" oninput="filtrar()"
+                   style="width:70px; padding:8px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+            <span style="color:#9ca3af;">–</span>
+            <input type="number" id="filtroMiembrosMax" placeholder="Máx" min="0" oninput="filtrar()"
+                   style="width:70px; padding:8px 10px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+        </div>
+
+        <button onclick="limpiarFiltros()"
+                style="padding:8px 16px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; background:#f9fafb; color:#374151; cursor:pointer;">
+            Limpiar
+        </button>
     </div>
 
     <table id="tablaEquipos">
@@ -42,7 +63,11 @@
         </thead>
         <tbody>
             {% for equipo in equipos %}
-            <tr class="fila-equipo">
+            <tr class="fila-equipo"
+                data-nombre="{{ equipo.nombre | lower }}"
+                data-curso="{{ equipo.curso | lower }}"
+                data-estado="{{ equipo.estado | lower }}"
+                data-miembros="{{ equipo.miembros }}">
                 <td class="col-nombre">{{ equipo.nombre }}</td>
                 <td>{{ equipo.descripcion or '—' }}</td>
                 <td class="col-curso">{{ equipo.curso }}</td>
@@ -51,9 +76,9 @@
                     <span class="badge-estado {{ equipo.estado | lower }}">{{ equipo.estado }}</span>
                 </td>
                 <td class="acciones">
-                    <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="btn-accion ver">Ver</a>
+                    <a href="{{ url_for('views.equipo_detalle', equipo_id=equipo.id) }}" class="btn-accion ver">Editar</a>
                     <form method="POST" action="{{ url_for('views.equipo_delete', equipo_id=equipo.id) }}" style="display:inline;"
-                          onsubmit="return confirm('¿Seguro que querés eliminar el equipo {{ equipo.nombre }}?')">
+                          onsubmit="return confirm('¿Seguro que querés eliminar el equipo {{ equipo.nombre }}? Esta acción no se puede deshacer.')">
                         <button type="submit" class="btn-accion eliminar">Eliminar</button>
                     </form>
                 </td>
@@ -65,6 +90,10 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <p id="sinResultados" style="display:none; text-align:center; padding:1.5rem; color:#6b7280; font-size:14px;">
+        No se encontraron equipos con los filtros aplicados.
+    </p>
 </div>
 
 <style>
@@ -75,18 +104,47 @@
     font-size: 0.75rem;
     font-weight: 600;
 }
-.badge-estado.activo { background:#d1fae5; color:#166534; }
+.badge-estado.activo   { background:#d1fae5; color:#166534; }
 .badge-estado.inactivo { background:#fee2e2; color:#991b1b; }
+.badge-estado.abandono { background:#fef3c7; color:#92400e; }
 </style>
 
 <script>
 function filtrar() {
-    const q = document.getElementById("buscador").value.toLowerCase();
+    const q       = document.getElementById("buscador").value.toLowerCase().trim();
+    const estado  = document.getElementById("filtroEstado").value.toLowerCase();
+    const minVal  = document.getElementById("filtroMiembrosMin").value;
+    const maxVal  = document.getElementById("filtroMiembrosMax").value;
+    const min     = minVal !== "" ? parseInt(minVal) : null;
+    const max     = maxVal !== "" ? parseInt(maxVal) : null;
+
+    let visibles = 0;
     document.querySelectorAll(".fila-equipo").forEach(fila => {
-        const nombre = fila.querySelector(".col-nombre").textContent.toLowerCase();
-        const curso = fila.querySelector(".col-curso").textContent.toLowerCase();
-        fila.style.display = (nombre.includes(q) || curso.includes(q)) ? "" : "none";
+        const nombre   = fila.dataset.nombre;
+        const curso    = fila.dataset.curso;
+        const filEst   = fila.dataset.estado;
+        const miembros = parseInt(fila.dataset.miembros);
+
+        const okTexto  = !q      || nombre.includes(q) || curso.includes(q);
+        const okEstado = !estado || filEst === estado;
+        const okMin    = min === null || miembros >= min;
+        const okMax    = max === null || miembros <= max;
+
+        const mostrar = okTexto && okEstado && okMin && okMax;
+        fila.style.display = mostrar ? "" : "none";
+        if (mostrar) visibles++;
     });
+
+    document.getElementById("sinResultados").style.display = visibles === 0 ? "block" : "none";
+    document.getElementById("contadorEquipos").textContent = visibles + " equipo(s)";
+}
+
+function limpiarFiltros() {
+    document.getElementById("buscador").value = "";
+    document.getElementById("filtroEstado").value = "";
+    document.getElementById("filtroMiembrosMin").value = "";
+    document.getElementById("filtroMiembrosMax").value = "";
+    filtrar();
 }
 </script>
 {% endblock %}

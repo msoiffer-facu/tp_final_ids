@@ -30,8 +30,8 @@
             <input type="text" name="nombre" value="{{ equipo.nombre if equipo else '' }}" required>
         </label>
         <label>
-            Descripción
-            <textarea name="descripcion" rows="4" required>{{ equipo.descripcion if equipo else '' }}</textarea>
+            Descripción <span style="font-weight:400; color:#6b7280;">(opcional)</span>
+            <textarea name="descripcion" rows="4">{{ equipo.descripcion if equipo else '' }}</textarea>
         </label>
         <label>
             Curso
@@ -44,7 +44,11 @@
         </label>
         <label>
             Estado
-            <input type="text" name="estado" value="{{ equipo.estado if equipo else 'Activo' }}">
+            <select name="estado">
+                <option value="Activo" {% if not equipo or equipo.estado == 'Activo' %}selected{% endif %}>Activo</option>
+                <option value="Inactivo" {% if equipo and equipo.estado == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                <option value="Abandono" {% if equipo and equipo.estado == 'Abandono' %}selected{% endif %}>Abandono</option>
+            </select>
         </label>
 
         <div class="form-actions full-width">
