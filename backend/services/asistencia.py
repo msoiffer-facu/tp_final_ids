@@ -92,9 +92,11 @@ def revisar_token(token, clase_id):
 def pedir_asistencia(clase, id_clase):
     try:
         alumnos = db_asistencia.listar_alumnos_por_curso(clase["curso_id"])
-    except Exception:
-        return "Error interno al listar a los alumnos del curso",500
-
+    #except Exception:
+     #   return "Error interno al listar a los alumnos del curso",500
+    except Exception as e:
+        print("ERROR CREANDO ASISTENCIAS:", e)
+        raise
     if not alumnos:
         return "No hay alumnos en esta clase",404
 
@@ -107,9 +109,11 @@ def pedir_asistencia(clase, id_clase):
 
     try:
         db_asistencia.crear_asistencia_alumnos(alumnos, id_clase, tokens)
-    except Exception:
-        return "Error interno al crear las asistencias", 500
-    
+    #except Exception:
+     #   return "Error interno al crear las asistencias", 500
+    except Exception as e:
+        print("ERROR CREANDO TOKENS", e)
+        raise
     return tokens
 
 def _enviar_qr_en_thread(tokens, id_clase):
