@@ -91,7 +91,6 @@ def editar_equipo(id):
 
         registrar_historial_equipos(f"Creó el equipo '{nombre}'", session.get("email"))
         
-
     except Exception as e:
         return jsonify({"error": f"Error al editar equipo: {str(e)}"}), 500
     return jsonify({"message": "Equipo actualizado correctamente"}), 200
