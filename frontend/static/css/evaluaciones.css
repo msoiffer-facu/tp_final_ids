@@ -1,11 +1,6 @@
-/* ── Reutiliza los estilos de cursos.css para tablas, botones, modales y formularios ── */
+/* ── Estilos específicos de evaluaciones ── */
 
 /* ── Badge de estado de nota ── */
-.badge-promocionado { background: #dcfce7; color: #16a34a; }
-.badge-aprobado     { background: #dbeafe; color: #2563eb; }
-.badge-desaprobado  { background: #fee2e2; color: #dc2626; }
-.badge-sin-nota     { background: #f3f4f6; color: #9ca3af; }
-
 .badge-estado {
     display: inline-block;
     padding: 0.2rem 0.6rem;
@@ -13,6 +8,11 @@
     font-size: 0.75rem;
     font-weight: 500;
 }
+
+.badge-promocionado { background: #dcfce7; color: #16a34a; }
+.badge-aprobado     { background: #dbeafe; color: #2563eb; }
+.badge-desaprobado  { background: #fee2e2; color: #dc2626; }
+.badge-sin-nota     { background: #f3f4f6; color: #9ca3af; }
 
 /* ── Notas form ── */
 .nota-input {

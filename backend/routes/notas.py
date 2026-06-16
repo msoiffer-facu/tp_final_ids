@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
 from dbs.db_notas import crear_nota_db, obtener_notas_db, obtener_notas_alumno_db, obtener_notas_equipo_db, modificar_nota_db, eliminar_nota_db
+from dbs.db_historial import registrar_historial_notas
 
 notas_bp = Blueprint("notas", __name__)
 
@@ -15,6 +16,7 @@ def crear_nota():
  estado = data.get("estado")
  try:
     nueva_nota_id = crear_nota_db(alumno_id, evaluacion_id, nota_alumno, estado)
+    registrar_historial_notas(f"Creó una nota (alumno {alumno_id}, evaluación {evaluacion_id})", session.get("email"))
 
  except Exception as e:
     return jsonify({"error": str(e)}), 500
@@ -72,6 +74,7 @@ def modificar_nota(nota_id):
 
     try:
         filas_afectadas = modificar_nota_db(nota_id, nota_alumno, estado)
+        registrar_historial_notas(f"Modificó la nota ID {nota_id} a {nota_alumno} ({estado})", session.get("email"))
 
         if filas_afectadas == 0:
             return jsonify({"error": "Nota no encontrada"}), 404
@@ -88,6 +91,8 @@ def eliminar_nota(nota_id):
 
     if filas_afectadas == 0:
         return jsonify({"error": "Nota no encontrada"}), 404
+    
+    registrar_historial_notas(f"Eliminó la nota ID {nota_id}", session.get("email"))
 
  except Exception as e:
     return jsonify({"error": str(e)}), 500

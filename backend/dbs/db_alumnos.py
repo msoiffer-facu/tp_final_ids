@@ -69,23 +69,20 @@ def db_get_alumno_id(id):
 def db_delete_alumno(id):
     db = get_db()
     cursor = db.cursor()
-
-    cursor.execute("DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
-
     cursor.execute("DELETE FROM asistencias WHERE alumno_id=%s", (id,))
-
+    cursor.execute("DELETE FROM tokens_asistencia WHERE alumno_id=%s", (id,))
     cursor.execute("DELETE FROM equipo_alumnos WHERE alumno_id=%s", (id,))
-
     cursor.execute("DELETE FROM notas WHERE alumno_id=%s", (id,))
-
+    cursor.execute("DELETE FROM alumnos_curso WHERE alumnos_id=%s", (id,))
     cursor.execute("DELETE FROM alumnos WHERE id=%s", (id,))
+
+    cursor.execute("")
 
     db.commit()
     cursor.close()
     db.close()
 
-
-def db_create_alumno(nombre, apellido, email, padron, abandono, estado,curso_id):
+def db_create_alumno(nombre, apellido, email, padron, abandono, estado, curso_id):
     db = get_db()
     cursor = db.cursor(dictionary=True)
     cursor.execute(
@@ -93,12 +90,14 @@ def db_create_alumno(nombre, apellido, email, padron, abandono, estado,curso_id)
         (nombre, apellido, email, padron, abandono, estado)
         )
     db.commit()
-    id = cursor.lastrowid
-    cursor.execute(
-        "INSERT INTO alumnos_curso (alumnos_id,curso_id) VALUES (%s, %s)",
-        (id,curso_id)
+    alumno_id = cursor.lastrowid
+    if curso_id:
+     cursor.execute(
+        "INSERT INTO alumnos_curso (alumnos_id, curso_id) VALUES (%s, %s)",
+        (alumno_id,curso_id)
         )
-    db.commit()
+     db.commit()
+
     cursor.close()
     db.close()
 

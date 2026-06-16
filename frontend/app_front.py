@@ -22,7 +22,6 @@ app.register_blueprint(asistencia_front_bp)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "clave-secreta")
 
 
-"""
 @app.before_request
 def control_acceso():
     if request.endpoint == "static":
@@ -30,8 +29,8 @@ def control_acceso():
 
     logueado = usuario_logueado()
 
-    if request.endpoint == "auth.login":
-        if logueado:
+    if request.endpoint in ("auth.login", "auth.logout"):
+        if logueado and request.endpoint == "auth.login":
             return redirect(url_for("views.dashboard"))
         return None
 
@@ -39,6 +38,5 @@ def control_acceso():
         return redirect(url_for("auth.login"))
 
     return None
-"""
 if __name__ == "__main__":
     app.run(debug=True, port=os.environ.get("PORT", 5001))

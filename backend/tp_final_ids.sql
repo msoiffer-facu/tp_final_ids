@@ -7,7 +7,8 @@ create table cursos (
     nombre varchar(100),
     cuatrimestre varchar(20),
     anio int not null,
-    modificacion varchar(255)
+    modificacion varchar(255),
+    UNIQUE (nombre, cuatrimestre, anio)   
 );
 
 create table historial (
@@ -81,8 +82,8 @@ create table notas (
     id int  not null  auto_increment primary key,
     alumno_id int not null ,
     evaluacion_id int not null ,
-    nota_alumno decimal(4,2) not null,
-    estado varchar(20) not null,
+    nota_alumno decimal(4,2) not null default 0,
+    estado varchar(20) not null default 'Sin calificar',
 
     foreign key (alumno_id)
         references alumnos(id),
@@ -95,6 +96,7 @@ create table equipos(
     nombre         varchar(100),
     descripcion    varchar(255),
     curso_id       int not null,
+    estado         varchar(20) not null default 'Activo',
     fecha_creacion timestamp default current_timestamp,
 
     foreign key (curso_id)
@@ -113,6 +115,38 @@ create table equipo_alumnos (
         references alumnos(id)
 );
 
+create table tokens_asistencia (
+    id int not null auto_increment primary key,
+    token varchar(255) not null unique,
+    alumno_id int not null,
+    fecha_expiracion timestamp not null,
+    utilizado boolean not null default false,
+
+    foreign key (alumno_id)
+        references alumnos(id)
+);
+
+create table login(
+    id int not null auto_increment primary key,
+    profesor_id int not null ,
+    fecha timestamp default current_timestamp,
+
+    foreign key (profesor_id)
+        references profesores(id)
+);
+
+create table evaluacion_equipos (
+    evaluacion_id int not null,
+    equipo_id int not null,
+
+    primary key (evaluacion_id, equipo_id),
+
+    foreign key (evaluacion_id)
+        references evaluaciones(id),
+    foreign key (equipo_id)
+        references equipos(id)
+);
+
 create table asistencias (
     id int not null auto_increment primary key,
     alumno_id int not null,
@@ -127,24 +161,4 @@ create table asistencias (
         references clase_presencial(id),
     foreign key (token_id)
         references tokens_asistencia(id)
-);
-
-create table login(
-    id int not null auto_increment primary key,
-    profesor_id int not null ,
-    fecha timestamp default current_timestamp,
-
-    foreign key (profesor_id)
-        references profesores(id)
-);
-
-create table tokens_asistencia (
-    id int not null auto_increment primary key,
-    token varchar(255) not null unique,
-    alumno_id int not null,
-    fecha_expiracion timestamp not null,
-    utilizado boolean not null default false,
-
-    foreign key (alumno_id)
-        references alumnos(id)
 );

@@ -16,40 +16,46 @@
     <a href="{{ url_for('views.equipos') }}" class="btn secondary">Volver al listado</a>
 </div>
 
-<div class="detail-card">
-    <div class="detail-card-header">
-        <div>
-            <h2>Nuevo equipo</h2>
-            <p>Rellena la información y haz clic en guardar para crear el equipo.</p>
+<div style="max-width:720px; margin:0 auto;">
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <div>
+                <h2>Nuevo equipo</h2>
+                <p>Rellena la información y haz clic en guardar para crear el equipo.</p>
+            </div>
         </div>
+
+        <form method="POST" class="form-grid">
+            <label>
+                Nombre del equipo
+                <input type="text" name="nombre" value="{{ equipo.nombre if equipo else '' }}" required>
+            </label>
+            <label>
+                <span>Descripción <span style="font-weight:400; color:#6b7280; font-size:13px;">(opcional)</span></span>
+                <textarea name="descripcion" rows="3">{{ equipo.descripcion if equipo else '' }}</textarea>
+            </label>
+            <label>
+                Curso
+                <select name="curso_id" required>
+                    <option value="" disabled selected>Selecciona un curso</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}" {% if equipo and equipo.curso_id == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Estado
+                <select name="estado">
+                    <option value="Activo" {% if not equipo or equipo.estado == 'Activo' %}selected{% endif %}>Activo</option>
+                    <option value="Inactivo" {% if equipo and equipo.estado == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                    <option value="Abandono" {% if equipo and equipo.estado == 'Abandono' %}selected{% endif %}>Abandono</option>
+                </select>
+            </label>
+
+            <div class="form-actions full-width">
+                <button type="submit" class="btn primary">Crear equipo</button>
+            </div>
+        </form>
     </div>
-
-    <form method="POST" class="form-grid">
-        <label>
-            Nombre del equipo
-            <input type="text" name="nombre" value="{{ equipo.nombre if equipo else '' }}" required>
-        </label>
-        <label>
-            Descripción
-            <textarea name="descripcion" rows="4" required>{{ equipo.descripcion if equipo else '' }}</textarea>
-        </label>
-        <label>
-            Curso
-            <select name="curso_id" required>
-                <option value="" disabled selected>Selecciona un curso</option>
-                {% for curso in cursos %}
-                <option value="{{ curso.id }}" {% if equipo and equipo.curso_id == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label>
-            Estado
-            <input type="text" name="estado" value="{{ equipo.estado if equipo else 'Activo' }}">
-        </label>
-
-        <div class="form-actions full-width">
-            <button type="submit" class="btn primary">Crear equipo</button>
-        </div>
-    </form>
 </div>
 {% endblock %}

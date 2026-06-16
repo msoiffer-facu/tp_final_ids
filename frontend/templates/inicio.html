@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Sistema Académico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Encabezado de la materia -->
+<section class="inicio-hero">
+    <p class="inicio-fiuba">FIUBA</p>
+    <h1>Introducción al Desarrollo de Software</h1>
+    <p class="inicio-subtitulo">Facultad de Ingeniería · UBA</p>
+</section>
+
+<!-- Descripción + Info de la cursada -->
+<section class="inicio-intro">
+    <div class="inicio-descripcion">
+        <p>Materia de segundo año que introduce a los alumnos en los fundamentos del desarrollo de software moderno: desde la terminal hasta el despliegue de aplicaciones web completas.</p>
+    </div>
+
+    <aside class="inicio-info">
+        <h2>Info de la cursada</h2>
+        <ul>
+            {% for item in info_cursada %}
+            <li>
+                <span class="info-label">{{ item.label }}</span>
+                <span class="info-valor">{{ item.valor }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+</section>
+
+<!-- Contenidos del programa -->
+<section class="inicio-contenidos">
+    <span class="inicio-badge">Contenidos del programa</span>
+
+    <div class="contenidos-grid">
+        {% for contenido in contenidos %}
+        <article class="contenido-card">
+            <h3>{{ contenido.titulo }}</h3>
+            <p>{{ contenido.descripcion }}</p>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="inicio-footer">
+    <p>Introducción al Desarrollo de Software · FIUBA</p>
+</footer>
+
+{% endblock %}

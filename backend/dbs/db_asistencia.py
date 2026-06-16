@@ -56,15 +56,17 @@ def obtener_promedio_asistencia():
     db = get_db()
     cursor = db.cursor()
 
-    cursor.execute("""SELECT COUNT(*) FROM asistencias""")
-    total_alumno = cursor.fetchone()[0]
+    cursor.execute("""SELECT COUNT(*) AS total, COUNT(CASE WHEN presente = 1 THEN 1 END) AS presentes FROM asistencias""")
 
-    cursor.execute("""SELECT COUNT(*) FROM asistencias WHERE presente = TRUE""")
-    presentes = cursor.fetchone()[0]
-    
+    total, presentes = cursor.fetchone()
+
     cursor.close()
     db.close()
-    return (presentes / total_alumno) * 100 if total_alumno > 0 else 0
+
+    if total == 0:
+        return 0
+
+    return (presentes / total) * 100 if total > 0 else 0
 
 def obtener_clases_p(page, per_page, curso_id=None):
     db = get_db()

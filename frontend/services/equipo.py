@@ -39,11 +39,11 @@ def crear_equipo(nombre, descripcion, curso_id):
     return _parse_response(resp)
 
 
-def editar_equipo(equipo_id, nombre, descripcion):
+def editar_equipo(equipo_id, nombre, descripcion, estado="Activo"):
     resp = backend_request(
         "PUT",
         f"/equipos/{equipo_id}",
-        json={"nombre": nombre, "descripcion": descripcion},
+        json={"nombre": nombre, "descripcion": descripcion, "estado": estado},
         timeout=5,
     )
     return _parse_response(resp)
@@ -77,6 +77,30 @@ def obtener_miembros_equipo(curso_id, equipo_id):
     resp = backend_request(
         "GET",
         f"/cursos/{curso_id}/equipos/{equipo_id}/alumnos",
+        timeout=5,
+    )
+    return _parse_response(resp)
+
+
+def obtener_evaluaciones_equipo(equipo_id):
+    resp = backend_request("GET", f"/equipos/{equipo_id}/evaluaciones", timeout=5)
+    return _parse_response(resp)
+
+
+def asociar_equipo_evaluacion(equipo_id, evaluacion_id):
+    resp = backend_request(
+        "POST",
+        f"/equipos/{equipo_id}/tps",
+        json={"evaluacion_id": evaluacion_id},
+        timeout=5,
+    )
+    return _parse_response(resp)
+
+
+def desasociar_equipo_evaluacion(equipo_id, evaluacion_id):
+    resp = backend_request(
+        "DELETE",
+        f"/equipos/{equipo_id}/tps/{evaluacion_id}",
         timeout=5,
     )
     return _parse_response(resp)

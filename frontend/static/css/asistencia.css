@@ -1,3 +1,4 @@
+/* ── Estilos específicos de asistencia ── */
 :root {
     --color-primary:    #4f46e5;
     --color-primary-dk: #4338ca;
@@ -43,35 +44,33 @@
     letter-spacing: 0.05em;
     color: #6b7280;
 }
+
 /* Tarjeta de métrica que actúa como botón/acción */
 .metric-card-action {
-    background-color: #f0f5ff; /* Un fondo azul muy sutil para destacar que es clickeable */
+    background-color: #f0f5ff;
     border: 1px solid #bfdbfe;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
 }
 
-/* Efecto Hover para simular el botón */
 .metric-card-action:hover {
-    background-color: #e1effe; /* Azul un poco más oscuro al pasar el mouse */
+    background-color: #e1effe;
     border-color: #3b82f6;
-    transform: translateY(-2px); /* Pequeño efecto de elevación */
+    transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* --- NUEVA CLASE PARA EL BOTÓN DE ENVIAR (VERDE) --- */
+/* Tarjeta de enviar (verde) */
 .metric-card-send {
-    background-color: #f0fdf4; /* Un fondo verde muy sutil (Soft Green) */
-    border-color: #bbf7d0;     /* Borde verde claro */
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
 }
 
-/* Efecto Hover para la tarjeta de enviar */
 .metric-card-send:hover {
-    background-color: #dcfce7; /* Verde un poco más oscuro al pasar el mouse */
-    border-color: #22c55e;     /* Borde verde brillante al hacer hover */
+    background-color: #dcfce7;
+    border-color: #22c55e;
 }
 
-/* Distribución interna del icono y los textos */
 .metric-action-content {
     display: flex;
     align-items: center;
@@ -80,7 +79,7 @@
 }
 
 .qr-icon {
-    font-size: 2rem; /* Tamaño del emoji/icono */
+    font-size: 2rem;
     background: #fff;
     padding: 8px;
     border-radius: 8px;
@@ -90,24 +89,16 @@
 .metric-action-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e429f; /* Texto azul haciendo juego con el fondo */
+    color: #1e429f;
     margin-top: 2px;
 }
 
-.metric-send-title{
+.metric-send-title {
     color: #16a34a;
 }
 
-/* ── Mejoras en Filtros del Header ── */
-.table-filters {
-    display: flex;
-    gap: 12px;
-    flex-grow: 1;
-    margin: 0 2.5rem;
-    max-width: 500px;
-}
-
-.search-input, .filter-select {
+/* ── Filtros del Header de asistencia ── */
+.filter-select {
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
     border: 1px solid #d1d5db;
@@ -116,24 +107,35 @@
     color: #374151;
     background-color: #fff;
     transition: border-color 0.2s;
+    flex-grow: 1;
+    cursor: pointer;
 }
 
-.search-input { flex-grow: 2; }
-.filter-select { flex-grow: 1; cursor: pointer; }
-
-.search-input:focus, .filter-select:focus {
+.filter-select:focus {
     border-color: #2563eb;
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
+.table-header-left {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-/* ── Ajustes de Alineación de Celdas y Botones ── */
+/* ── Ajustes específicos de celdas y datos visuales ── */
 .text-right {
     text-align: right !important;
 }
 
 .acciones-cell.text-right {
     justify-content: flex-end;
+}
+
+.acciones-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
 }
 
 .visual-data {
@@ -146,123 +148,11 @@
     font-size: 0.8rem;
 }
 
-/* Pequeña corrección al margin-bottom del header heredado */
-.table-card-header {
-    margin-bottom: 0 !important;
-}
-
-/* ── Clases presenciales table ── */
-.table-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    overflow: hidden;
-}
-
-.table-card-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.table-card-header h2 {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #6b7280;
-}
-
-.table-header-left{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.table-card table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-}
-
-.table-card thead {
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.table-card th {
-    padding: 0.625rem 1.5rem;
-    text-align: left;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b7280;
-}
-
-.table-card tbody tr {
-    border-bottom: 1px solid #f3f4f6;
-    transition: background 0.1s;
-}
-
-.table-card tbody tr:last-child { border-bottom: none; }
-.table-card tbody tr:hover { background: #f9fafb; }
-
-.table-card td {
-    padding: 0.625rem 1.5rem;
-    color: #374151;
-}
-
-.table-card td.usuario { font-weight: 500; color: #111827; }
-.table-card td.hora    { font-size: 0.75rem; color: #9ca3af; }
-
-/* Contenedor de las acciones en la celda */
-.acciones-cell {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    align-items: center;
-}
-
-
 .text-center {
     text-align: center;
 }
 
-/* ── Pagination ── */
-.pagination {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.125rem;
-    padding: 0.625rem 1.5rem;
-    border-top: 1px solid #e5e7eb;
-}
-
-.pagination button,
-.pagination a {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-    color: #6b7280;
-    background: none;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: color 0.15s;
-}
-
-.pagination button:hover { color: #2563eb; }
-
-.pagination span.current {
-    color: #2563eb;
-    font-weight: 600;
-    border-bottom: 2px solid #2563eb;
-}
-
+/* ── Botón agregar específico de asistencia (verde) ── */
 .btn-agregar {
     background-color: #4CAF50;
     color: white;
@@ -286,11 +176,82 @@
     box-shadow: none;
 }
 
+/* ---------------------------------------------------------------
+   Modal específico de asistencia (con guión bajo)
+   --------------------------------------------------------------- */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 5vh 1rem 2rem;
+    overflow-y: auto;
+}
+
+.modal--open {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.modal__content {
+    position: relative;
+    background: var(--color-white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal__close {
+    position: absolute;
+    top: 0.8rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--color-gray);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    transition: color var(--transition);
+}
+
+.modal__close:hover {
+    color: var(--color-dark);
+}
+
+.modal__title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-dark);
+    margin-bottom: 0.3rem;
+}
+
+.modal__subtitle {
+    color: var(--color-gray);
+    margin-bottom: 1.5rem;
+    font-size: 0.92rem;
+}
 
 /* ---------------------------------------------------------------
-   Formulario
+   Formularios con guión bajo específicos de asistencia
    --------------------------------------------------------------- */
-
 .form__label {
     display: block;
     font-weight: 600;
@@ -373,7 +334,7 @@
 /* ---------------------------------------------------------------
    Modales
    --------------------------------------------------------------- */
-.modal {
+.modal-contenedor {
     display: none;
     position: fixed;
     inset: 0;
@@ -446,70 +407,3 @@
     margin-bottom: 1.5rem;
     font-size: 0.92rem;
 }
-
-/* -- Pagina detalles asistencia -- */
-
-.page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-}
-
-.page-header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-
-.btn-volver {
-    font-size: 0.875rem;
-    color: #6b7280;
-    text-decoration: none;
-}
-
-.btn-volver:hover { color: #111827; }
-
-/* ── Cards de detalle ── */
-.detalle-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-}
-
-.detalle-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-
-.detalle-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b7280;
-}
-
-.detalle-valor {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #111827;
-    margin-top: 0.5rem;
-}
-
-/* ── Badges ── */
-.badge {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.badge.verde { background: #dcfce7; color: #16a34a; }
-.badge.rojo  { background: #fee2e2; color: #dc2626; }
-.badge.gris  { background: #f3f4f6; color: #6b7280; }
