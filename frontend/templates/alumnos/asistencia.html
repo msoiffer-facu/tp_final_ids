@@ -11,7 +11,7 @@
     <div class="metric-card metric-card-action metric-card-send" onclick="abrirModalEnviarQR()">
     <div class="metric-action-content">
         <span class="qr-icon">✉️</span> <div>
-            <div class="metric-label" style="color: #16a34a;">Control de Asistencia</div>
+            <div class="metric-label metric-send-title">Control de Asistencia</div>
             <div class="metric-action-title metric-send-title">Enviar código QR</div>
         </div>
     </div>
@@ -19,8 +19,8 @@
     <div class="metric-card metric-card-action" onclick="abrirModalEscanearQR()">
         <div class="metric-action-content">
             <span class="qr-icon">📷</span> <div>
-                <div class="metric-label" style="color: #1e429f;">Control de Asistencia</div>
-                <div class="metric-action-title">Escanear código QR</div>
+                <div class="metric-label metric-color-blue">Control de Asistencia</div>
+                <div class="metric-action-title metric-color-blue">Escanear código QR</div>
             </div>
         </div>
     </div>
@@ -40,12 +40,12 @@
                 </select>
             </div>
         </div>
-        <button class="btn-agregar" onclick="abrirModalCrear()">+ Agregar Registro</button>
+        <button class="btn-primary" onclick="abrirModalCrear()">+ Agregar Registro</button>
     </div>
     <table>
         <thead>
             <tr>
-                <th style="width: 80px;">id</th>
+                <th class="id-table">id</th>
                 <th>curso</th>
                 <th>fecha</th>
                 <th>Asistencia pedida</th>
@@ -136,19 +136,19 @@
 </div>
 
 
-<div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
-    <div class="modal__content" style="background:#fff; padding:20px; border-radius:8px; width:90%; max-width:500px; text-align:center;">
+<div id="qr-modal" class="modal-div" style="display:none;">
+    <div class="modal__content modal_escanear_qr">
         <button class="modal__close" onclick="cerrarEscannerQR()" aria-label="Cerrar">&times;</button>
         <h3>Escanear Asistencia QR</h3>
         
-        <div style="margin-bottom: 15px;">
-            <label for="camera-select" style="font-size: 0.85rem; color: #4b5563; display: block; margin-bottom: 5px;">Seleccionar Cámara:</label>
-            <select id="camera-select" style="padding: 6px; width: 100%; border-radius: 4px; border: 1px solid #d1d5db;"></select>
+        <div class="div-select-camara">
+            <label class="label-select-camara" for="camera-select">Seleccionar Cámara:</label>
+            <select class="select-camara" id="camera-select"></select>
         </div>
 
-        <div id="reader" style="width:100%; background: #000; border-radius: 6px; overflow: hidden;"></div> 
+        <div id="reader"></div> 
         
-        <button onclick="finalizarEscannerQR()" style="margin-top:15px; padding:8px 16px; background:#ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Finalizar lectura QR de esta clase</button>
+        <button onclick="finalizarEscannerQR()" class="btn-finalizar-asistencia">Finalizar lectura QR de esta clase</button>
     </div>
 </div>
 

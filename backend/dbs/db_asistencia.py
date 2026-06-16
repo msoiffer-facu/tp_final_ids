@@ -283,6 +283,13 @@ def comprobar_token(token_ingresado, clase_id):
     ahora = datetime.now()
     db = get_db()
     cursor = db.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM clase_presencial WHERE id = %s",
+        (clase_id,),)
+    clase = cursor.fetchone()
+
+    if clase["finalizada"]:
+        return "Ya finalizo la toma de asistencias de esta clase"
+
     cursor.execute(
         "SELECT * FROM tokens_asistencia WHERE token = %s",
         (token_ingresado,),
