@@ -39,12 +39,21 @@ def inicio():
             "hasta el despliegue de aplicaciones web completas."
         ),
     }
+
     info_cursada = [
-        {"label": "Cuatrimestre", "valor": "2do - 2025"},
-        {"label": "Carga horaria", "valor": "6 hs semanales"},
-        {"label": "Modalidad", "valor": "Presencial"},
-        {"label": "Correlativa", "valor": "Algoritmos y Programación II"},
+        {"label": "Nombre", "valor": "Introducción al Desarrollo de Software"},
+        {"label": "Código", "valor": ""},
+        {"label": "Carrera", "valor": "Ingeniería en Informática / Lic. en Sistemas"},
+        {"label": "Carga horaria", "valor": "6 horas semanales"},
+        {"label": "Carga horaria total", "valor": "96 horas"},
+        {"label": "Modalidad", "valor": "Presencial/Virtual"},
+        {"label": "Tipo de materia", "valor": "Obligatoria"},
+        {"label": "Régimen", "valor": "Cuatrimestral"},
+        {"label": "Correlativas", "valor": "Sin correlativas"},
+        {"label": "Créditos", "valor": ""},
+        {"label": "Departamento", "valor": "Computación"},
     ]
+
     contenidos = [
         {"titulo": "Bases de datos MySQL", "descripcion": "Diseño de tablas, consultas SQL, INSERT, UPDATE y JOINs."},
         {"titulo": "Linux y Bash", "descripcion": "Terminal, comandos, scripting y manejo del sistema de archivos."},
@@ -53,13 +62,13 @@ def inicio():
         {"titulo": "Docker y despliegue", "descripcion": "Contenedores, imágenes, Docker Compose y entornos reproducibles."},
         {"titulo": "Frontend: HTML, CSS y JS", "descripcion": "Interfaces web conectadas al backend usando Flask como servidor."},
     ]
+
     return render_template(
         "inicio.html",
         materia=materia,
         info_cursada=info_cursada,
         contenidos=contenidos,
     )
-
 
 @views_bp.route("/dashboard")
 def dashboard():
