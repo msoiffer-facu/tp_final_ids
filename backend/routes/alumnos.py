@@ -1,12 +1,39 @@
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request, Response
+from db import get_db
+from dbs.db_exportar_csv import obtener_alumnos_exportar
+from flask import Blueprint, jsonify, request, url_for, session
 from herramientas.importar_csv import importar_alumnos_csv
+from herramientas.exportar_csv import generar_csv_alumnos
 from herramientas.validaciones_alumnos import  validar_data_alumno
-from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db
+from dbs.db_alumnos import db_get_alumnos, db_get_alumno_id, db_delete_alumno, db_create_alumno, db_update_alumno, comprobar_alumno_existente, cargar_alumnos_db, db_get_todos_alumnos
 import os
 import mysql.connector
+from dbs.db_historial import registrar_historial_alumnos
 
 alumnos_bp = Blueprint("alumnos", __name__)
 
+@alumnos_bp.route("/exportar", methods=["GET"])
+def exportar_alumnos():
+
+    try:
+        alumnos = obtener_alumnos_exportar()
+
+        csv_data = generar_csv_alumnos(alumnos)
+
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=alumnos.csv"
+            }
+        )
+
+    except Exception as e:
+        return jsonify({
+            "error": f"Error al exportar alumnos: {e}"
+        }), 500
+    
 @alumnos_bp.route("/", methods=["GET"])
 def obtener_alumnos():
     pagina = request.args.get("pagina", 1, type=int)
@@ -18,10 +45,9 @@ def obtener_alumnos():
 
     limit = 10
     offset = (pagina - 1) * limit
-    
+
     try:
         alumnos_pagina, total_registros = db_get_alumnos(offset, limit, busqueda, abandono)
-
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
 
@@ -34,6 +60,16 @@ def obtener_alumnos():
     }), 200
 
   
+@alumnos_bp.route("/todos", methods=["GET"])
+def listar_todos_alumnos():
+    """Devuelve todos los alumnos sin paginación, con su equipo. Usado para selectores."""
+    try:
+        alumnos = db_get_todos_alumnos()
+    except mysql.connector.Error:
+        return jsonify({"error": "Error de base de datos"}), 500
+    return jsonify(alumnos), 200
+
+
 @alumnos_bp.route("/importar", methods=["POST"])
 def importar_lista():
     file = request.files.get("file")
@@ -42,7 +78,7 @@ def importar_lista():
         return jsonify({"error": "Archivo faltante"}), 400
 
     name = file.filename
-    extension=os.path.splitext(name)[1].lower()
+    extension = os.path.splitext(name)[1].lower()
 
     if extension != '.csv':
         return jsonify({"error": "Formato invalido"}), 400
@@ -54,7 +90,11 @@ def importar_lista():
             return jsonify({"error": resultado["error"]}), 400
 
         resultado_db = cargar_alumnos_db(resultado["alumnos"])
+
+        registrar_historial_alumnos(f"Importó {resultado_db['insertados']} alumnos", session.get("email"))
+
     except mysql.connector.Error:
+        print(err)
         return jsonify({"error": "Error de base de datos"}), 500
     except Exception as err:
         return jsonify({"error": str(err)}), 500
@@ -62,7 +102,7 @@ def importar_lista():
     return jsonify({
         "insertados": resultado_db["insertados"],
         "existentes": resultado_db["existentes"],
-        "errores": resultado["errores"]
+        "errores": resultado_db.get("errores", [])
     }), 200
 
   
@@ -72,10 +112,9 @@ def obtener_alumno(id):
         alumno = db_get_alumno_id(id)
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
-
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
-    
+
     return jsonify(alumno), 200
 
 
@@ -85,9 +124,12 @@ def eliminar_alumno(id):
         alumno = db_get_alumno_id(id)
         if not alumno:
             return jsonify({"error": "Alumno no encontrado"}), 404
-
+        
         db_delete_alumno(id)
-
+        nombre = alumno['nombre']
+        apellido = alumno['apellido']
+        registrar_historial_alumnos(f"Eliminó al alumno {nombre} {apellido}", session.get("email"))
+        
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
 
@@ -111,9 +153,17 @@ def modificar_alumno(id):
         errores_db = comprobar_alumno_existente(alumno_validado["email"], alumno_validado["padron"], id)
         if errores_db:
             return jsonify({"error": ", ".join(errores_db)}), 400
+        
+        alumno = db_get_alumno_id(id)
 
-        db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
+        if not alumno:
+            return jsonify({"error": "Alumno no encontrado"}), 400
+        
+        curso_id = data.get("curso_id")
+        db_update_alumno(id, alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"], curso_id)
 
+        registrar_historial_alumnos(f"Modificó al alumno {alumno['nombre']} {alumno['apellido']}", session.get("email"))
+    
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500
 
@@ -135,7 +185,9 @@ def crear_alumno():
         if errores_db:
             return jsonify({"error": ", ".join(errores_db)}), 400
 
-        db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"])
+        db_create_alumno(alumno_validado["nombre"], alumno_validado["apellido"], alumno_validado["email"], alumno_validado["padron"], alumno_validado["abandono"], alumno_validado["estado"],alumno_validado["curso_id"])
+       
+        registrar_historial_alumnos(f"Agregó al alumno {alumno_validado['nombre']} {alumno_validado['apellido']}", session.get("email"))
 
     except mysql.connector.Error:
         return jsonify({"error": "Error de base de datos"}), 500

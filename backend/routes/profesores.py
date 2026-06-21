@@ -10,6 +10,7 @@ from dbs.db_profesores import (
     db_delete_profesor,
 )
 
+from dbs.db_historial import registrar_historial_profesores
 profesores_bp = Blueprint("profesores", __name__)
 
 
@@ -32,7 +33,9 @@ def login():
 
     session["profesor_id"] = profesor["id"]
     session["email"] = profesor["email"]
+
     return jsonify({"mensaje": "Login exitoso", "profesor_id": profesor["id"]}), 200
+
 
 
 @profesores_bp.route("/logout", methods=["POST"])
@@ -93,6 +96,9 @@ def crear_profesor():
         if existente:
             return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
         profesor_id = db_create_profesor(nombre, apellido, email, hashear_password(password))
+
+        registrar_historial_profesores(f"Agregó al profesor {nombre} {apellido}", session.get("email"))
+
         return jsonify({"mensaje": "Profesor creado", "profesor_id": profesor_id}), 201
     except mysql.connector.IntegrityError:
         return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
@@ -139,6 +145,9 @@ def actualizar_profesor(profesor_id):
             email=email,
             password=hashear_password(password) if password is not None else None,
         )
+
+        registrar_historial_profesores(f"Modificó al profesor {profesor_existente['nombre']} {profesor_existente['apellido']}", session.get("email"))
+
         return jsonify({"mensaje": "Profesor actualizado"}), 200
     except mysql.connector.IntegrityError:
         return jsonify({"error": "El email ya está en uso por otro profesor"}), 409
@@ -150,9 +159,17 @@ def actualizar_profesor(profesor_id):
 @login_required
 def eliminar_profesor(profesor_id):
     try:
+        profesor = db_get_profesor_by_id(profesor_id)
+        
+        if not profesor:
+            return jsonify({"error": "Profesor no encontrado"}), 404
+        
         afectados = db_delete_profesor(profesor_id)
         if afectados == 0:
             return jsonify({"error": "Profesor no encontrado"}), 404
+        
+        registrar_historial_profesores(f"Eliminó al profesor {profesor['nombre']} {profesor['apellido']}", session.get("email"))
+        
         return jsonify({"mensaje": "Profesor eliminado"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

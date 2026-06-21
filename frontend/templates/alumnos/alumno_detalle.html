@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ alumno.nombre }} {{ alumno.apellido }}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div class="page-header-left">
+        <a href="/alumnos" class="btn-volver">
+            ← Volver
+        </a>
+
+        <h1 class="page-title">
+            {{ alumno.nombre }} {{ alumno.apellido }}
+        </h1>
+    </div>
+
+    <div class="page-header-right">
+
+        <a
+            href="/alumnos/{{ alumno.id }}/editar"
+            class="btn-secondary"
+        >
+            Editar
+        </a>
+
+    </div>
+
+</div>
+
+<div class="perfil-card perfil-horizontal">
+
+    <div class="perfil-item">
+        <span class="perfil-label">Padrón</span>
+        <span class="perfil-padron">{{ alumno.padron }}</span>
+    </div>
+
+    <div class="perfil-item">
+        <span class="perfil-label">Email</span>
+        <span class="perfil-value">{{ alumno.email }}</span>
+    </div>
+
+    <div class="perfil-item">
+        <span class="perfil-label">Estado</span>
+
+        {% if alumno.abandono %}
+            <span class="badge rojo">Abandonó</span>
+        {% else %}
+            <span class="badge verde">Activo</span>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="table-card resumen-card" style="margin-top:1rem;">
+    <div class="table-card-header">
+        <h2>Resumen académico</h2>
+    </div>
+
+    <div class="resumen-notas">
+        <div class="promedio-box">
+            <span class="perfil-label">Promedio actual</span>
+            <span class="perfil-value">
+                {% if notas %}
+                    {{ promedio }}
+                {% else %}
+                    Sin evaluaciones
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="promedio-box">
+            <span class="perfil-label">Promoción hasta el momento</span>
+            <span class="perfil-value">
+                {% if notas %}
+                    {% if promociona %}
+                        <span class="badge verde">Promociona</span>
+                    {% else %}
+                        <span class="badge rojo">No promociona</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge gris">Sin evaluaciones</span>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Equipos -->
+
+<div class="table-card" style="margin-top:1.5rem;">
+
+    <div class="table-card-header">
+        <h2>Equipos</h2>
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for equipo in equipos %}
+            <tr>
+
+                <td class="alumno-nombre">
+                    {{ equipo.nombre }}
+                </td>
+
+                <td>
+                    {{ equipo.descripcion or "-" }}
+                </td>
+
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="vacio">
+                    No pertenece a ningún equipo.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- Notas -->
+
+<div class="table-card" style="margin-top:1rem;">
+
+    <div class="table-card-header">
+        <h2>Notas</h2>
+    </div>
+
+    <table class="tabla-detalle tabla-notas">
+
+    <thead>
+        <tr>
+            <th>Evaluación</th>
+            <th>Curso</th>
+            <th>Cuatrimestre</th>
+            <th>Año</th>
+            <th>Nota</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for nota in notas %}
+        <tr>
+
+            <td>
+                {{ nota.titulo }}
+            </td>
+
+            <td>
+                {{ nota.curso }}
+            </td>
+
+            <td>
+                {{ nota.cuatrimestre }}
+            </td>
+
+            <td>
+                {{ nota.anio }}
+            </td>
+
+            <td>
+                {{ nota.nota_alumno }}
+            </td>
+
+            <td>
+                {% if nota.estado == "PROMOCIONADO" %}
+                    <span class="badge verde">
+                        {{ nota.estado }}
+                    </span>
+                {% elif nota.estado == "APROBADO" %}
+                    <span class="badge azul">
+                        {{ nota.estado }}
+                    </span>
+                {% else %}
+                    <span class="badge rojo">
+                        {{ nota.estado }}
+                    </span>
+                {% endif %}
+            </td>
+
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6" class="vacio">
+                No hay notas registradas.
+            </td>
+        </tr>
+        {% endfor %}
+
+    </tbody>
+
+    </table>
+
+</div>
+
+<!-- Asistencias -->
+
+<div class="table-card" style="margin-top:1rem;">
+
+    <div class="table-card-header">
+        <h2>Asistencias</h2>
+    </div>
+    <table class="tabla-detalle tabla-asistencias">
+
+        <thead>
+            <tr>
+                <th>Clase</th>
+                <th>Curso</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Presente</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for asistencia in asistencias %}
+            <tr>
+                <td>{{ asistencia.clase_presencial_id }}</td>
+                <td>{{ asistencia.curso_nombre }}</td>
+                <td>{{ asistencia.fecha }}</td>
+                <td>{{ asistencia.asistencia_registrada }}</td>
+                <td>
+                    {% if asistencia.presente %}
+                     <span class="badge verde">Sí</span>
+                    {% else %}
+                     <span class="badge rojo">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="vacio">
+                    No hay asistencias registradas.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

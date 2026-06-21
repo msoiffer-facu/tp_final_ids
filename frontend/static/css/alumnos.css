@@ -1,211 +1,31 @@
-/* ─────────────────────────────
-   Header listado alumnos
-───────────────────────────── */
+/* ── Estilos específicos de alumnos ── */
 
-.table-card-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.table-card-header h2 {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #6b7280;
-}
-
-/* ─────────────────────────────
-   Filtros
-───────────────────────────── */
-
-.table-filters {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex: 1;
-    margin: 0 1.5rem;
-}
-
-.search-input {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background: #fff;
-
-    font-size: 0.875rem;
-    color: #374151;
-
-    transition:
-        border-color 0.15s,
-        box-shadow 0.15s;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
-}
-
-#buscador {
-    width: 320px;
-}
-
-/* ─────────────────────────────
-   Botones
-───────────────────────────── */
-
-.btn-buscar,
-.btn-agregar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 0.5rem 0.9rem;
-
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-
-    background: #fff;
-
-    font-size: 0.8rem;
-    font-weight: 500;
-
-    color: #374151;
-    text-decoration: none;
-
-    cursor: pointer;
-
-    transition:
-        background 0.15s,
-        border-color 0.15s;
-}
-
-.btn-buscar:hover,
-.btn-agregar:hover {
-    background: #f9fafb;
-}
-
-/* ─────────────────────────────
-   Tabla alumnos
-───────────────────────────── */
-
-.table-card table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-}
-
-.table-card th {
-    padding: 0.85rem 2rem;
-}
-
-.table-card td {
-    padding: 1rem 2rem;
-    color: #374151;
-}
-
-/* separa visualmente columnas */
-.table-card th:not(:last-child),
-.table-card td:not(:last-child) {
-    border-right: 1px solid #f3f4f6;
-}
-
-.table-card tbody tr:hover {
-    background: #f9fafb;
-}
-
-/* ─────────────────────────────
-   Badges estado
-───────────────────────────── */
-
-.badge {
-    display: inline-block;
-
-    padding: 0.25rem 0.6rem;
-
-    border-radius: 999px;
-
-    font-size: 0.72rem;
-    font-weight: 600;
-}
-
-.badge-success {
-    background: #ecfdf5;
-    color: #047857;
-}
-
-.badge-warning {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-/* ─────────────────────────────
-   Acciones
-───────────────────────────── */
-
-.acciones-cell {
-    text-align: center;
-}
-
-.btn-accion {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 32px;
-    height: 32px;
-
-    border-radius: 6px;
-
-    text-decoration: none;
-
-    transition: background 0.15s;
-}
-
-.btn-ver:hover {
-    background: #eff6ff;
-}
-
-/* ─────────────────────────────
-   ABM alumno
-───────────────────────────── */
-
+/* ── Formularios con guión bajo (usados en abm.html) ── */
 .modal__content {
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
-
     padding: 2rem;
-
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     max-width: 760px;
     margin: 0 auto;
+}
+
+.modal__content--wide {
+    max-width: 760px;
 }
 
 .modal__title {
     font-size: 1.1rem;
     font-weight: 700;
     color: #111827;
-
     margin-bottom: 1.5rem;
 }
-
-/* ─────────────────────────────
-   Formulario
-───────────────────────────── */
 
 .form__row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-
     margin-bottom: 1rem;
 }
 
@@ -215,26 +35,19 @@
 
 .form__label {
     display: block;
-
     margin-bottom: 0.4rem;
-
     font-size: 0.82rem;
     font-weight: 600;
-
     color: #374151;
 }
 
 .form__input,
 .form__select {
     width: 100%;
-
     padding: 0.7rem 0.9rem;
-
     border: 1px solid #d1d5db;
     border-radius: 6px;
-
     background: #fff;
-
     font-size: 0.875rem;
 }
 
@@ -244,31 +57,39 @@
     border-color: #2563eb;
 }
 
-/* ─────────────────────────────
-   Footer acciones
-───────────────────────────── */
+.form__input[type="file"]::file-selector-button {
+    padding: 0.5rem 0.9rem;
+    margin-right: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.form__input[type="file"]::file-selector-button:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+}
 
 .form__actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-
     margin-top: 1.5rem;
 }
 
 .form__btn {
     padding: 0.6rem 1rem;
-
     border: 1px solid #d1d5db;
     border-radius: 6px;
-
     background: #fff;
-
     font-size: 0.82rem;
     font-weight: 500;
-
     cursor: pointer;
-
     transition: background 0.15s;
 }
 
@@ -279,7 +100,7 @@
 .form__btn--submit {
     background: #2563eb;
     border-color: #2563eb;
-    color: white;
+    color: #fff;
 }
 
 .form__btn--submit:hover {
@@ -289,72 +110,347 @@
 .btn-eliminar {
     background: #ef4444;
     border-color: #ef4444;
-    color: white;
+    color: #fff;
 }
 
 .btn-eliminar:hover {
     background: #dc2626;
 }
 
-/* ─────────────────────────────
-   Importar CSV 
-───────────────────────────── */
+/* ── Búsqueda específica de alumnos ── */
+#buscador {
+    width: 320px;
+}
+
+/* ==========================================================
+   DETALLE DE ALUMNO
+========================================================== */
+
+.perfil-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.perfil-horizontal {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.perfil-item {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.perfil-label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.perfil-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.perfil-padron {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* ==========================================================
+   TARJETAS DE TABLAS
+========================================================== */
+
+.table-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-card-header h2 {
+    margin: 0;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-card thead {
+    background: #f9fafb;
+}
+
+.table-card th {
+    padding: .9rem 1rem;
+    text-align: left;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-card td {
+    padding: .9rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111827;
+    font-size: .92rem;
+}
+
+.table-card tbody tr:hover {
+    background: #f9fafb;
+}
+
+.table-card tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tabla-detalle {
+    table-layout: fixed;
+}
+
+.tabla-notas th:nth-child(1),
+.tabla-notas td:nth-child(1) {
+    width: 30%;
+}
+
+.tabla-notas th:nth-child(2),
+.tabla-notas td:nth-child(2) {
+    width: 18%;
+}
+
+.tabla-notas th:nth-child(3),
+.tabla-notas td:nth-child(3) {
+    width: 16%;
+}
+
+.tabla-notas th:nth-child(4),
+.tabla-notas td:nth-child(4) {
+    width: 10%;
+}
+
+.tabla-notas th:nth-child(5),
+.tabla-notas td:nth-child(5) {
+    width: 8%;
+    text-align: center;
+}
+
+.tabla-notas th:nth-child(6),
+.tabla-notas td:nth-child(6) {
+    width: 18%;
+    text-align: center;
+}
+
+.tabla-asistencias th:nth-child(1),
+.tabla-asistencias td:nth-child(1) {
+    width: 12%;
+}
+
+.tabla-asistencias th:nth-child(2),
+.tabla-asistencias td:nth-child(2) {
+    width: 24%;
+}
+
+.tabla-asistencias th:nth-child(3),
+.tabla-asistencias td:nth-child(3) {
+    width: 22%;
+}
+
+.tabla-asistencias th:nth-child(4),
+.tabla-asistencias td:nth-child(4) {
+    width: 22%;
+}
+
+.tabla-asistencias th:nth-child(5),
+.tabla-asistencias td:nth-child(5) {
+    width: 20%;
+    text-align: center;
+}
+
+.vacio {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+}
+
+/* ==========================================================
+   BLOQUE PROMEDIO
+========================================================== */
+
+.resumen-notas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: .75rem;
+}
+
+.resumen-card .table-card-header {
+    align-items: center;
+}
+
+.promedio-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: .85rem 1rem;
+    min-width: 140px;
+    flex: 1;
+}
+
+.promedio-box .perfil-label {
+    font-size: .75rem;
+    display: block;
+    margin-bottom: .25rem;
+}
+
+.promedio-box .perfil-value {
+    font-size: .98rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* ==========================================================
+   BADGES
+========================================================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .3rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.badge.verde {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.rojo {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge.azul {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge.gris {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* ==========================================================
+   LISTADO DE ALUMNOS
+========================================================== */
+
+.alumno-nombre {
+    font-weight: 600;
+    color: #111827;
+}
+
+.estado-activo {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.estado-inactivo {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ==========================================================
+   CSV
+========================================================== */
 
 .import-info {
-    font-size: 0.9rem;
+    font-size: .9rem;
     color: #6b7280;
     margin-bottom: 1rem;
 }
 
-
-.error-box {
-    margin-top: 1.5rem;
-    border-left: 4px solid #ef4444;
+.resultado-card {
+    margin-top: 1rem;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
 }
 
-.success-box {
-    margin-top: 1.5rem;
-    border-left: 4px solid #22c55e;
+.error-card {
+    border-left: 4px solid #dc2626;
+}
+
+.success-card {
+    border-left: 4px solid #16a34a;
 }
 
 .error-list {
-    font-size: 0.85rem;
+    padding: 1rem 2rem;
+    margin: 0;
     color: #374151;
-    margin-left: 1rem;
+}
+
+.error-list li {
+    margin-bottom: .4rem;
 }
 
 .success-text {
-    font-size: 0.85rem;
+    padding: 1rem 1.5rem;
     color: #374151;
 }
 
-form__input[type="file"] {
-    padding: 0.6rem 0.9rem;
-    cursor: pointer;
-}
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
 
+@media (max-width: 768px) {
 
-.form__input[type="file"]::file-selector-button {
-    padding: 0.5rem 0.9rem;
+    .perfil-horizontal {
+        grid-template-columns: 1fr;
+    }
 
-    margin-right: 0.75rem;
+    .table-card {
+        overflow-x: auto;
+    }
 
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    .table-card table {
+        min-width: 700px;
+    }
 
-    background: #fff;
+    .table-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-    font-size: 0.8rem;
-    font-weight: 500;
-
-    color: #374151;
-
-    cursor: pointer;
-
-    transition: background 0.15s, border-color 0.15s;
-}
-
-.form__input[type="file"]::file-selector-button:hover {
-    background: #f9fafb;
-    border-color: #cbd5e1;
+    #buscador {
+        width: 100%;
+    }
 }

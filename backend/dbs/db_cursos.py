@@ -4,20 +4,43 @@ from db import get_db
 
 # ─── CURSOS ───
 
-def db_get_cursos(page=1, per_page=10):
+def db_get_cursos(page=1, per_page=10, cuatrimestre=""):
     offset = (page - 1) * per_page
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    
-    cursor.execute("SELECT COUNT(*) as total FROM cursos")
+
+    where = "WHERE c.cuatrimestre = %s" if cuatrimestre else ""
+    params_count = (cuatrimestre,) if cuatrimestre else ()
+
+    cursor.execute(f"SELECT COUNT(*) as total FROM cursos c {where}", params_count)
     total = cursor.fetchone()["total"]
-    
-    cursor.execute("SELECT * FROM cursos LIMIT %s OFFSET %s", (per_page, offset))
+
+    query = f"""
+        SELECT c.*, COUNT(ac.alumnos_id) as cantidad_alumnos
+        FROM cursos c
+        LEFT JOIN alumnos_curso ac ON ac.curso_id = c.id
+        {where}
+        GROUP BY c.id
+    """
+
+    if per_page == -1:
+        cursor.execute(query, params_count)
+    else:
+        cursor.execute(query + " LIMIT %s OFFSET %s", params_count + (per_page, offset))
+
     cursos = cursor.fetchall()
-    
     cursor.close()
     conn.close()
     return cursos, total
+
+def get_total_alumnos_curso(curso_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM alumnos_curso WHERE curso_id = %s", (curso_id,))
+    total = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return total
 
 def db_get_curso_by_id(id):
     conn = get_db()
@@ -55,11 +78,14 @@ def db_update_curso(id, nombre, cuatrimestre, anio, modificacion):
 def db_delete_curso(id):
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute("DELETE FROM alumnos_curso WHERE curso_id = %s", (id,))
+    cursor.execute("DELETE FROM clase_presencial WHERE curso_id = %s", (id,))
+    cursor.execute("DELETE FROM equipos WHERE curso_id = %s", (id,))
+    cursor.execute("DELETE FROM evaluaciones WHERE curso_id = %s", (id,))
     cursor.execute("DELETE FROM cursos WHERE id = %s", (id,))
     conn.commit()
     cursor.close()
     conn.close()
-
 
 # ─── ALUMNOS DEL CURSO ───
 

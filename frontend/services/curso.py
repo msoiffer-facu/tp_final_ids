@@ -1,55 +1,54 @@
-from services.config import BACKEND_URL
 import requests
+
+from services.config import BACKEND_URL
+from services.login import backend_request
+
 
 def obtener_cursos():
     try:
-        # response = requests.get(f"{BACKEND_URL}/cursos/cursos")
-        # cursos = response.json()
-        cursos = [
-        {
-            "anio": 2026,
-            "cuatrimestre": "1",
-            "id": 1,
-            "modificacion": "nose",
-            "nombre": "clase 12"
-        },
-        {
-            "anio": 2026,
-            "cuatrimestre": "2",
-            "id": 2,
-            "modificacion": "nose",
-            "nombre": "clase 12b"
-        },
-        {
-            "anio": 2025,
-            "cuatrimestre": "1",
-            "id": 3,
-            "modificacion": "nose",
-            "nombre": "clase 1"
-        },
-        {
-            "anio": 2025,
-            "cuatrimestre": "2",
-            "id": 4,
-            "modificacion": "nose",
-            "nombre": "clase 4"
-        },
-        {
-            "anio": 2024,
-            "cuatrimestre": "1",
-            "id": 5,
-            "modificacion": "ninguna",
-            "nombre": "curso 15"
-        }
-        ]
-    except:
-        cursos = []
-    return cursos
+        response = backend_request("GET", "/cursos", params={"page": 1, "per_page": -1})
 
-def obtener_curso_con_nombre(nombre):
+        data = response.json()
+        return data.get("cursos", [])
+
+    except Exception:
+        return []
+
+
+def obtener_curso(curso_id):
     try:
-        response = requests.get(f"{BACKEND_URL}/asistencia")
-        clases_p = response.json()
-    except:
-        clases_p = []
-    return clases_p
+        response = backend_request("GET", f"/cursos/{curso_id}")
+
+        if response.ok:
+            return response.json()
+
+    except requests.RequestException:
+        pass
+
+    return None
+
+
+def crear_curso(datos):
+    response = backend_request("POST", "/cursos", json=datos)
+
+    return {"status_code": response.status_code, "data": response.json()}
+
+
+def actualizar_curso(curso_id, datos):
+    response = backend_request("PUT", f"/cursos/{curso_id}", json=datos)
+
+    return {
+        "status_code": response.status_code,
+        "data": response.json()
+    }
+
+
+def eliminar_curso(curso_id):
+    response = backend_request("DELETE", f"/cursos/{curso_id}")
+
+    try:
+        data = response.json()
+    except Exception:
+        data = {"error": response.text}
+
+    return {"status_code": response.status_code, "data": data}

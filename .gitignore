@@ -2,6 +2,5 @@
 __pycache__/
 .env
 venv/
-!.env.example
-!frontend/.env.example
-!backend/.env.example
+
+backend/routes/__init__.py

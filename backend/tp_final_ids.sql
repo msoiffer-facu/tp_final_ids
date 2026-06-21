@@ -7,15 +7,23 @@ create table cursos (
     nombre varchar(100),
     cuatrimestre varchar(20),
     anio int not null,
-    modificacion varchar(255)
+    modificacion varchar(255),
+    UNIQUE (nombre, cuatrimestre, anio)   
 );
 
+create table historial (
+    id int not null auto_increment primary key,
+    usuario varchar(100) not null,
+    accion varchar(255) not null,
+    area varchar(100) not null,
+    hora timestamp default current_timestamp
+);
 
 create table clase_presencial
 (
     id       int auto_increment primary key,
     curso_id int not null,
-    fecha    timestamp,
+    fecha    timestamp not null,
     pedir_asistencia TINYINT(1) DEFAULT 0 NOT NULL,
     finalizada TINYINT(1) DEFAULT 0 NOT NULL,
     foreign key (curso_id) references cursos(id)
@@ -59,7 +67,7 @@ create table tipos_evaluacion (
 create table evaluaciones (
     id int not null auto_increment primary key,
     titulo varchar(200),
-    fecha date,
+    fecha datetime,
     tipo_id int not null,
     curso_id int not null,
 
@@ -74,8 +82,8 @@ create table notas (
     id int  not null  auto_increment primary key,
     alumno_id int not null ,
     evaluacion_id int not null ,
-    nota_alumno decimal(4,2) not null,
-    estado varchar(20) not null,
+    nota_alumno decimal(4,2) not null default 0,
+    estado varchar(20) not null default 'Sin calificar',
 
     foreign key (alumno_id)
         references alumnos(id),
@@ -88,6 +96,7 @@ create table equipos(
     nombre         varchar(100),
     descripcion    varchar(255),
     curso_id       int not null,
+    estado         varchar(20) not null default 'Activo',
     fecha_creacion timestamp default current_timestamp,
 
     foreign key (curso_id)
@@ -106,17 +115,15 @@ create table equipo_alumnos (
         references alumnos(id)
 );
 
-create table asistencias (
+create table tokens_asistencia (
     id int not null auto_increment primary key,
+    token varchar(255) not null unique,
     alumno_id int not null,
-    clase_presencial_id int not null,
-    presente boolean,
-    codigo_qr varchar(1024),
+    fecha_expiracion timestamp not null,
+    utilizado boolean not null default false,
 
     foreign key (alumno_id)
-        references alumnos(id),
-    foreign key (clase_presencial_id)
-        references clase_presencial(id)
+        references alumnos(id)
 );
 
 create table login(
@@ -128,13 +135,30 @@ create table login(
         references profesores(id)
 );
 
-create table tokens_asistencia (
+create table evaluacion_equipos (
+    evaluacion_id int not null,
+    equipo_id int not null,
+
+    primary key (evaluacion_id, equipo_id),
+
+    foreign key (evaluacion_id)
+        references evaluaciones(id),
+    foreign key (equipo_id)
+        references equipos(id)
+);
+
+create table asistencias (
     id int not null auto_increment primary key,
-    token varchar(255) not null unique,
     alumno_id int not null,
-    fecha_expiracion timestamp,
-    utilizado boolean default false,
+    clase_presencial_id int not null,
+    presente boolean DEFAULT 0 NOT NULL,
+    token_id int not null,
+    asistencia_registrada timestamp,
 
     foreign key (alumno_id)
-        references alumnos(id)
+        references alumnos(id),
+    foreign key (clase_presencial_id)
+        references clase_presencial(id),
+    foreign key (token_id)
+        references tokens_asistencia(id)
 );

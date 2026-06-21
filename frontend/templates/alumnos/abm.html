@@ -10,25 +10,20 @@
 {% block content %}
 
 <div class="abm-container">
+    <div class="page-header">
+    <div class="page-header-left">
+        <a href="/alumnos" class="btn-volver"> ← Volver </a>
+        <h1 class="page-title"> Nuevo alumno </h1>
+    </div>
+</div>
     <div class="modal__content modal__content--wide">
-        <h1 class="modal__title">
-            Alumno
-        </h1>
+        <h1 class="modal__title"> Alumno </h1>
 
-        <form
-            method="POST"
-            {% if alumno.id %}
-            action="/alumnos/{{ alumno.id }}/editar"
-            {% else %}
-            action="/alumnos/nuevo"
-            {% endif %}
-        >
+        <form method="POST" {% if alumno.id %} action="/alumnos/{{ alumno.id }}/editar" {% else %} action="/alumnos/nuevo" {% endif %}>
         
             <div class="form__row">
                 <div class="form__group">
-                    <label class="form__label">
-                        Nombre
-                    </label>
+                    <label class="form__label"> Nombre</label>
 
                     <input
                         type="text"
@@ -102,6 +97,19 @@
                 </select>
 
             </div>
+            <div class="form__group"> 
+                <label class="form__label">
+                    Curso
+                </label>
+                <select name="curso_id" class="form__select">
+                    <option value="">Cursos</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
 
             <div class="form__actions">
                 <button
@@ -114,20 +122,53 @@
         </form>
 
         {% if alumno.id %}
-        <form
-            method="POST"
-            action="/alumnos/{{ alumno.id }}/eliminar"
-        >
+        <div class="form__actions form__actions--delete">
             <button
-                type="submit"
-                class="form__btn btn-eliminar"
+                type="button"
+                class="btn-danger"
+                onclick='confirmarEliminar({{ alumno.id }}, {{ (alumno.nombre ~ " " ~ alumno.apellido) | tojson }})'
             >
                 Eliminar alumno
             </button>
-        </form>
+        </div>
         {% endif %}
     </div>
 
 </div>
 
+{% if alumno.id %}
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal">
+        <p class="modal-titulo">¿Estás seguro?</p>
+        <p class="modal-texto">Estás por eliminar al alumno <strong id="modal-nombre"></strong>. Esta acción no se puede deshacer.</p>
+        <div class="modal-btns">
+            <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+            <form id="form-eliminar" method="POST" style="display:inline;">
+                <button type="submit" class="btn-confirmar">Sí, eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% if alumno.id %}
+<script>
+    function confirmarEliminar(id, nombre) {
+        document.getElementById('modal-nombre').textContent = nombre;
+        document.getElementById('form-eliminar').action = '/alumnos/' + id + '/eliminar';
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal();
+    });
+</script>
+{% endif %}
 {% endblock %}

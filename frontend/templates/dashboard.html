@@ -20,7 +20,7 @@
     </div>
     <div class="stat-card">
         <p class="label">Prom.<br>Asistencia</p>
-        <p class="value">{{ stats.prom_asistencia }}</p>
+        <p class="value">{{ stats.prom_asistencia }}%</p>
     </div>
     <div class="stat-card">
         <p class="label">Notas<br>subidas</p>
@@ -45,6 +45,7 @@
         <div class="action-row">
             <p>Listado alumnos</p>
             <div class="action-btns">
+
                 <a href="/alumnos" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -52,7 +53,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    Vizualizar
+                    Visualizar
                 </a>
                 <a href="/alumnos/pdf" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,6 +62,14 @@
                     </svg>
                     PDF
                 </a>
+                <a href="/alumnos/importar" class="btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    Importar CSV
+                </a>
+
             </div>
         </div>
 
@@ -74,7 +83,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
-                    Vizualizar
+                    Visualizar
                 </a>
                 <a href="/equipos/pdf" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,21 +92,19 @@
                     </svg>
                     PDF
                 </a>
+                <a href="/equipos/csv" class="btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    CSV
+                </a>
             </div>
         </div>
 
         <div class="action-row">
             <p>Est. aprobacion</p>
             <div class="action-btns">
-                <a href="/estadisticas" class="btn">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    Vizualizar
-                </a>
                 <a href="/estadisticas/pdf" class="btn">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -105,80 +112,51 @@
                     </svg>
                     PDF
                 </a>
+                <a href="/estadisticas/csv" class="btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    CSV
+                </a>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Historial -->
-<div class="table-card">
+<div class="table-card history-table-card">
     <div class="table-card-header">
-        <h2>Historial Registros</h2>
+        <div class="history-title-block">
+            <p class="history-kicker">Registro</p>
+            <h2>Actividad reciente</h2>
+        </div>
+        <span class="history-count">{{ historial|length if historial else 0 }}</span>
     </div>
+
     <table>
         <thead>
             <tr>
-                <th>usuario</th>
-                <th>accion</th>
-                <th>area</th>
-                <th>hora</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Área</th>
+                <th>Hora</th>
             </tr>
         </thead>
         <tbody>
-            {% for registro in historial %}
-            <tr>
-                <td class="usuario">{{ registro.usuario }}</td>
-                <td>{{ registro.accion }}</td>
-                <td>{{ registro.area }}</td>
-                <td class="hora">{{ registro.hora }}</td>
-            </tr>
-            {% endfor %}
+            {% if historial and historial|length > 0 %}
+                {% for item in historial %}
+                    <tr>
+                        <td class="usuario">{{ item.usuario }}</td>
+                        <td>{{ item.accion }}</td>
+                        <td>{{ item.area }}</td>
+                        <td class="hora">{{ item.hora }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4" class="vacio">No hay actividad registrada</td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
-    <div class="pagination">
-        <button>&lt;</button>
-        <span class="current">1</span>
-        <span>2</span>
-        <span>3</span>
-        <span>...</span>
-        <button>&gt;</button>
-    </div>
 </div>
-
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-    const ctx = document.getElementById('promoChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['2020', '2021', '2022', '2023', '2024', '2025'],
-            datasets: [{
-                data: [62, 91, 82, 76, 58, 47],
-                backgroundColor: 'rgba(134, 239, 172, 0.8)',
-                borderColor: 'rgba(74, 222, 128, 1)',
-                borderWidth: 1,
-                borderRadius: 3,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { font: { size: 11 }, color: '#6b7280' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 11 }, color: '#6b7280' }
-                }
-            }
-        }
-    });
-</script>
 {% endblock %}
