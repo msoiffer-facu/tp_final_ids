@@ -179,7 +179,7 @@ if (promoChartCanvas && window.Chart) {
                         afterBody: (items) => {
                             const item = items[0];
                             const anio = promoChartData.labels[item.dataIndex];
-                            const cuatrimestre = item.dataset.label.replace("C", "");
+                            const cuatrimestre = String(item.datasetIndex + 1);
                             const cursos = (
                                 promoChartData.cursos[anio]
                                 && promoChartData.cursos[anio][cuatrimestre]
