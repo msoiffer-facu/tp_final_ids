@@ -86,9 +86,6 @@ def editar_equipo(id):
 
         db_editar_equipo(id, nombre, descripcion, estado)
 
-        
-        db_editar_equipo(id, nombre, descripcion)
-
         registrar_historial_equipos(f"Creó el equipo '{nombre}'", session.get("email"))
         
     except Exception as e:

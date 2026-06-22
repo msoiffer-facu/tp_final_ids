@@ -42,7 +42,6 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6b7280;
 }
 
 /* Tarjeta de métrica que actúa como botón/acción */
@@ -89,8 +88,10 @@
 .metric-action-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e429f;
     margin-top: 2px;
+}
+.metric-color-blue{
+    color: #1e429f;
 }
 
 .metric-send-title {
@@ -119,7 +120,12 @@
 .table-header-left {
     display: flex;
     justify-content: space-between;
+    gap: 15px;
     align-items: center;
+}
+
+.id-table{
+    width: 80px;
 }
 
 /* ── Ajustes específicos de celdas y datos visuales ── */
@@ -152,32 +158,8 @@
     text-align: center;
 }
 
-/* ── Botón agregar específico de asistencia (verde) ── */
-.btn-agregar {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.btn-agregar:hover {
-    background-color: #45a049;
-}
-
-.btn-agregar:disabled {
-    background-color: #9ca3af;
-    color: #f3f4f6;
-    opacity: 0.65;
-    box-shadow: none;
-}
-
 /* ---------------------------------------------------------------
-   Modal específico de asistencia (con guión bajo)
+   Modal específico de asistencia
    --------------------------------------------------------------- */
 .modal {
     display: none;
@@ -249,8 +231,20 @@
     font-size: 0.92rem;
 }
 
+.modal-div{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+    z-index:1000;
+    justify-content:center;
+    align-items:center;
+}
+
 /* ---------------------------------------------------------------
-   Formularios con guión bajo específicos de asistencia
+   Formularios con guión
    --------------------------------------------------------------- */
 .form__label {
     display: block;
@@ -331,6 +325,41 @@
     color: var(--color-dark);
 }
 
+
+.div-select-camara{
+    margin-bottom: 15px;
+}
+.label-select-camara{
+    font-size: 0.85rem;
+    color: #4b5563;
+    display: block;
+    margin-bottom: 5px;
+}
+.select-camara{
+    padding: 6px;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+}
+#reader{
+    width:100%;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.btn-finalizar-asistencia{
+    margin-top:15px;
+    padding:8px 16px;
+    background:#ef4444;
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+}
+
+#qr-form-target{
+
+}
 /* ---------------------------------------------------------------
    Modales
    --------------------------------------------------------------- */
@@ -406,4 +435,13 @@
     color: var(--color-gray);
     margin-bottom: 1.5rem;
     font-size: 0.92rem;
+}
+
+.modal_escanear_qr{
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    width:90%;
+    max-width:500px;
+    text-align:center;
 }
