@@ -227,13 +227,23 @@ def vista_alumnos():
 @views_bp.route("/alumnos/nuevo", methods=["GET", "POST"])
 def nuevo_alumno():
     if request.method == "POST":
+        estado_alumno = request.form.get("estado")
+        if estado_alumno == "activo":
+            abandono = False
+            estado = True
+        elif estado_alumno == "inactivo":
+            abandono = False
+            estado = False
+        elif estado_alumno == "abandono":
+            abandono = True
+            estado = False
         nuevo = {
             "padron": request.form.get("padron"),
             "nombre": request.form.get("nombre"),
             "apellido": request.form.get("apellido"),
             "email": request.form.get("email"),
-            "abandono": False,
-            "estado": request.form.get("estado"),
+            "abandono": abandono,
+            "estado": estado,
             "curso_id": request.form.get("curso_id")
         }
         resultado = crear_alumno(nuevo)
@@ -283,9 +293,20 @@ def alumno_editar(id):
     apellido = request.form.get("apellido")
     email = request.form.get("email")
     padron = request.form.get("padron")
-    abandono = request.form.get("abandono") == "true"
-    estado = request.form.get("estado") == "true"
+    estado_alumno = request.form.get("estado")
     curso_id = request.form.get("curso")
+
+    if estado_alumno == "activo":
+        abandono = False
+        estado = True
+
+    elif estado_alumno == "inactivo":
+        abandono = False
+        estado = False
+
+    elif estado_alumno == "abandono":
+        abandono = True
+        estado = False
 
     data = {"nombre": nombre, "apellido": apellido, "email": email, "padron": padron, "abandono": abandono, "estado": estado, "curso_id": curso_id}
 
