@@ -62,15 +62,63 @@ def inicio():
 
 @views_bp.route("/dashboard")
 def dashboard():
-
-    resultado = obtener_dashboard_estadisticas()
+    stats = {}
+    chart_data = {"labels": [], "c1": [], "c2": [], "cursos": {}}
     historial = obtener_dashboard_historial(5)
+    try:
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        total_alumnos = len(alumnos)
 
-    if resultado["status_code"] != 200:
-        flash(resultado["data"].get("error", "Error al obtener estadísticas"), "danger")
-        return render_template("dashboard.html", stats={})
+        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
+        total_equipos = len(equipos)
 
-    return render_template("dashboard.html", stats=resultado["data"], historial=historial)
+        notas = requests.get(f"{BACKEND_URL}/notas").json()
+        notas_subidas = len(notas)
+
+        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
+
+        alumnos_promocionados = sum(
+            1 for nota in notas
+            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO"
+        )
+
+        stats = {
+            "total_alumnos": total_alumnos,
+            "total_equipos": total_equipos,
+            "prom_asistencia": round(promedio_asistencia, 2),
+            "notas_subidas": notas_subidas,
+            "alumnos_promocionados": alumnos_promocionados,
+        }
+
+        promocionados_response = requests.get(
+            f"{BACKEND_URL}/api/reportes/promocionados/cuatrimestre"
+        )
+        promocionados_response.raise_for_status()
+        promocionados = promocionados_response.json().get("data", [])
+        chart_periodos = {}
+        for item in promocionados:
+            anio, cuatrimestre = item["periodo"].split("-C", 1)
+            chart_periodos.setdefault(anio, {})
+            chart_periodos[anio][cuatrimestre] = item
+
+        labels = sorted(chart_periodos.keys())
+        chart_data = {
+            "labels": labels,
+            "c1": [chart_periodos[anio].get("1", {}).get("promedio", 0) for anio in labels],
+            "c2": [chart_periodos[anio].get("2", {}).get("promedio", 0) for anio in labels],
+            "cursos": {
+                anio: {
+                    "1": chart_periodos[anio].get("1", {}).get("cursos", []),
+                    "2": chart_periodos[anio].get("2", {}).get("cursos", []),
+                }
+                for anio in labels
+            },
+        }
+
+    except requests.RequestException:
+        flash("Error al obtener datos del backend.", "danger")
+
+    return render_template("dashboard.html", stats=stats, chart_data=chart_data, historial=historial)
 
 
 @views_bp.route("/alumnos/pdf")
