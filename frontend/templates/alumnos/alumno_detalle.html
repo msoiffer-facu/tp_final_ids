@@ -49,11 +49,18 @@
 
     <div class="perfil-item">
         <span class="perfil-label">Estado</span>
-
         {% if alumno.abandono %}
             <span class="badge rojo">Abandonó</span>
         {% else %}
-            <span class="badge verde">Activo</span>
+            {% if alumno.estado %}
+                <span class="badge verde">
+                    Activo
+                </span>
+            {% else %}
+                <span class="badge gris">
+                    Inactivo
+                </span>
+            {% endif %}
         {% endif %}
     </div>
 

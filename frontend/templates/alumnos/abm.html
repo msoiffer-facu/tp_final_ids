@@ -78,21 +78,27 @@
                     Estado
                 </label>
                 <select
-                    name="abandono"
+                    name="estado"
                     class="form__select"
                 >
-                    <option
-                        value="false"
-                        {% if not alumno.abandono %}selected{% endif %}
-                    >
-                        Activo
-                    </option>
-                    <option
-                        value="true"
-                        {% if alumno.abandono %}selected{% endif %}
-                    >
-                        Abandonó
-                    </option>
+                    <option 
+                        value="activo"
+                        {% if alumno.estado %}selected{% endif %}
+                        >
+                            Activo
+                        </option>
+
+                        <option 
+                            value="inactivo"
+                            {% if not alumno.estado %}selected{% endif %}>
+                            Inactivo
+                        </option>
+
+                        <option 
+                            value="abandono"
+                            {% if alumno.abandono %}selected{% endif %}>
+                            Abandonó
+                        </option>
 
                 </select>
 

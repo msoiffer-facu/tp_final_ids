@@ -67,37 +67,23 @@ Editar alumno - Sistema Académico
                     Estado
                 </label>
 
-                <select
-                    id="abandono"
-                    name="abandono"
-                >
-                    <option
-                        value="true"
-                        {% if  alumno.estado %}selected{% endif %}
+                    <select
+                        id="abandono"
+                        name="estado"
                     >
-                        Activo
-                    </option>
-                    <option
-                        value="false"
-                        {% if not alumno.estado %}selected{% endif %}
-                    >
-                        Inactivo
-                    </option>
-                    <option
-                        value="false"
-                        {% if not alumno.abandono %}selected{% endif %}
-                    >
-                        Activo
-                    </option>
+                        <option value="activo">
+                            Activo
+                        </option>
 
-                    <option
-                        value="true"
-                        {% if alumno.abandono %}selected{% endif %}
-                    >
-                        Abandonó
-                    </option>
+                        <option value="inactivo">
+                            Inactivo
+                        </option>
 
-                </select>
+                        <option value="abandono">
+                            Abandonó
+                        </option>
+
+                    </select>
 
             </div>
         </div>

@@ -68,7 +68,7 @@
                 selected
             {% endif %}
         >
-            Activos
+            No abandonados
         </option>
 
         <option value="1"
@@ -138,9 +138,15 @@
                             Abandonó
                         </span>
                     {% else %}
+                        {% if alumno.estado %}
                         <span class="badge verde">
                             Activo
                         </span>
+                        {% else %}
+                        <span class="badge gris">
+                            Inactivo
+                        </span>
+                        {% endif %}
                     {% endif %}
                 </td>
 
