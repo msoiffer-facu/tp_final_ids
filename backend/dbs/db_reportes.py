@@ -129,9 +129,45 @@ def _statistics_data():
                 "FROM alumnos a"
             )
         else:
-            cursor.execute("SELECT COUNT(*) AS total FROM alumnos")
-            total = cursor.fetchone()[0]
-            return {"total": total, "aprobados": 0, "reprobados": 0, "porcentaje_aprobacion": 0.0, "por_equipo": []}
+            cursor.execute("SELECT COUNT(*) FROM alumnos a")
+            total = int(cursor.fetchone()[0] or 0)
+
+            if not _table_exists(cursor, "notas"):
+                return {"total": total, "aprobados": 0, "reprobados": 0, "porcentaje_aprobacion": 0.0, "por_equipo": []}
+
+            cursor.execute(
+                "SELECT COUNT(DISTINCT alumno_id) FROM notas "
+                "WHERE estado IN ('APROBADO', 'PROMOCIONADO')"
+            )
+            aprobados = int(cursor.fetchone()[0] or 0)
+            reprobados = total - aprobados
+            porcentaje = round((aprobados / total * 100) if total else 0.0, 2)
+            por_equipo = []
+
+            if tiene_equipos:
+                cursor.execute(
+                    "SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
+                    "COUNT(DISTINCT a.id) AS total, "
+                    "COUNT(DISTINCT CASE WHEN n.estado IN ('APROBADO', 'PROMOCIONADO') THEN a.id ELSE NULL END) AS aprobados "
+                    "FROM alumnos a "
+                    "LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id "
+                    "LEFT JOIN equipos e ON e.id = ea.equipo_id "
+                    "LEFT JOIN notas n ON n.alumno_id = a.id "
+                    "GROUP BY e.id, e.nombre "
+                    "ORDER BY total DESC"
+                )
+                por_equipo = [
+                    {"equipo": normalize_text(row[0]), "total": int(row[1]), "aprobados": int(row[2] or 0)}
+                    for row in cursor.fetchall()
+                ]
+
+            return {
+                "total": total,
+                "aprobados": aprobados,
+                "reprobados": reprobados,
+                "porcentaje_aprobacion": porcentaje,
+                "por_equipo": por_equipo,
+            }
 
         cursor.execute(count_sql)
         total, aprobados, reprobados = cursor.fetchone()
