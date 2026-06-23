@@ -2,10 +2,6 @@
 
 {% block title %}Profesores - Sistema Académico{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
-{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <div>
@@ -13,7 +9,7 @@
         <h1>Listado de profesores</h1>
         <p class="subtitle">Administrar el personal docente y acceder a su perfil.</p>
     </div>
-    <a href="{{ url_for('profesores_front.profesor_nuevo') }}" class="btn primary">+ Nuevo profesor</a>
+    <a href="{{ url_for('profesores_front.profesor_nuevo') }}" class="btn-primary">+ Nuevo profesor</a>
 </div>
 
 <div class="table-card">

@@ -2,10 +2,6 @@
 
 {% block title %}{% if tipo and tipo.id %}Editar tipo{% else %}Nuevo tipo{% endif %} de evaluación - Sistema Académico{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
-{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <div class="page-header-left">

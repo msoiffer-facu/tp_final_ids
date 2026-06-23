@@ -24,13 +24,6 @@ from services.alumnos_service import eliminar_alumno_service, obtener_alumnos, o
 views_bp = Blueprint("views", __name__)
 
 
-"""
-dashboard barra por cuaatrimestre y si queremos una desagregacion adicional y que hagas click en la barra para ver otro grafico por cada curso (la idea es tener un curso)
-
-ver alumnos font 42 al padron
-"""
-
-
 @views_bp.route("/")
 def index():
     if usuario_logueado():
