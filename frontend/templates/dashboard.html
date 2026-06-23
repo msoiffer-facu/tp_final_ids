@@ -129,7 +129,6 @@
             <p class="history-kicker">Registro</p>
             <h2>Actividad reciente</h2>
         </div>
-        <span class="history-count">{{ historial|length if historial else 0 }}</span>
     </div>
 
     <table>
@@ -159,4 +158,77 @@
         </tbody>
     </table>
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const promoChartData = {{ chart_data | tojson }};
+const promoChartCanvas = document.getElementById("promoChart");
+
+if (promoChartCanvas && window.Chart) {
+    new Chart(promoChartCanvas, {
+        type: "bar",
+        data: {
+            labels: promoChartData.labels,
+            datasets: [
+                {
+                    label: "1er cuatrimestre",
+                    data: promoChartData.c1,
+                    backgroundColor: "#2563eb",
+                    borderRadius: 4,
+                    categoryPercentage: 0.72,
+                    barPercentage: 1,
+                    maxBarThickness: 56
+                },
+                {
+                    label: "2do cuatrimestre",
+                    data: promoChartData.c2,
+                    backgroundColor: "#16a34a",
+                    borderRadius: 4,
+                    categoryPercentage: 0.72,
+                    barPercentage: 1,
+                    maxBarThickness: 56
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: (value) => value + "%"
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "bottom"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${context.parsed.y}%`,
+                        afterBody: (items) => {
+                            const item = items[0];
+                            const anio = promoChartData.labels[item.dataIndex];
+                            const cuatrimestre = String(item.datasetIndex + 1);
+                            const cursos = (
+                                promoChartData.cursos[anio]
+                                && promoChartData.cursos[anio][cuatrimestre]
+                            ) || [];
+                            return cursos.map(
+                                (curso) => `${curso.nombre}: ${curso.porcentaje}%`
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
 {% endblock %}

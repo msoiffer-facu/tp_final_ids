@@ -67,7 +67,7 @@
                 </td>
                 <td>{{ alumno.asistencia_registrada or "N/A" }}</td>
                 <td>
-                    {% if alumno.estado %}
+                    {% if not alumno.abondono %}
                         <span class="badge verde">Activo</span>
                     {% else %}
                         <span class="badge gris">Inactivo</span>

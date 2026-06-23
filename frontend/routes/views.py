@@ -1,5 +1,4 @@
 from flask import Blueprint, Response, render_template, redirect, url_for, request, session, flash
-from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 import requests
 from services.asistencia import *
 from services.config import BACKEND_URL
@@ -23,13 +22,6 @@ from services.dashboard_service import obtener_dashboard_estadisticas, obtener_d
 from services.alumnos_service import eliminar_alumno_service, obtener_alumnos, obtener_alumno, actualizar_alumno, importar_csv_service, crear_alumno, obtener_asistencias_alumno, calcular_promedio_alumno, obtener_equipos_alumno, obtener_notas_alumno
 
 views_bp = Blueprint("views", __name__)
-
-
-"""
-dashboard barra por cuaatrimestre y si queremos una desagregacion adicional y que hagas click en la barra para ver otro grafico por cada curso (la idea es tener un curso)
-
-ver alumnos font 42 al padron
-"""
 
 
 @views_bp.route("/")
@@ -63,15 +55,63 @@ def inicio():
 
 @views_bp.route("/dashboard")
 def dashboard():
-
-    resultado = obtener_dashboard_estadisticas()
+    stats = {}
+    chart_data = {"labels": [], "c1": [], "c2": [], "cursos": {}}
     historial = obtener_dashboard_historial(5)
+    try:
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        total_alumnos = len(alumnos)
 
-    if resultado["status_code"] != 200:
-        flash(resultado["data"].get("error", "Error al obtener estadísticas"), "danger")
-        return render_template("dashboard.html", stats={})
+        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
+        total_equipos = len(equipos)
 
-    return render_template("dashboard.html", stats=resultado["data"], historial=historial)
+        notas = requests.get(f"{BACKEND_URL}/notas").json()
+        notas_subidas = len(notas)
+
+        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
+
+        alumnos_promocionados = sum(
+            1 for nota in notas
+            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO"
+        )
+
+        stats = {
+            "total_alumnos": total_alumnos,
+            "total_equipos": total_equipos,
+            "prom_asistencia": round(promedio_asistencia, 2),
+            "notas_subidas": notas_subidas,
+            "alumnos_promocionados": alumnos_promocionados,
+        }
+
+        promocionados_response = requests.get(
+            f"{BACKEND_URL}/api/reportes/promocionados/cuatrimestre"
+        )
+        promocionados_response.raise_for_status()
+        promocionados = promocionados_response.json().get("data", [])
+        chart_periodos = {}
+        for item in promocionados:
+            anio, cuatrimestre = item["periodo"].split("-C", 1)
+            chart_periodos.setdefault(anio, {})
+            chart_periodos[anio][cuatrimestre] = item
+
+        labels = sorted(chart_periodos.keys())
+        chart_data = {
+            "labels": labels,
+            "c1": [chart_periodos[anio].get("1", {}).get("promedio", 0) for anio in labels],
+            "c2": [chart_periodos[anio].get("2", {}).get("promedio", 0) for anio in labels],
+            "cursos": {
+                anio: {
+                    "1": chart_periodos[anio].get("1", {}).get("cursos", []),
+                    "2": chart_periodos[anio].get("2", {}).get("cursos", []),
+                }
+                for anio in labels
+            },
+        }
+
+    except requests.RequestException:
+        flash("Error al obtener datos del backend.", "danger")
+
+    return render_template("dashboard.html", stats=stats, chart_data=chart_data, historial=historial)
 
 
 @views_bp.route("/alumnos/pdf")
@@ -136,6 +176,48 @@ def estadisticas_pdf():
     except requests.RequestException:
         flash("Error al generar PDF.", "danger")
         return render_template("dashboard.html")
+
+
+@views_bp.route("/alumnos/csv")
+def alumnos_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/alumnos/csv")
+        return Response(
+            response.content,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=reporte_alumnos.csv"}
+        )
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return render_template("dashboard.html")
+
+
+@views_bp.route("/equipos/csv")
+def equipos_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/equipos/csv")
+        return Response(
+            response.content,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=reporte_equipos.csv"}
+        )
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return render_template("dashboard.html")
+
+
+@views_bp.route("/estadisticas/csv")
+def estadisticas_csv():
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/reportes/estadisticas/csv")
+        return Response(
+            response.content,
+            content_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=reporte_estadisticas.csv"}
+        )
+    except requests.RequestException:
+        flash("Error al generar CSV.", "danger")
+        return render_template("dashboard.html")
   
 @views_bp.route("/alumnos/<int:id>")
 def alumno_detalle(id):
@@ -186,13 +268,23 @@ def vista_alumnos():
 @views_bp.route("/alumnos/nuevo", methods=["GET", "POST"])
 def nuevo_alumno():
     if request.method == "POST":
+        estado_alumno = request.form.get("estado")
+        if estado_alumno == "activo":
+            abandono = False
+            estado = True
+        elif estado_alumno == "inactivo":
+            abandono = False
+            estado = False
+        elif estado_alumno == "abandono":
+            abandono = True
+            estado = False
         nuevo = {
             "padron": request.form.get("padron"),
             "nombre": request.form.get("nombre"),
             "apellido": request.form.get("apellido"),
             "email": request.form.get("email"),
-            "abandono": False,
-            "estado": request.form.get("estado"),
+            "abandono": abandono,
+            "estado": estado,
             "curso_id": request.form.get("curso_id")
         }
         resultado = crear_alumno(nuevo)
@@ -242,9 +334,20 @@ def alumno_editar(id):
     apellido = request.form.get("apellido")
     email = request.form.get("email")
     padron = request.form.get("padron")
-    abandono = request.form.get("abandono") == "true"
-    estado = request.form.get("estado") == "true"
+    estado_alumno = request.form.get("estado")
     curso_id = request.form.get("curso")
+
+    if estado_alumno == "activo":
+        abandono = False
+        estado = True
+
+    elif estado_alumno == "inactivo":
+        abandono = False
+        estado = False
+
+    elif estado_alumno == "abandono":
+        abandono = True
+        estado = False
 
     data = {"nombre": nombre, "apellido": apellido, "email": email, "padron": padron, "abandono": abandono, "estado": estado, "curso_id": curso_id}
 

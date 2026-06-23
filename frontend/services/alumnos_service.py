@@ -32,12 +32,12 @@ def calcular_promedio_alumno(notas):
     if nota["anio"] > anio_actual:
         anio_actual = nota["anio"]
 
- cuatrimestre_actual = "primero"
+ cuatrimestre_actual = "1"
 
  for nota in notas:
     if nota["anio"] == anio_actual:
-        if nota["cuatrimestre"] == "segundo":
-            cuatrimestre_actual = "segundo"
+        if nota["cuatrimestre"] == "2":
+            cuatrimestre_actual = "2"
 
  curso_actual = None
 

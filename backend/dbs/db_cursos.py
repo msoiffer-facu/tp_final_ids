@@ -78,11 +78,14 @@ def db_update_curso(id, nombre, cuatrimestre, anio, modificacion):
 def db_delete_curso(id):
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute("DELETE FROM alumnos_curso WHERE curso_id = %s", (id,))
+    cursor.execute("DELETE FROM clase_presencial WHERE curso_id = %s", (id,))
+    cursor.execute("DELETE FROM equipos WHERE curso_id = %s", (id,))
+    cursor.execute("DELETE FROM evaluaciones WHERE curso_id = %s", (id,))
     cursor.execute("DELETE FROM cursos WHERE id = %s", (id,))
     conn.commit()
     cursor.close()
     conn.close()
-
 
 # ─── ALUMNOS DEL CURSO ───
 

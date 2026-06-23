@@ -58,23 +58,27 @@ def create_curso():
             return jsonify({"error": "El campo cuatrimestre es obligatorio y debe ser '1' o '2'."}), 400
 
         nuevo_id = db_create_curso(nombre, cuatrimestre, anio, modificacion)
-        registrar_historial_cursos(f"Creó el curso '{nombre}'", session.get("email"))
         
+
+    except mysql.connector.IntegrityError:
+        return jsonify({"error": f"Ya existe un curso '{nombre}' en el {cuatrimestre}° cuatrimestre de {anio}."}), 409
     except:
-        return  jsonify({"error": "error en el servidor"}), 500
+        return jsonify({"error": "error en el servidor"}), 500
+
+    registrar_historial_cursos(f"Creó el curso '{nombre}'", session.get("email"))
     return jsonify({"message": "Curso creado exitosamente.", "id": nuevo_id}), 201
 
 @cursos_bp.route("/<int:id>", methods=["PUT"])
 def update_curso(id):
     if not db_get_curso_by_id(id):
         return jsonify({"error": "Curso no encontrado."}), 404
-
+ 
     data = request.get_json()
     nombre = data.get("nombre")
     cuatrimestre = data.get("cuatrimestre")
     anio = data.get("anio")
     modificacion = data.get("modificacion")
-
+ 
     try:
         if not nombre:
             return jsonify({"error": "El campo nombre es obligatorio."}), 400
@@ -82,12 +86,14 @@ def update_curso(id):
             return jsonify({"error": "El campo anio es obligatorio."}), 400
         if not cuatrimestre or cuatrimestre not in ["1", "2"]:
             return jsonify({"error": "El campo cuatrimestre es obligatorio y debe ser '1' o '2'."}), 400
-
+ 
         db_update_curso(id, nombre, cuatrimestre, anio, modificacion)
         registrar_historial_cursos(f"Modificó el curso '{nombre}'", session.get("email"))
+    except mysql.connector.IntegrityError:
+        return jsonify({"error": f"Ya existe un curso '{nombre}' en el {cuatrimestre}° cuatrimestre de {anio}."}), 409
     except:
         return jsonify({"error": "error en el servidor"}), 500
-    return jsonify({"message": "Curso actualizado exitosamente."}), 200
+    return jsonify({"message": "Curso actualizado exitosamente."}), 200 
 
 
 @cursos_bp.route("/<int:id>", methods=["DELETE"])
