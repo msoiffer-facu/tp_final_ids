@@ -24,13 +24,6 @@ from services.alumnos_service import eliminar_alumno_service, obtener_alumnos, o
 views_bp = Blueprint("views", __name__)
 
 
-"""
-dashboard barra por cuaatrimestre y si queremos una desagregacion adicional y que hagas click en la barra para ver otro grafico por cada curso (la idea es tener un curso)
-
-ver alumnos font 42 al padron
-"""
-
-
 @views_bp.route("/")
 def index():
     if usuario_logueado():
@@ -40,30 +33,10 @@ def index():
 
 @views_bp.route("/inicio")
 def inicio():
-    materia = {
-        "titulo": "Introducción al Desarrollo de Software",
-        "subtitulo": "Facultad de Ingeniería · UBA",
-        "descripcion": (
-            "Materia de segundo año que introduce a los alumnos en los "
-            "fundamentos del desarrollo de software moderno: desde la terminal "
-            "hasta el despliegue de aplicaciones web completas."
-        ),
-    }
-
     info_cursada = [
-        {"label": "Nombre", "valor": "Introducción al Desarrollo de Software"},
-        {"label": "Código", "valor": ""},
-        {"label": "Carrera", "valor": "Ingeniería en Informática / Lic. en Sistemas"},
-        {"label": "Carga horaria", "valor": "6 horas semanales"},
-        {"label": "Carga horaria total", "valor": "96 horas"},
+        {"label": "Carga horaria", "valor": "6 hs semanales"},
         {"label": "Modalidad", "valor": "Presencial/Virtual"},
-        {"label": "Tipo de materia", "valor": "Obligatoria"},
-        {"label": "Régimen", "valor": "Cuatrimestral"},
-        {"label": "Correlativas", "valor": "Sin correlativas"},
-        {"label": "Créditos", "valor": ""},
-        {"label": "Departamento", "valor": "Computación"},
     ]
-
     contenidos = [
         {"titulo": "Bases de datos MySQL", "descripcion": "Diseño de tablas, consultas SQL, INSERT, UPDATE y JOINs."},
         {"titulo": "Linux y Bash", "descripcion": "Terminal, comandos, scripting y manejo del sistema de archivos."},
@@ -72,7 +45,6 @@ def inicio():
         {"titulo": "Docker y despliegue", "descripcion": "Contenedores, imágenes, Docker Compose y entornos reproducibles."},
         {"titulo": "Frontend: HTML, CSS y JS", "descripcion": "Interfaces web conectadas al backend usando Flask como servidor."},
     ]
-
     return render_template(
         "inicio.html",
         info_cursada=info_cursada,
@@ -82,15 +54,63 @@ def inicio():
 
 @views_bp.route("/dashboard")
 def dashboard():
-
-    resultado = obtener_dashboard_estadisticas()
+    stats = {}
+    chart_data = {"labels": [], "c1": [], "c2": [], "cursos": {}}
     historial = obtener_dashboard_historial(5)
+    try:
+        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
+        total_alumnos = len(alumnos)
 
-    if resultado["status_code"] != 200:
-        flash(resultado["data"].get("error", "Error al obtener estadísticas"), "danger")
-        return render_template("dashboard.html", stats={})
+        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
+        total_equipos = len(equipos)
 
-    return render_template("dashboard.html", stats=resultado["data"], historial=historial)
+        notas = requests.get(f"{BACKEND_URL}/notas").json()
+        notas_subidas = len(notas)
+
+        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
+
+        alumnos_promocionados = sum(
+            1 for nota in notas
+            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO"
+        )
+
+        stats = {
+            "total_alumnos": total_alumnos,
+            "total_equipos": total_equipos,
+            "prom_asistencia": round(promedio_asistencia, 2),
+            "notas_subidas": notas_subidas,
+            "alumnos_promocionados": alumnos_promocionados,
+        }
+
+        promocionados_response = requests.get(
+            f"{BACKEND_URL}/api/reportes/promocionados/cuatrimestre"
+        )
+        promocionados_response.raise_for_status()
+        promocionados = promocionados_response.json().get("data", [])
+        chart_periodos = {}
+        for item in promocionados:
+            anio, cuatrimestre = item["periodo"].split("-C", 1)
+            chart_periodos.setdefault(anio, {})
+            chart_periodos[anio][cuatrimestre] = item
+
+        labels = sorted(chart_periodos.keys())
+        chart_data = {
+            "labels": labels,
+            "c1": [chart_periodos[anio].get("1", {}).get("promedio", 0) for anio in labels],
+            "c2": [chart_periodos[anio].get("2", {}).get("promedio", 0) for anio in labels],
+            "cursos": {
+                anio: {
+                    "1": chart_periodos[anio].get("1", {}).get("cursos", []),
+                    "2": chart_periodos[anio].get("2", {}).get("cursos", []),
+                }
+                for anio in labels
+            },
+        }
+
+    except requests.RequestException:
+        flash("Error al obtener datos del backend.", "danger")
+
+    return render_template("dashboard.html", stats=stats, chart_data=chart_data, historial=historial)
 
 
 @views_bp.route("/alumnos/pdf")
@@ -247,13 +267,23 @@ def vista_alumnos():
 @views_bp.route("/alumnos/nuevo", methods=["GET", "POST"])
 def nuevo_alumno():
     if request.method == "POST":
+        estado_alumno = request.form.get("estado")
+        if estado_alumno == "activo":
+            abandono = False
+            estado = True
+        elif estado_alumno == "inactivo":
+            abandono = False
+            estado = False
+        elif estado_alumno == "abandono":
+            abandono = True
+            estado = False
         nuevo = {
             "padron": request.form.get("padron"),
             "nombre": request.form.get("nombre"),
             "apellido": request.form.get("apellido"),
             "email": request.form.get("email"),
-            "abandono": False,
-            "estado": request.form.get("estado"),
+            "abandono": abandono,
+            "estado": estado,
             "curso_id": request.form.get("curso_id")
         }
         resultado = crear_alumno(nuevo)
@@ -303,9 +333,20 @@ def alumno_editar(id):
     apellido = request.form.get("apellido")
     email = request.form.get("email")
     padron = request.form.get("padron")
-    abandono = request.form.get("abandono") == "true"
-    estado = request.form.get("estado") == "true"
+    estado_alumno = request.form.get("estado")
     curso_id = request.form.get("curso")
+
+    if estado_alumno == "activo":
+        abandono = False
+        estado = True
+
+    elif estado_alumno == "inactivo":
+        abandono = False
+        estado = False
+
+    elif estado_alumno == "abandono":
+        abandono = True
+        estado = False
 
     data = {"nombre": nombre, "apellido": apellido, "email": email, "padron": padron, "abandono": abandono, "estado": estado, "curso_id": curso_id}
 

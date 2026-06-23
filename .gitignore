@@ -4,7 +4,3 @@ __pycache__/
 venv/
 
 backend/routes/__init__.py
-
-# Archivos locales / de prueba (no se suben al repo)
-docker-compose.override.yml
-alumnos_prueba.csv
