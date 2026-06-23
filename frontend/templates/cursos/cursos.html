@@ -2,6 +2,9 @@
 
 {% block title %}Cursos - Sistema Académico{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cursos.css') }}">
+{% endblock %}
 
 {% block content %}
 
@@ -107,7 +110,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_scripts %}
 <script>
@@ -126,4 +128,5 @@
     });
 </script>
 
-{% endblock %}|
+{% endblock %}
+{% endblock %}
