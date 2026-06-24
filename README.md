@@ -97,9 +97,14 @@ git clone https://github.com/msoiffer-facu/tp_final_ids.git
 cd tp_final_ids
 ```
 2. Configurar las variables de entorno:
-Antes de ejecutar la aplicación, debés crear el archivo .env a partir de la plantilla provista para configurar las credenciales de la base de datos, claves secretas de Flask y puertos:
+Antes de ejecutar la aplicación, debés crear los archivos .env del backend y del frontend a partir de la plantilla provista para configurar las credenciales de la base de datos, claves secretas de Flask y puertos:
 ```bash
+cd backend
 cp .env.example .env
+cd ..
+cd frontend
+cp .env.example .env
+cd ..
 ```
 (Opcional: Abrí el archivo .env con tu editor de texto si necesitás modificar algún parámetro local).
 

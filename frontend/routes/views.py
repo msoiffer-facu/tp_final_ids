@@ -34,7 +34,7 @@ def index():
 @views_bp.route("/inicio")
 def inicio():
     info_cursada = [
-        {"label": "Cuatrimestre", "valor": "2do - 2026"},
+        {"label": "Cuatrimestre", "valor": "1er - 2026"},
         {"label": "Carga horaria", "valor": "6 hs semanales"},
         {"label": "Modalidad", "valor": "Presencial/virtual"},
     ]
