@@ -6,7 +6,6 @@ from services.login import backend_request
 def obtener_dashboard_estadisticas():
     try:
         total_alumnos =backend_request("GET", "/alumnos/todos").json()
-        print(total_alumnos)
         equipos = backend_request("GET", "/equipos").json()
         total_notas = backend_request("GET", "/notas").json()
         promediar_response = backend_request("GET", "/asistencia/promedio").json()
@@ -15,7 +14,6 @@ def obtener_dashboard_estadisticas():
 
         alumnos_promocionados = 0
         for alumno in total_alumnos:
-            print(alumno["id"])
             notas = backend_request("GET", f"/notas/alumno/{alumno['id']}").json()
             resultado = calcular_promedio_alumno(notas)
             
