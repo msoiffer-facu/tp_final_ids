@@ -55,33 +55,10 @@ def inicio():
 
 @views_bp.route("/dashboard")
 def dashboard():
-    stats = {}
-    chart_data = {"labels": [], "c1": [], "c2": [], "cursos": {}}
-    historial = obtener_dashboard_historial(5)
     try:
-        alumnos = requests.get(f"{BACKEND_URL}/alumnos").json()
-        total_alumnos = len(alumnos)
-
-        equipos = requests.get(f"{BACKEND_URL}/equipos").json()
-        total_equipos = len(equipos)
-
-        notas = requests.get(f"{BACKEND_URL}/notas").json()
-        notas_subidas = len(notas)
-
-        promedio_asistencia = requests.get(f"{BACKEND_URL}/asistencia/promedio").json().get("promedio_asistencia", 0)
-
-        alumnos_promocionados = sum(
-            1 for nota in notas
-            if isinstance(nota, dict) and nota.get("estado") == "PROMOCIONADO"
-        )
-
-        stats = {
-            "total_alumnos": total_alumnos,
-            "total_equipos": total_equipos,
-            "prom_asistencia": round(promedio_asistencia, 2),
-            "notas_subidas": notas_subidas,
-            "alumnos_promocionados": alumnos_promocionados,
-        }
+        dashboard_response = obtener_dashboard_estadisticas()
+        stats = dashboard_response["data"]
+        historial = obtener_dashboard_historial(5)
 
         promocionados_response = requests.get(
             f"{BACKEND_URL}/api/reportes/promocionados/cuatrimestre"
