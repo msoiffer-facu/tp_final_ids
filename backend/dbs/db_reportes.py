@@ -110,47 +110,93 @@ def _statistics_data():
             return {"total": 0, "aprobados": 0, "reprobados": 0, "porcentaje_aprobacion": 0.0, "por_equipo": []}
 
         columns = _get_table_columns(cursor, "alumnos")
+        tiene_notas = _table_exists(cursor, "notas")
         tiene_equipos = _table_exists(cursor, "equipo_alumnos") and _table_exists(cursor, "equipos")
 
-        if "aprobado" in columns:
+        cursor.execute("SELECT COUNT(*) FROM alumnos")
+        total = int(cursor.fetchone()[0] or 0)
+
+        if tiene_notas:
+            aprobado_estados = "('APROBADO', 'PROMOCIONADO')"
+            cursor.execute(
+                "SELECT "
+                f"COUNT(DISTINCT CASE WHEN n.estado IN {aprobado_estados} THEN n.alumno_id END) AS aprobados, "
+                "COUNT(DISTINCT CASE WHEN n.estado = 'DESAPROBADO' THEN n.alumno_id END) AS reprobados "
+                "FROM notas n"
+            )
+            aprobados, reprobados = cursor.fetchone()
+            aprobados = int(aprobados or 0)
+            reprobados = int(reprobados or 0)
+        elif "aprobado" in columns:
             aprobado_expr = "LOWER(CAST(a.aprobado AS CHAR)) IN ('1','true','si','yes','y','s')"
-            count_sql = (
-                "SELECT COUNT(*) AS total, "
+            cursor.execute(
+                "SELECT "
                 f"SUM(CASE WHEN {aprobado_expr} THEN 1 ELSE 0 END) AS aprobados, "
                 f"SUM(CASE WHEN NOT ({aprobado_expr}) THEN 1 ELSE 0 END) AS reprobados "
                 "FROM alumnos a"
             )
+            aprobados, reprobados = cursor.fetchone()
+            aprobados = int(aprobados or 0)
+            reprobados = int(reprobados or 0)
         elif "nota" in columns:
-            aprobado_expr = "a.nota >= 6"
-            count_sql = (
-                "SELECT COUNT(*) AS total, "
+            cursor.execute(
+                "SELECT "
                 "SUM(CASE WHEN a.nota >= 6 THEN 1 ELSE 0 END) AS aprobados, "
                 "SUM(CASE WHEN a.nota < 6 OR a.nota IS NULL THEN 1 ELSE 0 END) AS reprobados "
                 "FROM alumnos a"
             )
+            aprobados, reprobados = cursor.fetchone()
+            aprobados = int(aprobados or 0)
+            reprobados = int(reprobados or 0)
         else:
-            cursor.execute("SELECT COUNT(*) AS total FROM alumnos")
-            total = cursor.fetchone()[0]
-            return {"total": total, "aprobados": 0, "reprobados": 0, "porcentaje_aprobacion": 0.0, "por_equipo": []}
+            aprobados = 0
+            reprobados = 0
 
-        cursor.execute(count_sql)
-        total, aprobados, reprobados = cursor.fetchone()
-        total = int(total or 0)
-        aprobados = int(aprobados or 0)
-        reprobados = int(reprobados or 0)
         porcentaje = round((aprobados / total * 100) if total else 0.0, 2)
         por_equipo = []
 
-        if tiene_equipos:
+        if tiene_equipos and tiene_notas:
+            aprobado_estados = "('APROBADO', 'PROMOCIONADO')"
             cursor.execute(
-                f"SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
-                f"COUNT(*) AS total, "
+                "SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
+                "COUNT(DISTINCT ea.alumno_id) AS total, "
+                f"COUNT(DISTINCT CASE WHEN n.estado IN {aprobado_estados} THEN n.alumno_id END) AS aprobados "
+                "FROM equipo_alumnos ea "
+                "LEFT JOIN equipos e ON e.id = ea.equipo_id "
+                "LEFT JOIN notas n ON n.alumno_id = ea.alumno_id "
+                "GROUP BY e.id, e.nombre "
+                "ORDER BY total DESC"
+            )
+            por_equipo = [
+                {"equipo": normalize_text(row[0]), "total": int(row[1]), "aprobados": int(row[2] or 0)}
+                for row in cursor.fetchall()
+            ]
+        elif tiene_equipos and "aprobado" in columns:
+            aprobado_expr = "LOWER(CAST(a.aprobado AS CHAR)) IN ('1','true','si','yes','y','s')"
+            cursor.execute(
+                "SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
+                "COUNT(*) AS total, "
                 f"SUM(CASE WHEN {aprobado_expr} THEN 1 ELSE 0 END) AS aprobados "
-                f"FROM alumnos a "
-                f"LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id "
-                f"LEFT JOIN equipos e ON e.id = ea.equipo_id "
-                f"GROUP BY e.id, e.nombre "
-                f"ORDER BY total DESC"
+                "FROM alumnos a "
+                "LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id "
+                "LEFT JOIN equipos e ON e.id = ea.equipo_id "
+                "GROUP BY e.id, e.nombre "
+                "ORDER BY total DESC"
+            )
+            por_equipo = [
+                {"equipo": normalize_text(row[0]), "total": int(row[1]), "aprobados": int(row[2] or 0)}
+                for row in cursor.fetchall()
+            ]
+        elif tiene_equipos and "nota" in columns:
+            cursor.execute(
+                "SELECT IFNULL(e.nombre, 'Sin equipo') AS equipo, "
+                "COUNT(*) AS total, "
+                "SUM(CASE WHEN a.nota >= 6 THEN 1 ELSE 0 END) AS aprobados "
+                "FROM alumnos a "
+                "LEFT JOIN equipo_alumnos ea ON ea.alumno_id = a.id "
+                "LEFT JOIN equipos e ON e.id = ea.equipo_id "
+                "GROUP BY e.id, e.nombre "
+                "ORDER BY total DESC"
             )
             por_equipo = [
                 {"equipo": normalize_text(row[0]), "total": int(row[1]), "aprobados": int(row[2] or 0)}
